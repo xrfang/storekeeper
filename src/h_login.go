@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math/rand"
 	"net/http"
 
 	audit "github.com/xrfang/go-audit"
@@ -18,12 +17,11 @@ func login(w http.ResponseWriter, r *http.Request) {
 	pass := r.Form.Get("pass")
 	var mesg string
 	if user != "" && pass != "" {
-		mesg = "incorrect username or password"
+		//mesg = "incorrect username or password"
 		//TODO: authenticate user
-		if rand.Intn(100) > 49 {
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-			return
-		}
+		setCookie(w, "token", genToken(), 0)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
 	}
 	if user == "" {
 		user = getCookie(r, "user")

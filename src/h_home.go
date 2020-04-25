@@ -10,5 +10,9 @@ func home(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, path.Join(cf.WebRoot, r.URL.Path))
 		return
 	}
+	if !validate(r) {
+		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+		return
+	}
 	renderTemplate(w, "home.html", nil)
 }

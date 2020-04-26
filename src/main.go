@@ -35,7 +35,6 @@ func main() {
 	loadConfig(*conf)
 	L = NewLogger(cf.LogPath, 1024*1024, 10)
 	L.SetDebug(cf.DbgMode)
-
 	policy := res.Verbatim
 	if cf.DbgMode {
 		policy = res.OverwriteIfNewer

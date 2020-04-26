@@ -4,14 +4,16 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Configuration struct {
-	LogPath string
-	DbgMode bool
-	Port    string
-	WebRoot string
-	//TODO: define configuration items
+	LogPath string `yaml:"log_path"`
+	DbgMode bool   `yaml:"dbg_mode"`
+	Port    string `yaml:"port"`
+	WebRoot string `yaml:"web_root"`
+	DBFile  string `yaml:"db_file"`
 	cfgFile string
 	cfgPath string
 }
@@ -28,7 +30,8 @@ func (c *Configuration) Load(fn string) {
 	f, err := os.Open(fn)
 	assert(err)
 	defer f.Close()
-	//TODO: load configuration from f
+	yd := yaml.NewDecoder(f)
+	yd.Decode(c)
 	c.cfgFile = c.abs(fn)
 	c.cfgPath = path.Dir(c.cfgFile)
 }
@@ -39,7 +42,11 @@ func loadConfig(cfgFile string) {
 	cf.Port = "4372"
 	cf.WebRoot = "../webroot"
 	cf.LogPath = "../log"
-	cf.Load(cfgFile)
+	cf.DBFile = "herbs.db"
+	if cfgFile != "" {
+		cf.Load(cfgFile)
+	}
 	cf.WebRoot = cf.abs(cf.WebRoot)
 	cf.LogPath = cf.abs(cf.LogPath)
+	cf.DBFile = cf.abs(cf.DBFile)
 }

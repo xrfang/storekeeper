@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"storekeeper/db"
+
 	res "github.com/xrfang/go-res"
 )
 
@@ -40,6 +42,7 @@ func main() {
 		policy = res.OverwriteIfNewer
 	}
 	assert(res.Extract(cf.WebRoot, policy))
+	db.Initialize(cf.DBFile)
 	setupRoutes()
 	svr := http.Server{
 		Addr:         ":" + cf.Port,

@@ -4,17 +4,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-
-	audit "github.com/xrfang/go-audit"
 )
 
 type Configuration struct {
-	LogFile string
+	LogPath string
 	DbgMode bool
 	Port    string
 	WebRoot string
 	//TODO: define configuration items
-	binPath string
 	cfgFile string
 	cfgPath string
 }
@@ -23,13 +20,13 @@ func (c Configuration) abs(fn string) string {
 	if fn == "" || path.IsAbs(fn) {
 		return fn
 	}
-	p, _ := filepath.Abs(path.Join(c.binPath, fn))
+	p, _ := filepath.Abs(path.Join(c.cfgPath, fn))
 	return p
 }
 
 func (c *Configuration) Load(fn string) {
 	f, err := os.Open(fn)
-	audit.Assert(err)
+	assert(err)
 	defer f.Close()
 	//TODO: load configuration from f
 	c.cfgFile = c.abs(fn)
@@ -39,11 +36,10 @@ func (c *Configuration) Load(fn string) {
 var cf Configuration
 
 func loadConfig(cfgFile string) {
-	cf.binPath = path.Dir(os.Args[0])
-	cf.Port = "8080"
+	cf.Port = "4372"
 	cf.WebRoot = "../webroot"
-	cf.LogFile = "../log/log"
-	//TODO: load configuration from file, e.g. cf.Load(...)
+	cf.LogPath = "../log"
+	cf.Load(cfgFile)
 	cf.WebRoot = cf.abs(cf.WebRoot)
-	cf.LogFile = cf.abs(cf.LogFile)
+	cf.LogPath = cf.abs(cf.LogPath)
 }

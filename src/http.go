@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
-
-	audit "github.com/xrfang/go-audit"
 )
 
 func getCookie(r *http.Request, name string) string {
@@ -40,12 +38,12 @@ func renderTemplate(w http.ResponseWriter, tpl string, args interface{}) {
 	}
 	tDir := path.Join(cf.WebRoot, "templates")
 	t, err := template.New("body").Funcs(helper).ParseFiles(path.Join(tDir, tpl))
-	audit.Assert(err)
+	assert(err)
 	sfs, err := filepath.Glob(path.Join(tDir, "shared/*"))
 	if len(sfs) > 0 {
 		t, err = t.ParseFiles(sfs...)
-		audit.Assert(err)
+		assert(err)
 	}
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
-	audit.Assert(t.Execute(w, args))
+	assert(t.Execute(w, args))
 }

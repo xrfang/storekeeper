@@ -2,8 +2,6 @@ package main
 
 import (
 	"net/http"
-
-	audit "github.com/xrfang/go-audit"
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -12,7 +10,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
 		}
 	}()
-	audit.Assert(r.ParseForm())
+	assert(r.ParseForm())
 	user := r.Form.Get("user")
 	pass := r.Form.Get("pass")
 	var mesg string

@@ -8,9 +8,10 @@ import (
 	"path/filepath"
 	"time"
 
-	audit "github.com/xrfang/go-audit"
 	res "github.com/xrfang/go-res"
 )
+
+var L *StdLogger
 
 func main() {
 	conf := flag.String("conf", "", "configuration file")
@@ -32,21 +33,19 @@ func main() {
 		return
 	}
 	loadConfig(*conf)
-	if !cf.DbgMode {
-		audit.Assert(res.Extract(cf.WebRoot, res.OverwriteIfNewer))
+	L = NewLogger(cf.LogPath, 1024*1024, 10)
+	L.SetDebug(cf.DbgMode)
+
+	policy := res.Verbatim
+	if cf.DbgMode {
+		policy = res.OverwriteIfNewer
 	}
-	audit.ExpVars(map[string]interface{}{
-		"config":  cf,
-		"version": _G_REVS + "." + _G_HASH,
-	})
-	audit.SetLogFile(cf.LogFile)
-	audit.ExpLogs()
-	audit.SetDebugging(cf.DbgMode)
+	assert(res.Extract(cf.WebRoot, policy))
 	setupRoutes()
 	svr := http.Server{
 		Addr:         ":" + cf.Port,
 		ReadTimeout:  time.Minute,
 		WriteTimeout: time.Minute,
 	}
-	audit.Assert(svr.ListenAndServe())
+	assert(svr.ListenAndServe())
 }

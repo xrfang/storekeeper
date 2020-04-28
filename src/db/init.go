@@ -25,7 +25,7 @@ func setupSchema() {
     )`)
 	db.MustExec(`CREATE TABLE IF NOT EXISTS "sku" (  -- 库存单元表
         "caption" TEXT NOT NULL,                     -- 单元名称
-        "base"    TEXT NOT NULL DEFAULT "",          -- 关联基本单元（为空表示该单元即基本单元）
+        "base"    TEXT NOT NULL DEFAULT "",          -- 关联基本单元
         "count"   INTEGER NOT NULL DEFAULT 1,        -- 包含的基本单元数量
         PRIMARY KEY("caption")
     ) WITHOUT ROWID`)
@@ -63,7 +63,23 @@ func setupSchema() {
 }
 
 func setupParams() {
-	//TODO:  设置固定参数，例如bom类型等
+	//添加管理员
+	db.MustExec(`INSERT OR IGNORE INTO "user" ("id","name","login")
+        VALUES (1, "管理员", "admin")`)
+	//添加SKU单位
+	db.MustExec(`INSERT OR IGNORE INTO "sku" ("caption", "base", "count")
+        VALUES ("克", "克", 1)`)
+	db.MustExec(`INSERT OR IGNORE INTO "sku" ("caption", "base", "count")
+        VALUES ("斤", "克", 500)`)
+	db.MustExec(`INSERT OR IGNORE INTO "sku" ("caption", "base", "count")
+        VALUES ("公斤", "克", 1000)`)
+	//添加单据类型
+	db.MustExec(`INSERT OR IGNORE INTO "bom_type" ("id", "caption", "class")
+        VALUES (1, "进货", 0)`)
+	db.MustExec(`INSERT OR IGNORE INTO "bom_type" ("id", "caption", "class")
+        VALUES (2, "出货", 1)`)
+	db.MustExec(`INSERT OR IGNORE INTO "bom_type" ("id", "caption", "class")
+        VALUES (3, "损耗", 1)`)
 }
 
 func Initialize(fn string) {

@@ -3,17 +3,20 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/pquerna/otp/totp"
 )
 
 type User struct {
-	ID     int
-	Name   string
-	Login  string
-	OTPKey string
-	Client int
-	Memo   string
+	ID      int
+	Name    string
+	Login   string
+	OTPKey  string
+	Client  int
+	Memo    string
+	Created time.Time
+	Updated time.Time
 }
 
 var ErrInvalidOTP = errors.New("invalid otp password")

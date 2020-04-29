@@ -3,20 +3,21 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/pquerna/otp/totp"
 )
 
 type User struct {
-	ID      int
-	Name    string
-	Login   string
-	OTPKey  string
-	Client  int
-	Memo    string
-	Created time.Time
-	Updated time.Time
+	ID      int       `json:"id"`
+	Name    string    `json:"name"`
+	Login   string    `json:"login"`
+	OTPKey  string    `json:"-"`
+	Client  int       `json:"client"`
+	Memo    string    `json:"memo"`
+	Created time.Time `json:"created"`
+	Updated time.Time `json:"updated"`
 }
 
 var ErrInvalidOTP = errors.New("invalid otp password")
@@ -51,4 +52,13 @@ func CheckLogin(login, otp string) error {
 		return nil
 	}
 	return ErrInvalidOTP
+}
+
+func ListUsers(account int) (users []User, err error) {
+	qry := `SELECT * FROM user`
+	if account != 1 {
+		qry += fmt.Sprintf(` WHERE client=%d`, account)
+	}
+	err = db.Select(&users, qry)
+	return
 }

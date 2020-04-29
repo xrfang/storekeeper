@@ -9,6 +9,5 @@ func users(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	//TODO: list users.
 	renderTemplate(w, "users.html", nil)
 }

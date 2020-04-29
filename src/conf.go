@@ -33,7 +33,9 @@ func (c *Configuration) Load(fn string) {
 	defer f.Close()
 	yd := yaml.NewDecoder(f)
 	yd.Decode(c)
-	c.cfgPath = path.Dir(c.abs(fn))
+	fp, err := filepath.Abs(fn)
+	assert(err)
+	c.cfgPath = path.Dir(fp)
 }
 
 var cf Configuration

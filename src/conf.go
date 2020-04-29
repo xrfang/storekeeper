@@ -14,6 +14,7 @@ type Configuration struct {
 	Port    string `yaml:"port"`
 	WebRoot string `yaml:"web_root"`
 	DBFile  string `yaml:"db_file"`
+	OrgName string `yaml:"org_name"`
 	cfgFile string
 	cfgPath string
 }
@@ -32,8 +33,7 @@ func (c *Configuration) Load(fn string) {
 	defer f.Close()
 	yd := yaml.NewDecoder(f)
 	yd.Decode(c)
-	c.cfgFile = c.abs(fn)
-	c.cfgPath = path.Dir(c.cfgFile)
+	c.cfgPath = path.Dir(c.abs(fn))
 }
 
 var cf Configuration
@@ -43,6 +43,8 @@ func loadConfig(cfgFile string) {
 	cf.WebRoot = "../webroot"
 	cf.LogPath = "../log"
 	cf.DBFile = "herbs.db"
+	cf.OrgName = "Herbal Store"
+	cf.cfgPath = path.Dir(os.Args[0])
 	if cfgFile != "" {
 		cf.Load(cfgFile)
 	}

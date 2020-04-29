@@ -10,6 +10,8 @@ import (
 
 	"storekeeper/db"
 
+	"github.com/mdp/qrterminal"
+	"github.com/pquerna/otp/totp"
 	res "github.com/xrfang/go-res"
 )
 
@@ -30,11 +32,16 @@ func main() {
 		fmt.Println(verinfo())
 		return
 	}
+	loadConfig(*conf)
+	db.Initialize(cf.DBFile)
 	if *init {
-		fmt.Println("TODO: initialize configuration")
+		gopts := totp.GenerateOpts{AccountName: "admin", Issuer: cf.OrgName}
+		key, err := totp.Generate(gopts)
+		assert(err)
+		qrterminal.Generate(key.String(), qrterminal.L, os.Stdout)
+		assert(db.UpdateOTPKey("admin", key.Secret()))
 		return
 	}
-	loadConfig(*conf)
 	L = NewLogger(cf.LogPath, 1024*1024, 10)
 	L.SetDebug(cf.DbgMode)
 	policy := res.Verbatim
@@ -42,7 +49,6 @@ func main() {
 		policy = res.OverwriteIfNewer
 	}
 	assert(res.Extract(cf.WebRoot, policy))
-	db.Initialize(cf.DBFile)
 	setupRoutes()
 	svr := http.Server{
 		Addr:         ":" + cf.Port,

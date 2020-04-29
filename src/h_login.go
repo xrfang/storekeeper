@@ -2,6 +2,8 @@ package main
 
 import (
 	"net/http"
+
+	"storekeeper/db"
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -15,11 +17,18 @@ func login(w http.ResponseWriter, r *http.Request) {
 	pass := r.Form.Get("pass")
 	var mesg string
 	if user != "" && pass != "" {
-		//mesg = "incorrect username or password"
-		//TODO: authenticate user
-		setCookie(w, "token", genToken(), 0)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
+		err := db.CheckLogin(user, pass)
+		if err == nil {
+			setCookie(w, "token", genToken(), 0)
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+		if err == db.ErrInvalidOTP {
+			mesg = "用户名或密码错误"
+		} else {
+			L.Log("login: %v", err)
+			mesg = "内部错误"
+		}
 	}
 	if user == "" {
 		user = getCookie(r, "user")

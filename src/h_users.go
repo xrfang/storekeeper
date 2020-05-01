@@ -1,9 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"storekeeper/db"
 )
@@ -17,6 +19,20 @@ type UserInfo struct {
 	AccList map[int]string
 	Created string
 	Error   string
+}
+
+func chkUser(u *db.User) map[string]interface{} {
+	resp := map[string]interface{}{"stat": false}
+	if len(u.Name) > 32 {
+		resp["mesg"] = "姓名过长"
+		return resp
+	}
+	r := regexp.MustCompile(`^[0-9a-z]{6,32}$`)
+	if !r.MatchString(u.Login) {
+		resp["mesg"] = "登录标识必须由6~32个数字字母构成"
+		return resp
+	}
+	return map[string]interface{}{"stat": true, "goto": "/users"}
 }
 
 func users(w http.ResponseWriter, r *http.Request) {
@@ -60,36 +76,23 @@ func users(w http.ResponseWriter, r *http.Request) {
 		cli, _ := strconv.Atoi(r.FormValue("client"))
 		u := db.User{
 			ID:     id,
-			Name:   r.FormValue("name"),
-			Login:  r.FormValue("login"),
+			Name:   strings.TrimSpace(r.FormValue("name")),
+			Login:  strings.ToLower(strings.TrimSpace(r.FormValue("login"))),
 			Client: cli,
 			Memo:   r.FormValue("memo"),
 		}
-		fmt.Fprintf(w, "%+v\n", u)
+		resp := chkUser(&u)
+		if resp["stat"].(bool) {
+			//TODO: 禁止非admin用户设置u.Client
+			err := db.UpdateUser(&u)
+			if err != nil {
+				resp["stat"] = false
+				resp["mesg"] = err.Error()
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
 	case "DELETE":
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	}
 }
-
-/*
-{
-"account": [
-"0"
-],
-"created": [
-"正在创建"
-],
-"id": [
-"0"
-],
-"login": [
-"SomeOne"
-],
-"memo": [
-"About that person"
-],
-"name": [
-"路人甲"
-]
-}
-*/

@@ -62,3 +62,29 @@ func ListUsers(account int) (users []User, err error) {
 	err = db.Select(&users, qry)
 	return
 }
+
+func UpdateUser(u *User) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	if u.ID == 1 {
+		return //不允许更改1号用户（admin）的信息
+	}
+	if u.ID == 0 {
+		db.MustExec(`INSERT INTO user (name,login,client,memo) VALUES
+		    (?,?,?,?)`, u.Name, u.Login, u.Client, u.Memo)
+	} else {
+		cmd := `UPDATE user SET name=?,login=?,memo=?`
+		args := []interface{}{u.Name, u.Login, u.Memo}
+		if u.Client >= 0 {
+			cmd += `,client=?`
+			args = append(args, u.Client)
+		}
+		cmd += ` WHERE id=?`
+		args = append(args, u.ID)
+		db.MustExec(cmd, args...)
+	}
+	return
+}

@@ -21,7 +21,7 @@
   </div>
 </nav>
 <div class="container" style="padding-top:1em">
-  <form method="POST" action="/users">
+  <form onsubmit="doSubmit()" id="uedit">
     <input type="hidden" name="id" value="{{.ID}}" />
     <div class="row" style="margin-bottom: 0.8rem">
       <div class="col">
@@ -32,7 +32,7 @@
       <div class="col">
         <label for="login">登录标识</label>
         <input type="text" class="form-control" name="login" value="{{.Login}}" />
-        <small class="form-text text-muted">手机号、邮箱地址等</small>
+        <small class="form-text text-muted">例如手机号</small>
       </div>
     </div>
     <div class="row" style="margin-bottom: 0.8rem">
@@ -64,7 +64,7 @@
     </div>
     <div class="row" style="margin-top: 1.5rem">
       <div class="col" style="text-align:center">
-        <input type=submit class="btn btn-success" value=" 保   存 " />
+        <input type=button onclick="doSubmit()" class="btn btn-success" value=" 保   存 " />
         &nbsp; &nbsp;
         <input type=button class="btn btn-secondary" value="重置密钥" />
       </div>
@@ -72,6 +72,39 @@
   </form>
 </div>
 <script>
+  function doSubmit() {
+    $.ajax({
+      url: window.location.href,
+      cache: false,
+      contentType: 'application/x-www-form-urlencoded',
+      type: 'POST',
+      data : $('#uedit').serialize(),
+      complete: function(xhr){
+        if (xhr.status != 200) {
+          toast("操作失败", xhr.responseText, 'error')
+          return
+        }
+        var res = xhr.responseJSON
+        if (res.stat) {
+          $.toast({
+            heading: '操作成功',
+            text: '用户信息已保存',
+            icon: 'success',
+            position: 'mid-center',
+            loader: false,
+            textAlign: 'left',
+            allowToastClose: false,
+            showHideTransition: 'fade',
+            afterHidden: function () {
+              window.location.href = res.goto
+            }
+          })
+          return
+        }
+        toast("操作失败", res.mesg, 'error')
+      },
+    });
+  }
   $(document).ready(function () {
     console.log("ready")
   })

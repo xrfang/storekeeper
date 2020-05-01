@@ -1,0 +1,79 @@
+{{define "body"}} {{template "header"}}
+<nav class="navbar navbar-expand navbar-dark bg-dark">
+  <a class="navbar-brand" href="#"><img src="/imgs/nav_title.png"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMenu">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarMenu">
+    <a class="navbar-brand" href="#">用户管理</a>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+          <i class="fas fa-user"></i>&nbsp;<span id="user"></span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
+          <a class="dropdown-item" href="/users"><i class="fas fa-user-cog"></i>&nbsp;用户管理</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/logout"><i class="fas fa-door-open"></i>&nbsp;退出</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container" style="padding-top:1em">
+  <form method="POST" action="/users">
+    <input type="hidden" name="id" value="{{.ID}}" />
+    <div class="row" style="margin-bottom: 0.8rem">
+      <div class="col">
+        <label for="name">姓名</label>
+        <input type="text" class="form-control" name="name" value="{{.Name}}" />
+        <small class="form-text text-muted">真实姓名或昵称</small>
+      </div>
+      <div class="col">
+        <label for="login">登录标识</label>
+        <input type="text" class="form-control" name="login" value="{{.Login}}" />
+        <small class="form-text text-muted">手机号、邮箱地址等</small>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom: 0.8rem">
+      <div class="col">
+        <label for="acctype">账号类型</label>
+        <select class="form-control" name="account">
+          <option value="0">主账号</option>
+          {{range $id, $name := .AccList}}
+            <option value="{{$id}}">从属于：{{$name}}</option>
+          {{end}}
+        </select>
+        <small class="form-text text-muted">附属账号不能登录本系统</small>
+      </div>
+      <div class="col">
+        <label for="created">创建日期</label>
+        <input type="text" readonly class="form-control" name="created" value="{{.Created}}">
+      </div>
+    </div>  
+    <div class="row" style="margin-bottom: 0.8rem">
+      <div class="col">
+        <label for="memo">备注</label>
+        <textarea class="form-control" style="width:100%;height:120;resize:none"
+          name="memo">{{.Memo}}</textarea>
+        <small class="form-text text-muted">快递地址等</small>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom: 0.8rem">
+        <div class="col" style="text-align:center;color:red">{{.Error}}</div>
+    </div>
+    <div class="row" style="margin-top: 1.5rem">
+      <div class="col" style="text-align:center">
+        <input type=submit class="btn btn-success" value=" 保   存 " />
+        &nbsp; &nbsp;
+        <input type=button class="btn btn-secondary" value="重置密钥" />
+      </div>
+    </div>    
+  </form>
+</div>
+<script>
+  $(document).ready(function () {
+    console.log("ready")
+  })
+</script>
+{{template "footer"}} {{end}}

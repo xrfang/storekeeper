@@ -26,25 +26,36 @@
       <tr>
         <th>姓名</th>
         <th>登录标识</th>
-        <th class="op" style="vertical-align:middle"><i class="fas fa-cog"></i></th>
+        <th class="op dropdown" style="vertical-align:middle">
+          <i class="fas fa-cog dropdown-toggle" data-toggle="dropdown"></i>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item" href="/users/new">添加用户</a>
+          </div>
+        </th>
       </tr>
     </thead>
     <tbody id="list"></tbody>
+  </table>
 </div>
 <script>
   $(document).ready(function () {
     $.get("/api/users", function (e) {
-      console.log(e)
       $('#list').empty()
       $.each(e, function (_, u) {
         var clr = (u.client) ? "gray" : "green"
         $('#list').append(`<tr style="color:${clr}"><td>${u.name}</td><td>${u.login}</td>
-           <td class="op" style="vertical-align:middle" id="${u.id}"></td></tr>`)
+           <td class="op dropdown" style="vertical-align:middle" id="${u.id}"></td></tr>`)
       })
       $('#tbl tr').hover(function () {
         var id = $(this).find('.op').attr('id')
         if (typeof (id) != 'undefined')
-          $(this).find('.op').html(`<i class="fas fa-cog"></i>`)
+          $(this).find('.op').html(`
+          <i class="fas fa-cog dropdown-toggle" data-toggle="dropdown"></i>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item" href="#">编辑用户信息</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#">删除用户</a>
+          </div>`)
       }, function () {
         var id = $(this).find('.op').attr('id')
         if (typeof (id) != 'undefined')

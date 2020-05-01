@@ -8,10 +8,10 @@ import (
 )
 
 func apiUsers(w http.ResponseWriter, r *http.Request) {
-	// if !validate(r) {
-	// http.Error(w, "Unauthorized", http.StatusUnauthorized)
-	// return
-	// }
+	if !validate(r) {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	switch r.Method {
 	case "GET":
 		users, err := db.ListUsers(1)

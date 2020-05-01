@@ -9,7 +9,7 @@
     <ul class="navbar-nav ml-auto">
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
-          <i class="fas fa-user"></i>&nbsp;<span id="user"></span>
+          <i class="fas fa-bars"></i>
         </a>
         <div class="dropdown-menu dropdown-menu-right">
           <a class="dropdown-item" href="/"><i class="fas fa-home"></i>&nbsp;返回主菜单</a>
@@ -45,7 +45,7 @@
     $.get("/api/users", function (e) {
       $('#list').empty()
       $.each(e, function (_, u) {
-        var clr = (u.client) ? "gray" : "green"
+        var clr = (u.id == {{.ID}}) ? "red" : ((u.client) ? "gray" : "green")
         $('#list').append(`<tr style="color:${clr}"><td>${u.name}</td><td>${u.login}</td>
            <td class="op dropdown" style="vertical-align:middle" id="${u.id}"></td></tr>`)
       })

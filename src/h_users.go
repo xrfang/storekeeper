@@ -53,7 +53,7 @@ func users(w http.ResponseWriter, r *http.Request) {
 			ids = r.URL.Path[7:]
 		}
 		if ids == "" {
-			renderTemplate(w, "users.html", nil)
+			renderTemplate(w, "users.html", struct{ID int}{uid})
 		} else {
 			id, _ := strconv.Atoi(ids)
 			var ui UserInfo

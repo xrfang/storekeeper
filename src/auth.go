@@ -39,12 +39,12 @@ func (ts *tokenStore) Init() {
 		for {
 			time.Sleep(time.Minute)
 			ts.Lock()
-			defer ts.Unlock()
 			for s, t := range ts.store {
 				if t.Expired() {
 					delete(ts.store, s)
 				}
 			}
+			ts.Unlock()
 		}
 	}()
 }
@@ -70,6 +70,7 @@ func (ts *tokenStore) Validate(token string) (ok bool, id int) {
 	if t == nil {
 		return false, 0
 	}
+	t.upd = time.Now()
 	return true, t.id
 }
 

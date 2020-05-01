@@ -54,6 +54,12 @@ func CheckLogin(login, otp string) (int, error) {
 	return 0, ErrInvalidOTP
 }
 
+func GetUser(id int) (*User, error) {
+	var u User
+	err := db.Get(&u, `SELECT * FROM user WHERE id=?`, id)
+	return &u, err
+}
+
 func ListUsers(account int) (users []User, err error) {
 	qry := `SELECT * FROM user`
 	if account != 1 {
@@ -61,6 +67,12 @@ func ListUsers(account int) (users []User, err error) {
 	}
 	err = db.Select(&users, qry)
 	return
+}
+
+func GetPrimaryUsers() ([]User, error) {
+	var us []User
+	err := db.Select(&us, `SELECT id,name from user WHERE id>1 AND client=0`)
+	return us, err
 }
 
 func UpdateUser(u *User) (err error) {

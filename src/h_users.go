@@ -15,8 +15,8 @@ type UserInfo struct {
 	Name    string
 	Login   string
 	Memo    string
-	AccID   int
-	AccList map[int]string
+	Client  int
+	AccList []db.User
 	Created string
 	Error   string
 }
@@ -46,27 +46,43 @@ func users(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	_ = uid
 	switch r.Method {
 	case "GET":
-		ids := r.URL.Path[6:]
+		var ids string
+		if len(r.URL.Path) > 7 {
+			ids = r.URL.Path[7:]
+		}
 		if ids == "" {
 			renderTemplate(w, "users.html", nil)
 		} else {
-			err := r.URL.Query().Get("err")
 			id, _ := strconv.Atoi(ids)
-			ui := UserInfo{
-				ID:    id,
-				Name:  "路人甲",
-				Login: "SomeOne",
-				AccID: 0,
-				AccList: map[int]string{
-					2: "陈萌慧",
-					3: "石劲敏",
-				},
-				Memo:    "About that person",
-				Created: "正在创建",
-				Error:   err,
+			var ui UserInfo
+			if id == 0 {
+				if uid != 1 {
+					ui.Client = uid
+				}
+			} else {
+				u, err := db.GetUser(id)
+				if err != nil {
+					ui.Error = err.Error()
+				} else {
+					ui = UserInfo{
+						ID:      u.ID,
+						Name:    u.Name,
+						Login:   u.Login,
+						Client:  u.Client,
+						Memo:    u.Memo,
+						Created: u.Created.Format("2006-01-02"),
+					}
+					if uid == 1 {
+						pu, err := db.GetPrimaryUsers()
+						if err != nil {
+							ui.Error = err.Error()
+						} else {
+							ui.AccList = pu
+						}
+					}
+				}
 			}
 			renderTemplate(w, "usered.html", ui)
 		}
@@ -83,7 +99,9 @@ func users(w http.ResponseWriter, r *http.Request) {
 		}
 		resp := chkUser(&u)
 		if resp["stat"].(bool) {
-			//TODO: 禁止非admin用户设置u.Client
+			if uid != 1 {
+				u.Client = -1 //禁止非admin用户设置u.Client
+			}
 			err := db.UpdateUser(&u)
 			if err != nil {
 				resp["stat"] = false

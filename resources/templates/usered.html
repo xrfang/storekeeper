@@ -30,7 +30,7 @@
         <small class="form-text text-muted">真实姓名或昵称</small>
       </div>
       <div class="col">
-        <label for="login">登录标识</label>
+        <label for="login">用户标识</label>
         <input type="text" class="form-control" name="login" value="{{.Login}}" />
         <small class="form-text text-muted">例如手机号</small>
       </div>
@@ -38,10 +38,12 @@
     <div class="row" style="margin-bottom: 0.8rem">
       <div class="col">
         <label for="acctype">账号类型</label>
-        <select class="form-control" name="account">
+        <select class="form-control" name="client">
           <option value="0">主账号</option>
-          {{range $id, $name := .AccList}}
-            <option value="{{$id}}">从属于：{{$name}}</option>
+          {{if ne .Client 0}}
+          {{range $pu := .AccList}}
+            <option value="{{$pu.ID}}">从属于：{{$pu.Name}}</option>
+          {{end}}
           {{end}}
         </select>
         <small class="form-text text-muted">附属账号不能登录本系统</small>

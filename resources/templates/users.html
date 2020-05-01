@@ -38,6 +38,9 @@
   </table>
 </div>
 <script>
+  function delUser(id) {
+    console.log("TODO: delete user with confirmation...", id)
+  }
   $(document).ready(function () {
     $.get("/api/users", function (e) {
       $('#list').empty()
@@ -52,7 +55,7 @@
           $(this).find('.op').html(`
           <i class="fas fa-cog dropdown-toggle" data-toggle="dropdown"></i>
           <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item" href="#">编辑用户信息</a>
+            <a class="dropdown-item" href="/users/${id}">设置用户</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="#">删除用户</a>
           </div>`)

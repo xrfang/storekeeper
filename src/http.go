@@ -35,6 +35,9 @@ func renderTemplate(w http.ResponseWriter, tpl string, args interface{}) {
 		"ver": func() string {
 			return "V" + _G_REVS + "." + _G_HASH
 		},
+		"org": func() string {
+			return cf.OrgName
+		},
 	}
 	tDir := path.Join(cf.WebRoot, "templates")
 	t, err := template.New("body").Funcs(helper).ParseFiles(path.Join(tDir, tpl))

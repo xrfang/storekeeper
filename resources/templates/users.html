@@ -51,13 +51,14 @@
       })
       $('#tbl tr').hover(function () {
         var id = $(this).find('.op').attr('id')
+        var del = (id == "{{.ID}}" || id == "1") ? "" : `<div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#">删除用户</a>`
         if (typeof (id) != 'undefined')
           $(this).find('.op').html(`
           <i class="fas fa-cog dropdown-toggle" data-toggle="dropdown"></i>
           <div class="dropdown-menu dropdown-menu-right">
             <a class="dropdown-item" href="/users/${id}">设置用户</a>
-            <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#">删除用户</a>
+            ${del}
           </div>`)
       }, function () {
         var id = $(this).find('.op').attr('id')

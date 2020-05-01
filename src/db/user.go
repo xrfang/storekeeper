@@ -40,18 +40,18 @@ func UpdateOTPKey(login, key string) error {
 	return err
 }
 
-func CheckLogin(login, otp string) error {
+func CheckLogin(login, otp string) (int, error) {
 	u, err := findUser(login)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = ErrInvalidOTP
 		}
-		return err
+		return 0, err
 	}
 	if totp.Validate(otp, u.OTPKey) {
-		return nil
+		return u.ID, nil
 	}
-	return ErrInvalidOTP
+	return 0, ErrInvalidOTP
 }
 
 func ListUsers(account int) (users []User, err error) {

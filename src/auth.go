@@ -2,7 +2,6 @@ package main
 
 import (
 	"math/rand"
-	"net/http"
 	"sync"
 	"time"
 )
@@ -17,25 +16,65 @@ func uuid(L int) string {
 	return string(buf)
 }
 
-var T sync.Map
+type token struct {
+	t   string
+	id  int
+	upd time.Time
+}
 
-func genToken() string {
-	now := time.Now()
-	T.Range(func(key, val interface{}) bool {
-		if time.Since(val.(time.Time)).Seconds() > 3600 {
-			T.Delete(key) //token固定1小时有效
+func (t *token) Expired() bool {
+	return time.Since(t.upd).Seconds() > 1800
+}
+
+type tokenStore struct {
+	store map[string]*token
+	sync.Mutex
+}
+
+func (ts *tokenStore) Init() {
+	ts.Lock()
+	defer ts.Unlock()
+	ts.store = make(map[string]*token)
+	go func() {
+		for {
+			time.Sleep(time.Minute)
+			ts.Lock()
+			defer ts.Unlock()
+			for s, t := range ts.store {
+				if t.Expired() {
+					delete(ts.store, s)
+				}
+			}
 		}
-		return true
-	})
+	}()
+}
+
+func (ts *tokenStore) SignIn(id int) string {
+	ts.Lock()
+	defer ts.Unlock()
 	tok := uuid(16)
-	T.Store(tok, now)
+	ts.store[tok] = &token{t: tok, id: id, upd: time.Now()}
 	return tok
 }
 
-func validate(r *http.Request) bool {
-	created, ok := T.Load(getCookie(r, "token"))
-	if !ok {
-		return false
+func (ts *tokenStore) SignOut(token string) {
+	ts.Lock()
+	defer ts.Unlock()
+	delete(ts.store, token)
+}
+
+func (ts *tokenStore) Validate(token string) (ok bool, id int) {
+	ts.Lock()
+	defer ts.Unlock()
+	t := ts.store[token]
+	if t == nil {
+		return false, 0
 	}
-	return time.Since(created.(time.Time)).Seconds() < 3600
+	return true, t.id
+}
+
+var T tokenStore
+
+func init() {
+	T.Init()
 }

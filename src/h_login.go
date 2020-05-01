@@ -17,9 +17,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 	pass := r.Form.Get("pass")
 	var mesg string
 	if user != "" && pass != "" {
-		err := db.CheckLogin(user, pass)
+		id, err := db.CheckLogin(user, pass)
 		if err == nil {
-			setCookie(w, "token", genToken(), 0)
+			setCookie(w, "token", T.SignIn(id), 0)
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}

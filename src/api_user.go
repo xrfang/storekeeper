@@ -8,10 +8,12 @@ import (
 )
 
 func apiUsers(w http.ResponseWriter, r *http.Request) {
-	if !validate(r) {
+	ok, uid := T.Validate(getCookie(r, "token"))
+	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	_ = uid //TODO...
 	switch r.Method {
 	case "GET":
 		users, err := db.ListUsers(1)

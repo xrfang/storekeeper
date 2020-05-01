@@ -25,10 +25,12 @@ func users(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
 		}
 	}()
-	if !validate(r) {
+	ok, uid := T.Validate(getCookie(r, "token"))
+	if !ok {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
+	_ = uid
 	switch r.Method {
 	case "GET":
 		ids := r.URL.Path[6:]

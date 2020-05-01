@@ -10,7 +10,8 @@ func home(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, path.Join(cf.WebRoot, r.URL.Path))
 		return
 	}
-	if !validate(r) {
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}

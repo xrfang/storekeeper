@@ -37,12 +37,14 @@
     </div>
     <div class="row" style="margin-bottom: 0.8rem">
       <div class="col">
-        <label for="acctype">账号类型</label>
-        <select class="form-control" name="client">
-          <option value="0">主账号</option>
-          {{if ne .Client 0}}
+        <label for="client">账号类型</label>
+        <select class="form-control" id="client" name="client">
+          {{if eq .Client 0}}
+            <option value="0">主账号</option>
+          {{end}}
+          {{if or (ne .Client 0) (eq .ID 0)}}
           {{range $pu := .AccList}}
-            <option value="{{$pu.ID}}">从属于：{{$pu.Name}}</option>
+            <option value="{{$pu.ID}}">从属于{{$pu.Name}}</option>
           {{end}}
           {{end}}
         </select>
@@ -67,8 +69,10 @@
     <div class="row" style="margin-top: 1.5rem">
       <div class="col" style="text-align:center">
         <input type=button onclick="doSubmit()" class="btn btn-success" value=" 保   存 " />
+        {{if eq .Client 0}}
         &nbsp; &nbsp;
-        <input type=button class="btn btn-secondary" value="重置密钥" />
+        <a class="btn btn-secondary" href="/otp/{{.ID}}">重置密钥</a>
+        {{end}}
       </div>
     </div>    
   </form>
@@ -108,7 +112,7 @@
     });
   }
   $(document).ready(function () {
-    console.log("ready")
+    $('#client').val('{{.Client}}')
   })
 </script>
 {{template "footer"}} {{end}}

@@ -1,0 +1,35 @@
+{{define "body"}} {{template "header"}}
+<nav class="navbar navbar-expand navbar-dark bg-dark">
+  <a class="navbar-brand" href="#"><img src="/imgs/nav_title.png"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMenu">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarMenu">
+    <a class="navbar-brand" href="#">用户管理</a>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+          <i class="fas fa-user"></i>&nbsp;<span id="user"></span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
+          <a class="dropdown-item" href="/users"><i class="fas fa-user-cog"></i>&nbsp;用户管理</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/logout"><i class="fas fa-door-open"></i>&nbsp;退出</a>
+        </div>
+      </li>        
+    </ul>    
+  </div>
+</nav>
+<div class="container" style="text-align: center;padding-top:20px">
+<div class="card">
+<div class="card-header">
+    {{.Name}}的登录密钥
+</div>
+<div class="card-body">
+  <img src="/imgs/qr.png" style="width:200;height:200" />
+  <p>请用手机上的动态密码管理器（如FreeOTP）扫描该二维码</p>
+  <a href="/users" style="margin-bottom:0.5rem" class="btn btn-success">返回用户管理</a>
+</div>
+</div>
+</div>
+{{template "footer"}} {{end}}

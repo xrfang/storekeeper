@@ -37,9 +37,28 @@
     <tbody id="list"></tbody>
   </table>
 </div>
+<div class="modal fade" id="deluser" tabindex="-1" role="dialog">
+  <input type=hidden id="uid" />
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">请确认</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>用户删除后无法恢复。另外，若用户存在交易记录则无法删除。</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-danger" data-dismiss="modal">执行删除</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
   function delUser(id) {
-    console.log("TODO: delete user with confirmation...", id)
+    $('#deluser #uid').val(id)
+    $('#deluser').modal('show')
   }
   $(document).ready(function () {
     $.get("/api/users", function (e) {
@@ -52,7 +71,7 @@
       $('#tbl tr').hover(function () {
         var id = $(this).find('.op').attr('id')
         var del = (id == "{{.ID}}" || id == "1") ? "" : `<div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#">删除用户</a>`
+            <a class="dropdown-item" href="javascript:delUser(${id})">删除用户</a>`
         if (typeof (id) != 'undefined')
           $(this).find('.op').html(`
           <i class="fas fa-cog dropdown-toggle" data-toggle="dropdown"></i>
@@ -64,6 +83,34 @@
         var id = $(this).find('.op').attr('id')
         if (typeof (id) != 'undefined')
           $(this).find('.op').text("")
+      })
+      $('#deluser').on('hide.bs.modal', function (e) {
+        var btn = $(document.activeElement)
+        if (btn.hasClass("btn-danger")) {
+          var id = $('#deluser #uid').val()
+          $.ajax({
+            url: `/users/${id}`,
+            type: 'DELETE',
+            complete: function(xhr) {
+              if (xhr.status != 200)
+                toast("操作失败", xhr.responseText, 'error')
+              else
+                $.toast({
+                  heading: '操作成功',
+                  text: '用户已被删除',
+                  icon: 'success',
+                  position: 'mid-center',
+                  loader: false,
+                  textAlign: 'left',
+                  allowToastClose: false,
+                  showHideTransition: 'fade',
+                  afterHidden: function () {
+                    window.location.reload(true) 
+                  }
+                })
+            }
+          })
+        }
       })
     })
   })

@@ -102,3 +102,9 @@ func UpdateUser(u *User) (err error) {
 	}
 	return
 }
+
+func DeleteUser(id int) error {
+	//TODO: 添加外部制约，凡是有交易记录的不可删除
+	_, err := db.Exec(`DELETE FROM user WHERE id=?`, id)
+	return err
+}

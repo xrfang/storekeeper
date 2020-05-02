@@ -89,8 +89,8 @@
         <p>重置密钥后原有的动态密码将失效，需重新扫码后才能登录。</p>
       </div>
       <div class="modal-footer">
-        <button type="button" id="cancel" class="btn btn-secondary" data-dismiss="modal">取消</button>
-        <button type="button" id="proceed" class="btn btn-success" data-dismiss="modal">执行重置</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-success" data-dismiss="modal">执行重置</button>
       </div>
     </div>
   </div>
@@ -107,7 +107,7 @@
       contentType: 'application/x-www-form-urlencoded',
       type: 'POST',
       data : $('#uedit').serialize(),
-      complete: function(xhr){
+      complete: function(xhr) {
         if (xhr.status != 200) {
           toast("操作失败", xhr.responseText, 'error')
           return

@@ -61,7 +61,7 @@ func users(w http.ResponseWriter, r *http.Request) {
 			ids = r.URL.Path[7:]
 		}
 		if ids == "" {
-			renderTemplate(w, "users.html", struct{ID int}{uid})
+			renderTemplate(w, "users.html", struct{ ID int }{uid})
 		} else {
 			id, _ := strconv.Atoi(ids)
 			var ui UserInfo
@@ -123,6 +123,27 @@ func users(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 	case "DELETE":
-		http.Error(w, "Not Implemented", http.StatusNotImplemented)
+		var ids string
+		if len(r.URL.Path) > 7 {
+			ids = r.URL.Path[7:]
+		}
+		id, _ := strconv.Atoi(ids)
+		if id <= 0 {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+		if id == 1 {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		if uid != 1 {
+			u, err := db.GetUser(id)
+			asssert(err)
+			if u.Client != uid {
+				http.Error(w, "Forbidden", http.StatusForbidden)
+				return
+			}
+		}
+		assert(db.DeleteUser(id))
 	}
 }

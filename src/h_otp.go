@@ -54,7 +54,7 @@ func otpShow(w http.ResponseWriter, r *http.Request) {
 	be := base64.NewEncoder(base64.StdEncoding, &buf)
 	png.Encode(be, qrCode)
 	be.Close()
-	renderTemplate(w, "otp.html", struct{ 
+	renderTemplate(w, "otp.html", struct {
 		Name string
 		Code string
 	}{u.Name, buf.String()})

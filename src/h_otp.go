@@ -46,6 +46,7 @@ func otpShow(w http.ResponseWriter, r *http.Request) {
 	assert(err)
 	key, err := otpGenKey(u.Login)
 	assert(err)
+	assert(db.UpdateOTPKey(u.Login, key.Secret()))
 	qrCode, _ := qr.Encode(key.String(), qr.M, qr.Auto)
 	qrCode, _ = barcode.Scale(qrCode, 200, 200)
 	var buf bytes.Buffer

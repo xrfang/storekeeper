@@ -62,45 +62,50 @@ func users(w http.ResponseWriter, r *http.Request) {
 		}
 		if ids == "" {
 			renderTemplate(w, "users.html", struct{ ID int }{uid})
-		} else {
-			id, _ := strconv.Atoi(ids)
-			var ui UserInfo
-			if id == 0 {
-				if uid != 1 {
-					ui.Client = uid
-				}
+			return
+		}
+		var ui UserInfo
+		pu, err := db.GetPrimaryUsers()
+		if err != nil {
+			ui.Error = err.Error()
+			renderTemplate(w, "usered.html", ui)
+			return
+		}
+		id, _ := strconv.Atoi(ids)
+		if id > 0 {
+			u, err := db.GetUser(id)
+			if err != nil {
+				ui.Error = err.Error()
 			} else {
-				u, err := db.GetUser(id)
-				if err != nil {
-					ui.Error = err.Error()
-				} else {
-					ui = UserInfo{
-						ID:      u.ID,
-						Name:    u.Name,
-						Login:   u.Login,
-						Client:  u.Client,
-						Memo:    u.Memo,
-						Created: u.Created.Format("2006-01-02"),
-					}
-					pu, err := db.GetPrimaryUsers()
-					if err == nil {
-						if uid == 1 {
-							ui.AccList = pu
-						} else {
-							for _, p := range pu {
-								if p.ID == u.Client {
-									ui.AccList = []db.User{p}
-									break
-								}
-							}
-						}
-					} else {
-						ui.Error = err.Error()
+				ui = UserInfo{
+					ID:      u.ID,
+					Name:    u.Name,
+					Login:   u.Login,
+					Client:  u.Client,
+					Memo:    u.Memo,
+					Created: u.Created.Format("2006-01-02"),
+				}
+			}
+		}
+		if ui.ID == 0 { //新增用户
+			if uid != 1 {
+				ui.Client = uid
+				for _, p := range pu {
+					if p.ID == uid {
+						ui.AccList = []db.User{p}
+						break
 					}
 				}
 			}
-			renderTemplate(w, "usered.html", ui)
+		} else { //编辑现有用户
+			for _, p := range pu {
+				if p.ID == ui.Client {
+					ui.AccList = []db.User{p}
+					break
+				}
+			}
 		}
+		renderTemplate(w, "usered.html", ui)
 	case "POST":
 		assert(r.ParseForm())
 		id, _ := strconv.Atoi(r.FormValue("id"))

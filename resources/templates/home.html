@@ -22,6 +22,7 @@
           <i class="fas fa-bars"></i>
         </a>
         <div class="dropdown-menu dropdown-menu-right">
+          <a class="dropdown-item" href="/sku"><i class="fas fa-warehouse"></i>&nbsp;货品管理</a>
           <a class="dropdown-item" href="/users"><i class="fas fa-user-cog"></i>&nbsp;用户管理</a>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/logout"><i class="fas fa-door-open"></i>&nbsp;退出</a>
@@ -30,7 +31,20 @@
     </ul>    
   </div>
 </nav>
+<div class="container" style="padding-top:1rem">
+  <div class="input-group mb-2 mr-sm-2">
+    <input type="text" class="form-control" id="term" />
+    <div class="input-group-append">
+      <div class="input-group-text"><i style="cursor:pointer" onclick="doSearch()" class="fas fa-search"></i></div>
+    </div>
+  </div>
+</div>
 <script>
+function doSearch() {
+  var term = $('#term').val()
+  console.log("search:", term)
+}
+
 $(document).ready(function() {
   //TODO: application logic here
 })

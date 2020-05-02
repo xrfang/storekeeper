@@ -10,6 +10,8 @@ func setupRoutes() {
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/logout", logout)
 	http.HandleFunc("/otp/", otpShow)
+	http.HandleFunc("/sku", sku)
+	http.HandleFunc("/sku/", sku)
 	http.HandleFunc("/users", users)
 	http.HandleFunc("/users/", users)
 }

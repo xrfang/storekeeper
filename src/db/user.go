@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 )
 
@@ -40,7 +41,7 @@ func UpdateOTPKey(login, key string) error {
 	return err
 }
 
-func CheckLogin(login, otp string) (int, error) {
+func CheckLogin(login, code string) (int, error) {
 	u, err := findUser(login)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -48,10 +49,19 @@ func CheckLogin(login, otp string) (int, error) {
 		}
 		return 0, err
 	}
-	if totp.Validate(otp, u.OTPKey) {
-		return u.ID, nil
+	ok, err := totp.ValidateCustom(code, u.OTPKey, time.Now(), totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    6,
+		Algorithm: otp.AlgorithmSHA256,
+	})
+	if !ok {
+		if err == nil {
+			err = ErrInvalidOTP
+		}
+		return 0, err
 	}
-	return 0, ErrInvalidOTP
+	return u.ID, nil
 }
 
 func GetUser(id int) (*User, error) {

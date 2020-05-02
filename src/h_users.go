@@ -138,7 +138,7 @@ func users(w http.ResponseWriter, r *http.Request) {
 		}
 		if uid != 1 {
 			u, err := db.GetUser(id)
-			asssert(err)
+			assert(err)
 			if u.Client != uid {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return

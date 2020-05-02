@@ -71,13 +71,35 @@
         <input type=button onclick="doSubmit()" class="btn btn-success" value=" 保   存 " />
         {{if and (eq .Client 0) (ne .ID 0)}}
         &nbsp; &nbsp;
-        <a class="btn btn-secondary" href="/otp/{{.ID}}">重置密钥</a>
+        <a class="btn btn-secondary" href="javascript:resetOTP({{.ID}})">重置密钥</a>
         {{end}}
       </div>
     </div>    
   </form>
 </div>
+<div class="modal fade" id="rstotp" tabindex="-1" role="dialog">
+  <input type=hidden id="uid" />
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">请确认</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>重置密钥后原有的动态密码将失效，需重新扫码后才能登录。</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancel" class="btn btn-secondary" data-dismiss="modal">取消</button>
+        <button type="button" id="proceed" class="btn btn-success" data-dismiss="modal">执行重置</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
+  function resetOTP(id) {
+    $('#rstotp #uid').val(id)
+    $('#rstotp').modal('show')
+  }
   function doSubmit() {
     $.ajax({
       url: window.location.href,
@@ -113,6 +135,13 @@
   }
   $(document).ready(function () {
     $('#client').val('{{.Client}}')
+    $('#rstotp').on('hide.bs.modal', function (e) {
+      var btn = $(document.activeElement)
+      if (btn.hasClass("btn-success")) {
+        var id = $('#rstotp #uid').val()
+        window.location.href = `/otp/${id}`
+      }
+    })
   })
 </script>
 {{template "footer"}} {{end}}

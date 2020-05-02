@@ -32,7 +32,11 @@ func chkUser(u *db.User) map[string]interface{} {
 		resp["mesg"] = "登录标识必须由6~32个数字字母构成"
 		return resp
 	}
-	return map[string]interface{}{"stat": true, "goto": "/users"}
+	redir := "/users"
+	if u.ID == 0 {
+		redir = "/otp/"
+	}
+	return map[string]interface{}{"stat": true, "goto": redir}
 }
 
 func users(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +107,11 @@ func users(w http.ResponseWriter, r *http.Request) {
 				u.Client = -1 //禁止非admin用户设置u.Client
 			}
 			err := db.UpdateUser(&u)
-			if err != nil {
+			if err == nil {
+				if strings.HasPrefix(resp["goto"].(string), "/otp/") {
+					resp["goto"] = resp["goto"].(string) + strconv.Itoa(u.ID)
+				}
+			} else {
 				resp["stat"] = false
 				resp["mesg"] = err.Error()
 			}

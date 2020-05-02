@@ -9,7 +9,7 @@ func setupRoutes() {
 	http.HandleFunc("/api/users", apiUsers)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/logout", logout)
-	http.HandleFunc("/otp/", otp)
+	http.HandleFunc("/otp/", otpShow)
 	http.HandleFunc("/users", users)
 	http.HandleFunc("/users/", users)
 }

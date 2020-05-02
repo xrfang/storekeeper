@@ -11,7 +11,6 @@ import (
 	"storekeeper/db"
 
 	"github.com/mdp/qrterminal"
-	"github.com/pquerna/otp/totp"
 	res "github.com/xrfang/go-res"
 )
 
@@ -35,8 +34,7 @@ func main() {
 	loadConfig(*conf)
 	db.Initialize(cf.DBFile)
 	if *init {
-		gopts := totp.GenerateOpts{AccountName: "admin", Issuer: cf.OrgName}
-		key, err := totp.Generate(gopts)
+		key, err := otpGenKey("admin")
 		assert(err)
 		qrterminal.Generate(key.String(), qrterminal.L, os.Stdout)
 		assert(db.UpdateOTPKey("admin", key.Secret()))

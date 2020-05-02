@@ -85,8 +85,10 @@ func UpdateUser(u *User) (err error) {
 		return //不允许更改1号用户（admin）的信息
 	}
 	if u.ID == 0 {
-		db.MustExec(`INSERT INTO user (name,login,client,memo) VALUES
-		    (?,?,?,?)`, u.Name, u.Login, u.Client, u.Memo)
+		res := db.MustExec(`INSERT INTO user (name,login,client,memo) VALUES
+			(?,?,?,?)`, u.Name, u.Login, u.Client, u.Memo)
+		id, _ := res.LastInsertId()
+		u.ID = int(id)
 	} else {
 		cmd := `UPDATE user SET name=?,login=?,memo=?`
 		args := []interface{}{u.Name, u.Login, u.Memo}

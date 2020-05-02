@@ -20,16 +20,22 @@
     </ul>    
   </div>
 </nav>
-<div class="container" style="text-align: center;padding-top:20px">
+<div class="container" style="max-width:500;text-align:center;padding-top:20px">
 <div class="card">
 <div class="card-header">
     {{.Name}}的登录密钥
 </div>
 <div class="card-body">
-  <img src="/imgs/qr.png" style="width:200;height:200" />
-  <p>请用手机上的动态密码管理器（如FreeOTP）扫描该二维码</p>
+  <img id=qrimg style="width:200;height:200" />
+  <p style="margin:1rem">请用动态密码管理器（如FreeOTP）扫描该二维码</p>
   <a href="/users" style="margin-bottom:0.5rem" class="btn btn-success">返回用户管理</a>
 </div>
 </div>
 </div>
+<script>
+var qrcode = "{{.Code}}"
+$(document).ready(function () {
+  $('#qrimg').attr('src', qrcode)
+})
+</script>
 {{template "footer"}} {{end}}

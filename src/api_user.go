@@ -13,10 +13,9 @@ func apiUsers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	_ = uid //TODO...
 	switch r.Method {
 	case "GET":
-		users, err := db.ListUsers(1)
+		users, err := db.ListUsers(uid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -82,13 +82,20 @@ func users(w http.ResponseWriter, r *http.Request) {
 						Memo:    u.Memo,
 						Created: u.Created.Format("2006-01-02"),
 					}
-					if uid == 1 {
-						pu, err := db.GetPrimaryUsers()
-						if err != nil {
-							ui.Error = err.Error()
-						} else {
+					pu, err := db.GetPrimaryUsers()
+					if err == nil {
+						if uid == 1 {
 							ui.AccList = pu
+						} else {
+							for _, p := range pu {
+								if p.ID == u.Client {
+									ui.AccList = []db.User{p}
+									break
+								}
+							}
 						}
+					} else {
+						ui.Error = err.Error()
 					}
 				}
 			}

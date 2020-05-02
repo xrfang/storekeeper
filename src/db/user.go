@@ -73,7 +73,7 @@ func GetUser(id int) (*User, error) {
 func ListUsers(account int) (users []User, err error) {
 	qry := `SELECT * FROM user`
 	if account != 1 {
-		qry += fmt.Sprintf(` WHERE client=%d`, account)
+		qry += fmt.Sprintf(` WHERE client=%d OR id=%d`, account, account)
 	}
 	err = db.Select(&users, qry)
 	return

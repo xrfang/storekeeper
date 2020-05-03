@@ -9,7 +9,6 @@ type Herb struct {
 	ID     int     `json:"id"`
 	Name   string  `json:"name"`
 	Pinyin string  `json:"pinyin"`
-	Alias  int     `json:"alias"`
 	Stock  int     `json:"stock"`
 	Unit   string  `json:"unit"`
 	Cost   float64 `json:"cost"`

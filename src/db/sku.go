@@ -114,6 +114,10 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 		cond, args := whereAs(t)
 		qry := fmt.Sprintf(`SELECT id,name,pinyin FROM herb WHERE %s`, cond)
 		assert(db.Select(&herbs, qry, args...))
+		if len(herbs) == 0 {
+			qr.Missing = append(qr.Missing, skuQR{ID: 0, Name: []string{t}})
+			continue
+		}
 		var match []skuQR
 		for _, h := range herbs {
 			if h.Name == t {

@@ -26,7 +26,7 @@ func setupSchema() {
         "pinyin" TEXT NOT NULL DEFAULT "",           -- 拼音首字母索引
         "alias"  INTEGER NOT NULL DEFAULT 0,         -- 别名ID索引（0表示没有别名）
         "stock"  INTEGER NOT NULL DEFAULT 0,         -- 存货数量（如果alias不为0，该值一定为0）
-        "unit"   TEXT NOT NULL,                      -- 存货计量单位
+        "unit"   TEXT NOT NULL DEFAULT "克",         -- 存货计量单位
         "cost"   NUMERIC NOT NULL DEFAULT 0          -- 平均成本单价
     )`)
 	db.MustExec(`CREATE TABLE IF NOT EXISTS "sku" (  -- 库存单元表

@@ -20,8 +20,58 @@
     </ul>
   </div>
 </nav>
-<div class="container" style="padding-top:1em">
+<div class="container" style="padding-top:1rem">
+  <div class="input-group mb-2 mr-sm-2">
+    <input type="text" class="form-control" id="terms" />
+    <div class="input-group-append">
+      <div class="input-group-text">
+        <i id="search" style="cursor:pointer" onclick="doSearch()" class="fas fa-search"></i>
+      </div>
+    </div>
+  </div>
+  <small class="form-text text-muted">输入货品名称，多个用空格隔开。</small>
+  <div id="list">
+    <p style="margin-top:1rem;color:#555555">目前共有 <span style="color:red;font-weight:bold">{{.Total}}</span>
+        种库存单元。请在上方搜索框中输入需要添加、编辑的货品名称。</p>    
+  </div>
 </div>
 <script>
+function doSearch() {
+  $('#terms').attr("disabled", "disabled")
+  $('#search').attr("disabled", "disabled")            
+  var terms = $('#terms').val()
+  $.get("/api/sku", {terms: terms}, function(e) {
+    $('#terms').removeAttr("disabled")
+    $('#search').removeAttr("disabled")
+    $('#list').empty()
+    if (e.found != null && e.found.length > 0) {
+      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">${e.found.length}</span> 个货品</p>`)
+      $.each(e.found, function(_, h) {
+        $('#list').append(`<a href="#" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
+      })
+    }
+    if (e.missing != null && e.missing.length > 0) {
+      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">未找到 <span style="color:red">${e.missing.length}</span> 个货品</p>`)
+      $.each(e.missing, function(_, h) {
+        $('#list').append(`<a href="#" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
+      })
+    }
+    if (e.match != null && e.match.length > 0) {
+      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">${e.match.length}</span> 个部分匹配条目</p>`)
+      $.each(e.match, function(_, h) {
+        var cap = ""
+        $.each(h.name, function(_, s) {
+          cap += (s[0] == '*') ? `<span style="color:red">${s.substr(1)}</span>` : s 
+        })
+        $('#list').append(`<a href="#" style="line-height:1.75rem;font-weight:bold">${cap}</a>&nbsp; &nbsp;`)
+      })
+    }
+  })
+}    
+$(document).ready(function () {
+  $('#terms').on('keypress', function (e) {
+    if (e.which === 13) doSearch()
+   });  
+})
 </script>
 {{template "footer"}} {{end}}

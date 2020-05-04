@@ -169,8 +169,17 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 			qr.Missing = append(qr.Missing, skuQR{ID: 0, Name: []string{t}})
 		}
 	}
-	for _, m := range pm {
-		qr.Match = append(qr.Match, m)
+	for cap, m := range pm {
+		found := false
+		for _, f := range qr.Found {
+			if cap == f.Caption() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			qr.Match = append(qr.Match, m)
+		}
 	}
 	return &qr, nil
 }

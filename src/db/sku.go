@@ -118,6 +118,20 @@ func markMatch(subj string, term string) []string {
 	return res
 }
 
+func pinInit(name string) string {
+	var segs []string
+	for _, p := range pindex.Encode(strings.ToLower(name)) {
+		t := ""
+		for _, x := range p {
+			if x >= 'A' && x <= 'Z' {
+				t += string(x)
+			}
+		}
+		segs = append(segs, t)
+	}
+	return strings.Join(segs, " ")
+}
+
 func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -205,13 +219,13 @@ func UpdateSKUs(skus []Herb) (err error) {
 		var stmt string
 		var args []interface{}
 		if h.ID == 0 {
-			h.Pinyin = strings.Join(pindex.Encode(h.Name), " ")
+			h.Pinyin = pinInit(h.Name)
 			stmt = `INSERT INTO herb (name,pinyin) VALUES (?,?)`
 			args = []interface{}{h.Name, h.Pinyin}
 		} else {
 			h.Pinyin = strings.ToUpper(strings.TrimSpace(h.Pinyin))
 			if strings.TrimSpace(h.Pinyin) == "" {
-				h.Pinyin = strings.Join(pindex.Encode(h.Name), " ")
+				h.Pinyin = pinInit(h.Name)
 			}
 			unit := strings.TrimSpace(h.Unit)
 			h.Unit = ""

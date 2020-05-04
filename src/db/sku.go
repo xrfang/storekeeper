@@ -248,3 +248,12 @@ func UpdateSKUs(skus []Goods) (err error) {
 	}
 	return
 }
+
+func GetSKU(id int) (goods Goods, units []string, err error) {
+	err = db.Get(&goods, `SELECT * FROM goods WHERE id=?`, id)
+	if err != nil {
+		return
+	}
+	err = db.Select(&units, `SELECT caption FROM sku WHERE base='' AND count=1`)
+	return
+}

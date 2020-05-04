@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"storekeeper/db"
@@ -54,7 +55,15 @@ func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
 	}()
 	switch r.Method {
 	case "GET":
-		http.Error(w, "Not Implemented", http.StatusNotImplemented)
+		id, _ := strconv.Atoi(r.URL.Path[9:])
+		if id <= 0 {
+			http.Error(w, "Not Found", http.StatusNotFound)
+			return
+		}
+		goods, units, err := db.GetSKU(id)
+		assert(err)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{"goods": goods, "units": units})
 	case "POST":
 		var skus []db.Goods
 		assert(json.NewDecoder(r.Body).Decode(&skus))

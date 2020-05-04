@@ -7,7 +7,7 @@ import (
 	"github.com/xrfang/pindex"
 )
 
-type Herb struct {
+type Goods struct {
 	ID     int     `json:"id"`
 	Name   string  `json:"name"`
 	Pinyin string  `json:"pinyin"`
@@ -51,7 +51,7 @@ type SkuQueryResult struct {
 
 func CountSKU() (int, error) {
 	var cnt int
-	err := db.Get(&cnt, `SELECT COUNT(id) FROM herb`)
+	err := db.Get(&cnt, `SELECT COUNT(id) FROM goods`)
 	return cnt, err
 }
 
@@ -138,12 +138,12 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 			err = e.(error)
 		}
 	}()
-	var herbs []Herb
+	var goods []Goods
 	if len(terms) == 0 {
-		assert(db.Select(&herbs, `SELECT id,name FROM herb ORDER BY pinyin`))
+		assert(db.Select(&goods, `SELECT id,name FROM goods ORDER BY pinyin`))
 		var items []skuQR
-		for _, h := range herbs {
-			items = append(items, skuQR{ID: h.ID, Name: []string{h.Name}})
+		for _, g := range goods {
+			items = append(items, skuQR{ID: g.ID, Name: []string{g.Name}})
 		}
 		return &SkuQueryResult{Found: items}, nil
 	}
@@ -160,22 +160,22 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 	}
 	for _, t := range terms {
 		cond, args := whereAs(t)
-		qry := fmt.Sprintf(`SELECT id,name,pinyin FROM herb WHERE %s`, cond)
-		assert(db.Select(&herbs, qry, args...))
-		if len(herbs) == 0 {
+		qry := fmt.Sprintf(`SELECT id,name,pinyin FROM goods WHERE %s`, cond)
+		assert(db.Select(&goods, qry, args...))
+		if len(goods) == 0 {
 			qr.Missing = append(qr.Missing, skuQR{ID: 0, Name: []string{t}})
 			continue
 		}
 		match := []skuQR{}
-		for _, h := range herbs {
-			if h.Name == t {
-				qr.Found = append(qr.Found, skuQR{ID: h.ID, Name: []string{h.Name}})
+		for _, g := range goods {
+			if g.Name == t {
+				qr.Found = append(qr.Found, skuQR{ID: g.ID, Name: []string{g.Name}})
 				match = nil
 				break
 			}
-			mm := markMatch(h.Name, t)
+			mm := markMatch(g.Name, t)
 			if mm != nil {
-				match = append(match, skuQR{ID: h.ID, Name: mm})
+				match = append(match, skuQR{ID: g.ID, Name: mm})
 			}
 		}
 		if match != nil {
@@ -198,7 +198,7 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 	return &qr, nil
 }
 
-func UpdateSKUs(skus []Herb) (err error) {
+func UpdateSKUs(skus []Goods) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -220,7 +220,7 @@ func UpdateSKUs(skus []Herb) (err error) {
 		var args []interface{}
 		if h.ID == 0 {
 			h.Pinyin = pinInit(h.Name)
-			stmt = `INSERT INTO herb (name,pinyin) VALUES (?,?)`
+			stmt = `INSERT INTO goods (name,pinyin) VALUES (?,?)`
 			args = []interface{}{h.Name, h.Pinyin}
 		} else {
 			h.Pinyin = strings.ToUpper(strings.TrimSpace(h.Pinyin))
@@ -235,7 +235,7 @@ func UpdateSKUs(skus []Herb) (err error) {
 					break
 				}
 			}
-			stmt = `UPDATE herb SET name=?,pinyin=?`
+			stmt = `UPDATE goods SET name=?,pinyin=?`
 			args = []interface{}{h.Name, h.Pinyin}
 			if h.Unit != "" {
 				stmt += ",unit=?"

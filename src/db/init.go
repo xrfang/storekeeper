@@ -20,7 +20,7 @@ func setupSchema() {
 	db.MustExec(`CREATE TRIGGER IF NOT EXISTS updated AFTER UPDATE ON "user"
         FOR EACH ROW BEGIN UPDATE "user" SET updated=CURRENT_TIMESTAMP WHERE
         id=OLD.id; END`)
-	db.MustExec(`CREATE TABLE IF NOT EXISTS "herb" ( -- 货品表
+	db.MustExec(`CREATE TABLE IF NOT EXISTS "goods" ( -- 货品表
         "id"     INTEGER PRIMARY KEY AUTOINCREMENT,
         "name"   TEXT NOT NULL UNIQUE,               -- 品名
         "pinyin" TEXT NOT NULL DEFAULT "",           -- 拼音首字母索引
@@ -58,7 +58,7 @@ func setupSchema() {
 	db.MustExec(`CREATE TABLE IF NOT EXISTS "bom_item" (       -- 单据条目表
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
         "bom_id"  INTEGER NOT NULL,                            -- 单据ID
-        "herb_id" INTEGER NOT NULL,                            -- 商品ID
+        "goods_id" INTEGER NOT NULL,                           -- 商品ID
         "unit"    TEXT NOT NULL,                               -- 计量单位
         "count"   INTEGER NOT NULL,                            -- 数量
         "status"  INTEGER NOT NULL,                            -- 状态（0表示出入库未完成；1表示完成）

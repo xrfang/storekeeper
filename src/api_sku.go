@@ -56,7 +56,7 @@ func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	case "POST":
-		var skus []db.Herb
+		var skus []db.Goods
 		assert(json.NewDecoder(r.Body).Decode(&skus))
 		db.UpdateSKUs(skus)
 	}

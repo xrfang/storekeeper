@@ -3,6 +3,8 @@ package db
 import (
 	"fmt"
 	"strings"
+
+	"github.com/xrfang/pindex"
 )
 
 type Herb struct {
@@ -88,7 +90,7 @@ func markMatch(subj string, term string) []string {
 	if len(t) > 0 {
 		res = append(res, t)
 	}
-	if len(res) == 1 {
+	if len(res) == 1 && res[0][0] != '*' {
 		return nil
 	}
 	return res
@@ -136,4 +138,55 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 		}
 	}
 	return &qr, nil
+}
+
+func UpdateSKUs(skus []Herb) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	if len(skus) == 0 {
+		return
+	}
+	var units []string
+	assert(db.Select(&units, `SELECT caption FROM sku WHERE base='' AND count=1`))
+	tx := db.MustBegin()
+	defer tx.Commit()
+	for _, h := range skus {
+		h.Name = strings.TrimSpace(h.Name)
+		if h.Name == "" {
+			continue
+		}
+		var stmt string
+		var args []interface{}
+		if h.ID == 0 {
+			h.Pinyin = strings.Join(pindex.Encode(h.Name), " ")
+			stmt = `INSERT INTO herb (name,pinyin) VALUES (?,?)`
+			args = []interface{}{h.Name, h.Pinyin}
+		} else {
+			h.Pinyin = strings.ToUpper(strings.TrimSpace(h.Pinyin))
+			if strings.TrimSpace(h.Pinyin) == "" {
+				h.Pinyin = strings.Join(pindex.Encode(h.Name), " ")
+			}
+			unit := strings.TrimSpace(h.Unit)
+			h.Unit = ""
+			for _, u := range units {
+				if u == unit {
+					h.Unit = u
+					break
+				}
+			}
+			stmt = `UPDATE herb SET name=?,pinyin=?`
+			args = []interface{}{h.Name, h.Pinyin}
+			if h.Unit != "" {
+				stmt += ",unit=?"
+				args = append(args, h.Unit)
+			}
+			stmt += ` WHERE id=?`
+			args = append(args, h.ID)
+		}
+		tx.MustExec(stmt, args...)
+	}
+	return
 }

@@ -36,6 +36,15 @@
   </div>
 </div>
 <script>
+function submitSku(sku) {
+  var sku = $(sku)
+  var data = new Array()
+  data.push({'name': sku.text()})
+  $.post("/api/sku/", JSON.stringify(data), function(e) {
+    sku.css("pointer-events", "none")
+    sku.css("color", "#888888")
+  })
+}
 function doSearch() {
   $('#terms').attr("disabled", "disabled")
   $('#search').attr("disabled", "disabled")            
@@ -53,7 +62,7 @@ function doSearch() {
     if (e.missing != null && e.missing.length > 0) {
       $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">未找到 <span style="color:red">${e.missing.length}</span> 个货品</p>`)
       $.each(e.missing, function(_, h) {
-        $('#list').append(`<a href="#" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
+        $('#list').append(`<a href="#" onclick="submitSku(this)" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
       })
     }
     if (e.match != null && e.match.length > 0) {

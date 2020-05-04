@@ -8,7 +8,7 @@ import (
 	"storekeeper/db"
 )
 
-func apiSku(w http.ResponseWriter, r *http.Request) {
+func apiSkuList(w http.ResponseWriter, r *http.Request) {
 	ok, _ := T.Validate(getCookie(r, "token"))
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -38,5 +38,26 @@ func apiSku(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(qr)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	switch r.Method {
+	case "GET":
+		http.Error(w, "Not Implemented", http.StatusNotImplemented)
+	case "POST":
+		var skus []db.Herb
+		assert(json.NewDecoder(r.Body).Decode(&skus))
+		db.UpdateSKUs(skus)
 	}
 }

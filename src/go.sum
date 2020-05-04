@@ -23,6 +23,8 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/xrfang/go-res v1.3.0 h1:YuKceLxLqdZJW0yduvfCVl2BipCwJLmNf31rgMY/54I=
 github.com/xrfang/go-res v1.3.0/go.mod h1:85w8GsrLRxitQHpkLCfVRBnlOSsPGerGgCKH4yr7HgQ=
+github.com/xrfang/pindex v0.0.0-20200427153515-86e90cd0c2c8 h1:SdB1PRqlTo1lAD/rM27Z1wftXpHrq/PIyBwJiG4Gby0=
+github.com/xrfang/pindex v0.0.0-20200427153515-86e90cd0c2c8/go.mod h1:FhAvJ/7EXLvzc3Ml4JeJacHcnFi14Uurkkr86cVyHvQ=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/net v0.0.0-20190603091049-60506f45cf65/go.mod h1:HSz+uSET+XFnRR8LxR5pz3Of3rY3CfYBVs4xY44aLks=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

@@ -20,7 +20,7 @@ func setupSchema() {
 	db.MustExec(`CREATE TRIGGER IF NOT EXISTS updated AFTER UPDATE ON "user"
         FOR EACH ROW BEGIN UPDATE "user" SET updated=CURRENT_TIMESTAMP WHERE
         id=OLD.id; END`)
-	db.MustExec(`CREATE TABLE IF NOT EXISTS "herb" ( -- 商品表
+	db.MustExec(`CREATE TABLE IF NOT EXISTS "herb" ( -- 货品表
         "id"     INTEGER PRIMARY KEY AUTOINCREMENT,
         "name"   TEXT NOT NULL UNIQUE,               -- 品名
         "pinyin" TEXT NOT NULL DEFAULT "",           -- 拼音首字母索引
@@ -81,7 +81,7 @@ func setupParams() {
         VALUES (1, "管理员", "admin")`)
 	//添加SKU单位
 	db.MustExec(`INSERT OR IGNORE INTO "sku" ("caption", "base", "count")
-        VALUES ("克", "克", 1)`)
+        VALUES ("克", "", 1)`)
 	db.MustExec(`INSERT OR IGNORE INTO "sku" ("caption", "base", "count")
         VALUES ("斤", "克", 500)`)
 	db.MustExec(`INSERT OR IGNORE INTO "sku" ("caption", "base", "count")

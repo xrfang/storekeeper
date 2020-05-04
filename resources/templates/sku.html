@@ -31,8 +31,10 @@
   </div>
   <small class="form-text text-muted">输入货品名称，多个用空格隔开。</small>
   <div id="list">
-    <p style="margin-top:1rem;color:#555555">目前共有 <span style="color:red;font-weight:bold">{{.Total}}</span>
-        种库存单元。请在上方搜索框中输入需要添加、编辑的货品名称。</p>    
+    <p style="margin-top:1rem;color:#555555">请在上方搜索框中输入需要添加、编辑的货品名称。
+      系统将检查输入的品名是否已经存在，并让您添加不存在的货品。</p>
+    <p style="margin-top:1rem;color:#555555">目前共有<span style="color:red;font-weight:bold">
+      {{.Total}} </span>种货品（直接点击搜索按钮可查看全部）。</p>    
   </div>
 </div>
 <script>
@@ -64,6 +66,8 @@ function doSearch() {
       $.each(e.missing, function(_, h) {
         $('#list').append(`<a href="#" onclick="submitSku(this)" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
       })
+      $('#list').append(`<p style="margin:1rem 0 1rem 0">您可以将它们<a style="font-weight:bold" href="#">
+        全部添加 </a>到货品定义，或者点击上面的品名逐一添加。</p>`)
     }
     if (e.match != null && e.match.length > 0) {
       $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">${e.match.length}</span> 个部分匹配条目</p>`)

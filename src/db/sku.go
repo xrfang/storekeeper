@@ -21,6 +21,28 @@ type skuQR struct {
 	Name []string `json:"name"`
 }
 
+func (sqr skuQR) Caption() string {
+	t := ""
+	for _, s := range sqr.Name {
+		if s[0] == '*' {
+			t += s[1:]
+		} else {
+			t += s
+		}
+	}
+	return t
+}
+
+func (sqr skuQR) Score() int {
+	cnt := 1
+	for _, s := range sqr.Name {
+		if s[0] == '*' {
+			cnt += len([]rune(s)) - 1
+		}
+	}
+	return cnt
+}
+
 type SkuQueryResult struct {
 	Found   []skuQR `json:"found"`
 	Match   []skuQR `json:"match"`
@@ -111,7 +133,17 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 		}
 		return &SkuQueryResult{Found: items}, nil
 	}
+	pm := make(map[string]skuQR)
 	var qr SkuQueryResult
+	addMatch := func(ms []skuQR) {
+		for _, m := range ms {
+			cap := m.Caption()
+			p := pm[cap]
+			if m.Score() > p.Score() {
+				pm[cap] = m
+			}
+		}
+	}
 	for _, t := range terms {
 		cond, args := whereAs(t)
 		qry := fmt.Sprintf(`SELECT id,name,pinyin FROM herb WHERE %s`, cond)
@@ -120,7 +152,7 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 			qr.Missing = append(qr.Missing, skuQR{ID: 0, Name: []string{t}})
 			continue
 		}
-		var match []skuQR
+		match := []skuQR{}
 		for _, h := range herbs {
 			if h.Name == t {
 				qr.Found = append(qr.Found, skuQR{ID: h.ID, Name: []string{h.Name}})
@@ -132,10 +164,13 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 				match = append(match, skuQR{ID: h.ID, Name: mm})
 			}
 		}
-		if len(match) > 0 {
-			qr.Match = append(qr.Match, match...)
+		if match != nil {
+			addMatch(match)
 			qr.Missing = append(qr.Missing, skuQR{ID: 0, Name: []string{t}})
 		}
+	}
+	for _, m := range pm {
+		qr.Match = append(qr.Match, m)
 	}
 	return &qr, nil
 }

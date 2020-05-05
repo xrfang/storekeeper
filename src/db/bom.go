@@ -1,5 +1,10 @@
 package db
 
+import (
+	"strings"
+	"time"
+)
+
 /*
 入库单状态：1=未提交；2=待核价；3=待收货；4=已入库
 出库单状态：1=未配齐；2=未发货；3=未收款；4=已完成
@@ -20,17 +25,17 @@ type Bill struct {
 //tpl模板可以指定的参数：ID、Type、User、Status
 func GetBills(tpl *Bill) (bills []Bill, err error) {
 	defer func() {
-		if e := recover(); e!=nil {
+		if e := recover(); e != nil {
 			err = e.(error)
 		}
-	}
+	}()
 	qry := `SELECT * FROM bom`
 	if tpl == nil {
 		assert(db.Select(&bills, qry))
 		return
 	}
 	if tpl.ID > 0 {
-		assert(db.Select(&bills, qry + ` WHERE id=?`, tpl.ID))
+		assert(db.Select(&bills, qry+` WHERE id=?`, tpl.ID))
 		return
 	}
 	var cond []string
@@ -40,11 +45,11 @@ func GetBills(tpl *Bill) (bills []Bill, err error) {
 		args = append(args, tpl.Type)
 	}
 	if tpl.User > 0 {
-		cond = append(`user_id=?`)
+		cond = append(cond, `user_id=?`)
 		args = append(args, tpl.User)
 	}
 	if tpl.Status > 0 {
-		cond = `status=?`
+		cond = append(cond, `status=?`)
 		args = append(args, tpl.Status)
 	}
 	if len(cond) == 0 {

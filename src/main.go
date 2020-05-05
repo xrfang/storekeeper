@@ -53,5 +53,9 @@ func main() {
 		ReadTimeout:  time.Minute,
 		WriteTimeout: time.Minute,
 	}
-	assert(svr.ListenAndServe())
+	if cf.TLSCert != "" && cf.TLSPKey != "" {
+		assert(svr.ListenAndServeTLS(cf.TLSCert, cf.TLSPKey))
+	} else {
+		assert(svr.ListenAndServe())
+	}
 }

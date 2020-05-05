@@ -15,6 +15,8 @@ type Configuration struct {
 	WebRoot string `yaml:"web_root"`
 	DBFile  string `yaml:"db_file"`
 	OrgName string `yaml:"org_name"`
+	TLSCert string `yaml:"tls_cert"`
+	TLSPKey string `yaml:"tls_pkey"`
 	cfgFile string
 	cfgPath string
 }

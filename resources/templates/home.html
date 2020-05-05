@@ -6,14 +6,21 @@
   </button>
   <div class="collapse navbar-collapse" id="navbarMenu">
     <ul class="navbar-nav">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">货品</a>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">出入库</a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="/chkout">出库</a>
+          <a class="dropdown-item" href="/chkin">入库</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/inventory">盘点</a>
+        </div>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">出入库</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">统计</a>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">统计</a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="#">按人</a>
+          <a class="dropdown-item" href="#">按货品</a>
+        </div>
       </li>      
     </ul>
     <ul class="navbar-nav ml-auto">

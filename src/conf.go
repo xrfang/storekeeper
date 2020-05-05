@@ -55,4 +55,6 @@ func loadConfig(cfgFile string) {
 	cf.WebRoot = cf.abs(cf.WebRoot)
 	cf.LogPath = cf.abs(cf.LogPath)
 	cf.DBFile = cf.abs(cf.DBFile)
+	cf.TLSCert = cf.abs(cf.TLSCert)
+	cf.TLSPKey = cf.abs(cf.TLSPKey)
 }

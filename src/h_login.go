@@ -16,6 +16,12 @@ func login(w http.ResponseWriter, r *http.Request) {
 	user := r.Form.Get("user")
 	pass := r.Form.Get("pass")
 	var mesg string
+
+	//TODO：开发模式，跳过登录
+	setCookie(w, "token", T.SignIn(1), 0)
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	return
+
 	if user != "" && pass != "" {
 		id, err := db.CheckLogin(user, pass)
 		if err == nil {

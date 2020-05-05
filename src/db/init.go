@@ -34,21 +34,15 @@ func setupSchema() {
         "count"   INTEGER NOT NULL DEFAULT 1,        -- 包含的基本单元数量
         PRIMARY KEY("caption")
     ) WITHOUT ROWID`)
-	db.MustExec(`CREATE TABLE IF NOT EXISTS "bom_type" ( -- 单据类型表
-        "id"      INTEGER,
-        "caption" TEXT NOT NULL UNIQUE,                  -- 单据类型名称
-        "class"   INTEGER NOT NULL,                      -- 单据性质（0=入库；1=出库）
-        PRIMARY KEY("id")
-    ) WITHOUT ROWID`)
 	db.MustExec(`CREATE TABLE IF NOT EXISTS "bom" (            -- 单据表
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
-        "type"    INTEGER NOT NULL,                            -- 单据类型
+        "type"    INTEGER NOT NULL,                            -- 单据类型（1=入库；2=出库；3=盘点）
         "user_id" INTEGER NOT NULL,                            -- 操作用户ID
         "amount"  NUMERIC NOT NULL DEFAULT 0,                  -- 总金额
         "markup"  TEXT NOT NULL DEFAULT 0,                     -- 定价策略描述
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（不含在总金额内，如运费）
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
-        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（0表示未完成；1表示完成）
+        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（1=未配齐；2=未发货；3=未收款；4=完成）
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP  -- 最后更新时间戳
     )`)
@@ -58,8 +52,10 @@ func setupSchema() {
 	db.MustExec(`CREATE TABLE IF NOT EXISTS "bom_item" (       -- 单据条目表
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
         "bom_id"  INTEGER NOT NULL,                            -- 单据ID
-        "goods_id" INTEGER NOT NULL,                           -- 商品ID
+        "gid"     INTEGER NOT NULL,                            -- 货品ID
+        "gname"   TEXT NOT NULL,                               -- 货品名称
         "unit"    TEXT NOT NULL,                               -- 计量单位
+        "price"   NUMERIC NOT NULL,                            -- 单价
         "count"   INTEGER NOT NULL,                            -- 数量
         "status"  INTEGER NOT NULL,                            -- 状态（0表示出入库未完成；1表示完成）
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳

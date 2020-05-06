@@ -12,7 +12,7 @@ import (
 type Bill struct {
 	ID      int       `json:"id"`
 	Type    byte      `json:"type"` //1=入库；2=出库；3=盘点
-	User    int       `json:"user"`
+	User    int       `json:"user" db:"user_id"`
 	Amount  float64   `json:"amount"`
 	Markup  string    `json:"markup"`
 	Fee     float64   `json:"fee"`

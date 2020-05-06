@@ -39,7 +39,7 @@ func setupSchema() {
         "type"    INTEGER NOT NULL,                            -- 单据类型（1=入库；2=出库；3=盘点）
         "user_id" INTEGER NOT NULL,                            -- 操作用户ID
         "amount"  NUMERIC NOT NULL DEFAULT 0,                  -- 总金额
-        "markup"  TEXT NOT NULL DEFAULT 0,                     -- 定价策略描述
+        "markup"  TEXT NOT NULL DEFAULT "",                    -- 定价策略描述
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（不含在总金额内，如运费）
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
         "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（1=未配齐；2=未发货；3=未收款；4=完成）
@@ -82,13 +82,6 @@ func setupParams() {
         VALUES ("斤", "克", 500)`)
 	db.MustExec(`INSERT OR IGNORE INTO "sku" ("caption", "base", "count")
         VALUES ("公斤", "克", 1000)`)
-	//添加单据类型
-	db.MustExec(`INSERT OR IGNORE INTO "bom_type" ("id", "caption", "class")
-        VALUES (1, "进货", 0)`)
-	db.MustExec(`INSERT OR IGNORE INTO "bom_type" ("id", "caption", "class")
-        VALUES (2, "出货", 1)`)
-	db.MustExec(`INSERT OR IGNORE INTO "bom_type" ("id", "caption", "class")
-        VALUES (3, "损耗", 1)`)
 }
 
 func Initialize(fn string) {

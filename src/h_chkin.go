@@ -17,11 +17,11 @@ func chkIn(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	bills, err := db.GetBills(nil)
+	bills, err := db.GetBills(&db.Bill{Type: 1})
 	assert(err)
+	bm := make(map[byte][]db.Bill)
 	for _, b := range bills {
-		//TODO：根据状态分类
-		_ = b
+		bm[b.Status] = append(bm[b.Status], b)
 	}
-	renderTemplate(w, "chkin.html", nil)
+	renderTemplate(w, "chkin.html", bm)
 }

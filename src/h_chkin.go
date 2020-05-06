@@ -23,5 +23,11 @@ func chkIn(w http.ResponseWriter, r *http.Request) {
 	for _, b := range bills {
 		bm[b.Status] = append(bm[b.Status], b)
 	}
+	for i := 1; i < 5; i++ {
+		_, ok := bm[byte(i)]
+		if !ok {
+			bm[byte(i)] = nil
+		}
+	}
 	renderTemplate(w, "chkin.html", bm)
 }

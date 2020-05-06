@@ -24,17 +24,15 @@
   <p style="margin-top:1rem;font-weight:bold">当前入库单概况</p>
   <p style="font-family: 'Courier New', Courier, monospace">
   {{range $stat, $bill := . }}
-    {{if gt (len $bill) 0 }}
-      {{if eq $stat 1}}
-        <a href="#">{{len $bill}}张</a>未提交 &nbsp;
-      {{else if eq $stat 2}}
-        <a href="#">{{len $bill}}张</a>待核价 &nbsp;
-      {{else if eq $stat 3}}
-        <a href="#">{{len $bill}}张</a>待收货 &nbsp;
-      {{else if eq $stat 4}}
-        <a href="#">{{len $bill}}张</a>已入库 &nbsp;
-      {{end}}  
-    {{end}}
+    {{if eq $stat 1}}
+      <a {{if gt (len $bill) 0}}href="#"{{end}}>{{len $bill}}张</a>未提交 &nbsp;
+    {{else if eq $stat 2}}
+      <a {{if gt (len $bill) 0}}href="#"{{end}}>{{len $bill}}张</a>待核价 &nbsp;
+    {{else if eq $stat 3}}
+      <a {{if gt (len $bill) 0}}href="#"{{end}}>{{len $bill}}张</a>待收货 &nbsp;
+    {{else if eq $stat 4}}
+      <a {{if gt (len $bill) 0}}href="#"{{end}}>{{len $bill}}张</a>已入库 &nbsp;
+    {{end}}  
   {{end}}
   </p>
   <p>
@@ -46,6 +44,7 @@
   </p>
 </div>
 <script>
+  var bills = {{.}}
   $(document).ready(function () {
     //TODO
   })

@@ -16,6 +16,7 @@ type Bill struct {
 	Amount  float64   `json:"amount"`
 	Markup  string    `json:"markup"`
 	Fee     float64   `json:"fee"`
+	Count   int       `json:"count"`
 	Memo    string    `json:"memo"`
 	Status  byte      `json:"status"`
 	Created time.Time `json:"created"`
@@ -29,17 +30,17 @@ func GetBills(tpl *Bill) (bills []Bill, err error) {
 			err = e.(error)
 		}
 	}()
+	var cond []string
+	var args []interface{}
 	qry := `SELECT * FROM bom`
 	if tpl == nil {
 		assert(db.Select(&bills, qry))
-		return
+		goto items
 	}
 	if tpl.ID > 0 {
 		assert(db.Select(&bills, qry+` WHERE id=?`, tpl.ID))
-		return
+		goto items
 	}
-	var cond []string
-	var args []interface{}
 	if tpl.Type > 0 {
 		cond = append(cond, `type=?`)
 		args = append(args, tpl.Type)
@@ -53,9 +54,33 @@ func GetBills(tpl *Bill) (bills []Bill, err error) {
 		args = append(args, tpl.Status)
 	}
 	if len(cond) == 0 {
+		qry += ` ORDER BY updated`
 		assert(db.Select(&bills, qry))
 	}
 	qry += ` WHERE ` + strings.Join(cond, ` AND `)
+	qry += ` ORDER BY updated`
 	assert(db.Select(&bills, qry, args...))
+items:
+	if len(bills) == 0 {
+		return
+	}
+	var ids []interface{}
+	for _, b := range bills {
+		ids = append(ids, b.ID)
+	}
+	qry = `SELECT bom_id,COUNT(id) FROM bom_item WHERE bom_id IN (?` +
+		strings.Repeat(`,?`, len(ids)-1) + `) GROUP BY bom_id`
+	rows, err := db.Query(qry, ids...)
+	assert(err)
+	defer rows.Close()
+	cm := make(map[int]int)
+	for rows.Next() {
+		var bid, cnt int
+		assert(rows.Scan(&bid, &cnt))
+		cm[bid] = cnt
+	}
+	for i, b := range bills {
+		bills[i].Count = cm[b.ID]
+	}
 	return
 }

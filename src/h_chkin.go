@@ -29,5 +29,10 @@ func chkIn(w http.ResponseWriter, r *http.Request) {
 			bm[byte(i)] = nil
 		}
 	}
-	renderTemplate(w, "chkin.html", bm)
+	users, err := db.ListUsers(1)
+	assert(err)
+	renderTemplate(w, "chkin.html", struct {
+		Bills map[byte][]db.Bill
+		Users []db.User
+	}{bm, users})
 }

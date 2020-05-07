@@ -103,7 +103,7 @@ function submitSku(sku) {
 function doSearch() {
   $('#terms').attr("disabled", "disabled")
   $('#search').attr("disabled", "disabled")            
-  var terms = $('#terms').val()
+  var terms = $('#terms').val().trim()
   $.get("/api/sku", {terms: terms}, function(e) {
     $('#terms').removeAttr("disabled")
     $('#search').removeAttr("disabled")
@@ -114,6 +114,8 @@ function doSearch() {
         $('#list').append(`<a onclick="editSku(this)" href="#" id="${h.id}" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
       })
       $('#list').append(`<p style="margin:1rem 0 1rem 0">您可点击上面的品名进行编辑（更改其名称、拼音索引或计量单位）</p>`)
+    } else if (terms.length == 0) {
+      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">0</span> 个货品</p>`)
     }
     if (e.missing != null && e.missing.length > 0) {
       $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">未找到 <span style="color:red">${e.missing.length}</span> 个货品</p>`)

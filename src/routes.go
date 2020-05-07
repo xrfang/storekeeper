@@ -8,6 +8,7 @@ func setupRoutes() {
 	http.HandleFunc("/", home)
 	http.HandleFunc("/api/sku", apiSkuList)
 	http.HandleFunc("/api/sku/", apiSkuEdit)
+	http.HandleFunc("/api/goods", apiGoods)
 	http.HandleFunc("/api/users", apiUsers)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/logout", logout)

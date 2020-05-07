@@ -61,26 +61,48 @@
 	<div class="row" style="margin-bottom: 1rem">
 	  <div class="col col-9" style="padding-right:0">
 		<label for="goods">添加货品</label>
-		<input type="text" class="form-control" id="goods" placeholder="默认订购500克，可单独修改"/>
+		<input type="text" class="form-control" id="goods" placeholder="只需输入品名，订购数量可单独修改"/>
 		<small class="form-text text-muted">输入品名或其拼音索引，多个以空格隔开</small>
 	  </div>
 	  <div class="col col-3">
 		<label>&nbsp;</label>
-		<div><button style="width:100%" class="btn btn-success">添加</button></div>
+		<div>
+		  <input style="width:100%" type=button onclick="addGoods()" class="btn btn-success" value="添加" />
+		</div>
 	  </div>
 	</div>
 	{{end}}
-  </form>	
+  </form>
+  <p id="choice"></p>
+  <p id="na"></p>
+  <p id="cart"></p>
 </div>
+<script>
+function addGoods() {
+	var goods = $('#goods').val().trim()
+	if (goods.length == 0) {
+		toast("错误", "请输入需添加的品名", "warning")
+		return
+	}
+	$('#choice').empty()
+	$('#na').empty()
+	$('#cart').empty()
+	$.get('/api/goods', {type: 1, terms: goods}, function(e) {
+		$.each(e, function(name, goods) {
+			switch(goods.length) {
+			case 0:
+				$('#na').append(`<a href="#">${name}</a>&nbsp; `)
+				break
+			case 1:
+			    $('#cart').append(`<a href="#">${goods[0].name}</a>&nbsp; `)
+				break
+			default:
+				$.each(goods, function(_, g) {
+					$('#choice').append(`<a href="#">${g.name}</a>&nbsp; `)
+				})
+			}
+		})
+	})
+}
+</script>
 {{template "footer"}} {{end}}
-
-/*
-ID      int       `json:"id"`
-Type    byte      `json:"type"` //1=入库；2=出库；3=盘点
-User    int       `json:"user" db:"user_id"`
-Amount  float64   `json:"amount"`
-Markup  string    `json:"markup"`
-Fee     float64   `json:"fee"`
-Memo    string    `json:"memo"`
-Status  byte      `json:"status"`
-*/

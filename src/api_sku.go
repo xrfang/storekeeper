@@ -36,7 +36,7 @@ func apiSkuList(w http.ResponseWriter, r *http.Request) {
 		qr, err := db.QuerySKU(terms)
 		assert(err)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(qr)
+		assert(json.NewEncoder(w).Encode(qr))
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
@@ -63,10 +63,12 @@ func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
 		goods, units, err := db.GetSKU(id)
 		assert(err)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{"goods": goods, "units": units})
+		assert(json.NewEncoder(w).Encode(map[string]interface{}{"goods": goods, "units": units}))
 	case "POST":
 		var skus []db.Goods
 		assert(json.NewDecoder(r.Body).Decode(&skus))
 		db.UpdateSKUs(skus)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }

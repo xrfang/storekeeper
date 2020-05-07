@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -104,5 +105,79 @@ func GetBill(id int) (bill *Bill, items []BillItem, err error) {
 			err = e.(error)
 		}
 	}()
+	return
+}
+
+type BomItem struct {
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Pinyin string `json:"pinyin"`
+	Unit   string `json:"unit"`
+	Count  int    `json:"count"`
+}
+
+func SearchGoods(term string, bomType int) (res map[string][]BomItem, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	var terms []string
+	for _, t := range strings.Split(term, " ") {
+		t = strings.TrimSpace(t)
+		if len(t) > 0 {
+			terms = append(terms, t)
+		}
+	}
+	if len(terms) == 0 {
+		return nil, fmt.Errorf("SearchGoods: term is empty")
+	}
+	res = make(map[string][]BomItem)
+	var cond []string
+	var args []interface{}
+	for _, t := range terms {
+		t = "%" + t + "%"
+		cond = append(cond, "name LIKE ?", "pinyin LIKE ?")
+		args = append(args, t, t)
+	}
+	qry := `SELECT id,name,pinyin FROM goods WHERE ` + strings.Join(cond, " OR ")
+	var bis []BomItem
+	assert(db.Select(&bis, qry, args...))
+	if bomType == 1 { //进货单，需要获取默认采购量
+		args = []interface{}{bomType}
+		for _, b := range bis {
+			args = append(args, b.ID)
+		}
+		type hist struct {
+			ID    int
+			GID   int
+			Unit  string
+			Count int
+		}
+		var hs []hist
+		assert(db.Select(&hs, `SELECT bom_item.id,gid,unit,count FROM bom_item JOIN bom ON
+			bom_item.bom_id=bom.id WHERE bom.type=? AND gid IN (?`+strings.Repeat(`,?`,
+			len(args)-2)+`) GROUP BY gid HAVING MAX(bom_item.id) ORDER BY bom_item.id`, args...))
+		for i, b := range bis {
+			for _, h := range hs {
+				if h.GID == b.ID {
+					bis[i].Unit = h.Unit
+					bis[i].Count = h.Count
+				}
+			}
+		}
+	}
+	for _, b := range bis {
+		for _, t := range terms {
+			if strings.Contains(b.Name, t) || strings.Contains(b.Pinyin, t) {
+				res[t] = append(res[t], b)
+			}
+		}
+	}
+	for _, t := range terms {
+		if _, ok := res[t]; !ok {
+			res[t] = []BomItem{}
+		}
+	}
 	return
 }

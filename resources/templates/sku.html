@@ -55,11 +55,6 @@
           <input type="text" class="form-control" id="pinyin">
           <small class="form-text text-muted">清除该索引可以让系统自动生成</small>
         </div>
-        <div class="form-group">
-          <label for="unit">计量单位</label>
-          <select class="form-control" id="unit"></select>
-          <small class="form-text text-muted">只可使用基本单位</small>
-        </div>        
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
@@ -113,7 +108,7 @@ function doSearch() {
       $.each(e.found, function(_, h) {
         $('#list').append(`<a onclick="editSku(this)" href="#" id="${h.id}" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
       })
-      $('#list').append(`<p style="margin:1rem 0 1rem 0">您可点击上面的品名进行编辑（更改其名称、拼音索引或计量单位）</p>`)
+      $('#list').append(`<p style="margin:1rem 0 1rem 0">您可点击上面的品名进行编辑（更改其名称或拼音索引）</p>`)
     } else if (terms.length == 0) {
       $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">0</span> 个货品</p>`)
     }
@@ -146,11 +141,6 @@ $(document).ready(function () {
     $.get(`/api/sku/${id}`, function(e) {
       $('#edsku #name').val(e.goods.name)
       $('#edsku #pinyin').val(e.goods.pinyin)
-      $('#edsku #unit').empty()
-      $.each(e.units, function(_, u) {
-        $('#edsku #unit').append(`<option value="${u}">${u}</option>`)
-      })
-      $('#edsku #unit').val(e.goods.unit)
     })
   })
   $('#edsku').on('hide.bs.modal', function (e) {
@@ -159,9 +149,8 @@ $(document).ready(function () {
       var id = parseInt($('#edsku #gid').val(), 10) 
       var name = $('#edsku #name').val()
       var pinyin = $('#edsku #pinyin').val()
-      var unit = $('#edsku #unit').val()
       var data = new Array()
-      data.push({id:id, name: name, pinyin: pinyin, unit: unit})
+      data.push({id:id, name: name, pinyin: pinyin})
       $.post("/api/sku/", JSON.stringify(data), function(e) {
         toast("操作成功", "货品信息已保存", "success")
         $(`#${id}`).text(name)

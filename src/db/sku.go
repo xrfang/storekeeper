@@ -12,7 +12,6 @@ type Goods struct {
 	Name   string  `json:"name"`
 	Pinyin string  `json:"pinyin"`
 	Stock  int     `json:"stock"`
-	Unit   string  `json:"unit"`
 	Cost   float64 `json:"cost"`
 }
 
@@ -227,20 +226,8 @@ func UpdateSKUs(skus []Goods) (err error) {
 			if strings.TrimSpace(h.Pinyin) == "" {
 				h.Pinyin = pinInit(h.Name)
 			}
-			unit := strings.TrimSpace(h.Unit)
-			h.Unit = ""
-			for _, u := range units {
-				if u == unit {
-					h.Unit = u
-					break
-				}
-			}
 			stmt = `UPDATE goods SET name=?,pinyin=?`
 			args = []interface{}{h.Name, h.Pinyin}
-			if h.Unit != "" {
-				stmt += ",unit=?"
-				args = append(args, h.Unit)
-			}
 			stmt += ` WHERE id=?`
 			args = append(args, h.ID)
 		}

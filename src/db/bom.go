@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"strings"
 	"time"
 )
@@ -29,7 +28,6 @@ type BillItem struct {
 	BomID     int       `json:"bid" db:"bom_id"`
 	GoodsID   int       `json:"gid" db:"gid"`
 	GoodsName string    `json:"gname" db:"gname"`
-	Unit      string    `json:"unit"`
 	Price     float64   `json:"price"`
 	Count     int       `json:"count"`
 	Status    int       `json:"status"`
@@ -108,76 +106,26 @@ func GetBill(id int) (bill *Bill, items []BillItem, err error) {
 	return
 }
 
-type BomItem struct {
-	ID     int    `json:"id"`
-	Name   string `json:"name"`
-	Pinyin string `json:"pinyin"`
-	Unit   string `json:"unit"`
-	Count  int    `json:"count"`
-}
-
-func SearchGoods(term string, bomType int) (res map[string][]BomItem, err error) {
+func SearchGoods(term string) (goods []Goods, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
 		}
 	}()
-	var terms []string
-	for _, t := range strings.Split(term, " ") {
-		t = strings.TrimSpace(t)
-		if len(t) > 0 {
-			terms = append(terms, t)
+	term = "%" + strings.ToUpper(strings.TrimSpace(term)) + "%"
+	args := []interface{}{term, term}
+	qry := `SELECT id,name FROM goods WHERE name LIKE ? OR pinyin LIKE ?`
+	assert(db.Select(&goods, qry, args...))
+	return
+}
+
+func AddGoodsToBill(bid, gid int, gname string) (id int, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
 		}
-	}
-	if len(terms) == 0 {
-		return nil, fmt.Errorf("SearchGoods: term is empty")
-	}
-	res = make(map[string][]BomItem)
-	var cond []string
-	var args []interface{}
-	for _, t := range terms {
-		t = "%" + t + "%"
-		cond = append(cond, "name LIKE ?", "pinyin LIKE ?")
-		args = append(args, t, t)
-	}
-	qry := `SELECT id,name,pinyin FROM goods WHERE ` + strings.Join(cond, " OR ")
-	var bis []BomItem
-	assert(db.Select(&bis, qry, args...))
-	if bomType == 1 { //进货单，需要获取默认采购量
-		args = []interface{}{bomType}
-		for _, b := range bis {
-			args = append(args, b.ID)
-		}
-		type hist struct {
-			ID    int
-			GID   int
-			Unit  string
-			Count int
-		}
-		var hs []hist
-		assert(db.Select(&hs, `SELECT bom_item.id,gid,unit,count FROM bom_item JOIN bom ON
-			bom_item.bom_id=bom.id WHERE bom.type=? AND gid IN (?`+strings.Repeat(`,?`,
-			len(args)-2)+`) GROUP BY gid HAVING MAX(bom_item.id) ORDER BY bom_item.id`, args...))
-		for i, b := range bis {
-			for _, h := range hs {
-				if h.GID == b.ID {
-					bis[i].Unit = h.Unit
-					bis[i].Count = h.Count
-				}
-			}
-		}
-	}
-	for _, b := range bis {
-		for _, t := range terms {
-			if strings.Contains(b.Name, t) || strings.Contains(b.Pinyin, t) {
-				res[t] = append(res[t], b)
-			}
-		}
-	}
-	for _, t := range terms {
-		if _, ok := res[t]; !ok {
-			res[t] = []BomItem{}
-		}
-	}
+	}()
+	tx := db.MustBegin()
+	defer tx.Commit()
 	return
 }

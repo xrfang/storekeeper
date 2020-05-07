@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -50,19 +52,46 @@ func chkInEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := strconv.Atoi(r.URL.Path[7:])
-	u, err := db.GetUser(uid)
-	assert(err)
-	var bill *db.Bill
-	var items []db.BillItem
-	if id != 0 {
-		bill, items, err = db.GetBill(id)
+	switch r.Method {
+	case "GET":
+		u, err := db.GetUser(uid)
 		assert(err)
-	} else {
-		bill = &db.Bill{ID: 0, Status: 1}
+		var bill *db.Bill
+		var items []db.BillItem
+		if id != 0 {
+			bill, items, err = db.GetBill(id)
+			assert(err)
+		} else {
+			bill = &db.Bill{ID: 0, Status: 1}
+		}
+		renderTemplate(w, "chkined.html", struct {
+			User  *db.User
+			Bill  *db.Bill
+			Items []db.BillItem
+		}{u, bill, items})
+	case "POST":
+		assert(r.ParseForm())
+		item := r.FormValue("item")
+		cnt, _ := strconv.Atoi(r.FormValue("count"))
+		if cnt <= 0 {
+			panic(fmt.Errorf("invalid count"))
+		}
+		goods, err := db.SearchGoods(item)
+		assert(err)
+		var items []string
+		for _, g := range goods {
+			items = append(items, g.Name)
+		}
+		if len(items) == 1 {
+			if id == 0 {
+
+			}
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"id":    id,
+			"item":  items,
+			"count": cnt,
+		})
 	}
-	renderTemplate(w, "chkined.html", struct {
-		User  *db.User
-		Bill  *db.Bill
-		Items []db.BillItem
-	}{u, bill, items})
 }

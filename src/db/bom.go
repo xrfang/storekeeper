@@ -6,8 +6,8 @@ import (
 )
 
 /*
-入库单状态：1=未提交；2=待核价；3=待收货；4=已入库
-出库单状态：1=未配齐；2=未发货；3=未收款；4=已完成
+入库单状态：1=待提交；2=待收货；3=已入库
+出库单状态：1=未配齐；2=未发货；3=未结账；4=已完成
 */
 type Bill struct {
 	ID      int       `json:"id"`
@@ -23,8 +23,21 @@ type Bill struct {
 	Updated time.Time `json:"updated"`
 }
 
+type BillItem struct {
+	ID        int       `json:"id"`
+	BomID     int       `json:"bid" db:"bom_id"`
+	GoodsID   int       `json:"gid" db:"gid"`
+	GoodsName string    `json:"gname" db:"gname"`
+	Unit      string    `json:"unit"`
+	Price     float64   `json:"price"`
+	Count     int       `json:"count"`
+	Status    int       `json:"status"`
+	Created   time.Time `json:"created"`
+	Updated   time.Time `json:"updated"`
+}
+
 //tpl模板可以指定的参数：ID、Type、User、Status
-func GetBills(tpl *Bill) (bills []Bill, err error) {
+func ListBills(tpl *Bill) (bills []Bill, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -82,5 +95,14 @@ items:
 	for i, b := range bills {
 		bills[i].Count = cm[b.ID]
 	}
+	return
+}
+
+func GetBill(id int) (bill *Bill, items []BillItem, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
 	return
 }

@@ -27,11 +27,9 @@
     {{if eq $stat 1}}
       <a {{if gt (len $bill) 0}}href="javascript:listBills(1)"{{end}}>{{len $bill}}张</a>待提交&nbsp;
     {{else if eq $stat 2}}
-      <a {{if gt (len $bill) 0}}href="javascript:listBills(2)"{{end}}>{{len $bill}}张</a>待核价&nbsp;
+      <a {{if gt (len $bill) 0}}href="javascript:listBills(2)"{{end}}>{{len $bill}}张</a>待收货&nbsp;
     {{else if eq $stat 3}}
-      <a {{if gt (len $bill) 0}}href="javascript:listBills(3)"{{end}}>{{len $bill}}张</a>待收货&nbsp;
-    {{else if eq $stat 4}}
-      <a {{if gt (len $bill) 0}}href="javascript:listBills(4)"{{end}}>{{len $bill}}张</a>已入库&nbsp;
+      <a {{if gt (len $bill) 0}}href="javascript:listBills(3)"{{end}}>{{len $bill}}张</a>已入库&nbsp;
     {{end}}  
   {{end}}
   </p>
@@ -39,8 +37,8 @@
     {{if gt (len .Bills) 0}}
     请点击上面的连接获取各状态进货单详情，或
     {{else}}
-    0张待提交&nbsp; 0张待核价&nbsp; 0张待收货&nbsp; 0张已入库<br><br>
-    {{end}}<a href="#">新建进货单</a>
+    0张待提交&nbsp; 0张待收货&nbsp; 0张已入库<br><br>
+    {{end}}<a href="/chkin/">新建进货单</a>
   </p>
   <p id="blist"></p>
 </div>
@@ -52,7 +50,6 @@ function un(id) {
   }
   return `user#${id}`
 }
-
 function listBills(status) {
   var bs = data.Bills[status]
   var us = data.Users
@@ -60,22 +57,19 @@ function listBills(status) {
   var st = ""
   switch(status) {
   case 1:
-    st = "未提交"
+    st = "待提交"
     break
   case 2:
-    st = "待核价"
-    break
-  case 3:
     st = "待收货"
     break
-  case 4:
+  case 3:
     st = "已入库"
   }
   $('#blist').text("")
   $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}进货单</p>`)
   $.each(bs, function(_, b) {
     $('#blist').append(`<div style="margin-top:0.4rem;font-family:'Courier New',
-      Courier,monospace"><a href="#">[${b.updated.substring(0, 10)}]${b.count}种货品，总价${b.amount}元</a></div>`)
+      Courier,monospace"><a href="#">[${b.updated.substring(0, 10)}] ${b.count}种货品，总价${b.amount}元</a></div>`)
   })
 }
 </script>

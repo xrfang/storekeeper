@@ -1,0 +1,86 @@
+{{define "body"}} {{template "header"}}
+<nav class="navbar navbar-expand navbar-dark bg-dark">
+  <a class="navbar-brand" href="#"><img src="/imgs/nav_title.png"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMenu">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarMenu">
+    <a class="navbar-brand" href="#">{{if eq .Bill.ID 0}}新建进货单{{else}}编辑进货单{{end}}</a>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+          <i class="fas fa-bars"></i>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
+          <a class="dropdown-item" href="/chkin"><i class="fas fa-file-powerpoint"></i>&nbsp;进货单管理</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/logout"><i class="fas fa-door-open"></i>&nbsp;退出</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container" style="padding-top:1em">
+  <form>
+	<input type="hidden" id="id" value="{{.Bill.ID}}" />
+    <div class="row" style="margin-bottom:1rem">
+      <div class="col" style="padding-right:0">
+		<label for="creator">创建者</label>
+		<input type="text" readonly class="form-control" name="creator" value="{{.User.Name}}" />
+	  </div>
+      <div class="col" style="padding-right:0">
+		<label for="status">状态</label>
+		<input type="text" readonly class="form-control" name="status" value="
+		{{- if eq .Bill.Status 1}}待提交
+		{{- else if eq .Bill.Status 2}}待收货
+		{{- else}}已入库{{end}}" />
+	  </div>
+	  <div class="col">
+		<label>&nbsp;</label>
+		<div>
+		  {{if eq .Bill.Status 1}}
+		    <button id="action" style="width:100%" class="btn btn-success">提交订单</button>
+		  {{else if eq .Bill.Status 2}}
+		    <button id="action" style="width:100%" class="btn btn-success">完成入库</button>
+		  {{end}}
+		</button></div>  
+	  </div>
+	</div>
+    <div class="row" style="margin-bottom: 1rem">
+	  <div class="col col-3" style="padding-right:0">
+	    <label for="fee">附加费用</label>
+		<input type="text" class="form-control" name="fee" value="0" />
+		<small class="form-text text-muted">如运费等</small>
+	  </div>
+	  <div class="col col-9">
+	    <label for="memo">备注</label>
+	    <input type="text" class="form-control" name="memo" value="" />
+	  </div>
+	</div>
+	{{if eq .Bill.Status 1}}
+	<div class="row" style="margin-bottom: 1rem">
+	  <div class="col col-9" style="padding-right:0">
+		<label for="goods">添加货品</label>
+		<input type="text" class="form-control" id="goods" placeholder="默认订购500克，可单独修改"/>
+		<small class="form-text text-muted">输入品名或其拼音索引，多个以空格隔开</small>
+	  </div>
+	  <div class="col col-3">
+		<label>&nbsp;</label>
+		<div><button style="width:100%" class="btn btn-success">添加</button></div>
+	  </div>
+	</div>
+	{{end}}
+  </form>	
+</div>
+{{template "footer"}} {{end}}
+
+/*
+ID      int       `json:"id"`
+Type    byte      `json:"type"` //1=入库；2=出库；3=盘点
+User    int       `json:"user" db:"user_id"`
+Amount  float64   `json:"amount"`
+Markup  string    `json:"markup"`
+Fee     float64   `json:"fee"`
+Memo    string    `json:"memo"`
+Status  byte      `json:"status"`
+*/

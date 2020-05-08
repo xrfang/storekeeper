@@ -60,14 +60,14 @@ func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Not Found", http.StatusNotFound)
 			return
 		}
-		goods, units, err := db.GetSKU(id)
+		goods, err := db.GetSKU(id)
 		assert(err)
 		w.Header().Set("Content-Type", "application/json")
-		assert(json.NewEncoder(w).Encode(map[string]interface{}{"goods": goods, "units": units}))
+		assert(json.NewEncoder(w).Encode(goods))
 	case "POST":
 		var skus []db.Goods
 		assert(json.NewDecoder(r.Body).Decode(&skus))
-		db.UpdateSKUs(skus)
+		assert(db.UpdateSKUs(skus))
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}

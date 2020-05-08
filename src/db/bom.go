@@ -112,14 +112,27 @@ func SearchGoods(term string) (goods []Goods, err error) {
 			err = e.(error)
 		}
 	}()
-	term = "%" + strings.ToUpper(strings.TrimSpace(term)) + "%"
+	name := strings.ToUpper(strings.TrimSpace(term))
+	term = "%" + name + "%"
 	args := []interface{}{term, term}
 	qry := `SELECT id,name FROM goods WHERE name LIKE ? OR pinyin LIKE ?`
 	assert(db.Select(&goods, qry, args...))
+	if len(goods) == 1 {
+		ns := strings.FieldsFunc(goods[0].Name, func(c rune) bool {
+			return c == ' ' || c == '　' || c == '\t' || c == ',' || c == '，' ||
+				c == '/' || c == '(' || c == ')' || c == '（' || c == '）'
+		})
+		for _, n := range ns {
+			if strings.TrimSpace(n) == name {
+				goods[0].Name = n
+				break
+			}
+		}
+	}
 	return
 }
 
-func AddGoodsToBill(bid, gid int, gname string) (id int, err error) {
+func AddGoodsToBill(b Bill, gid int, gname string, cnt int) (id int, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -127,5 +140,15 @@ func AddGoodsToBill(bid, gid int, gname string) (id int, err error) {
 	}()
 	tx := db.MustBegin()
 	defer tx.Commit()
-	return
+	if b.ID == 0 {
+		res := tx.MustExec(`INSERT INTO bom (type,user_id,status) VALUES
+			(?,?,1)`, b.Type, b.User)
+		rid, err := res.LastInsertId()
+		assert(err)
+		b.ID = int(rid)
+	}
+	tx.MustExec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, b.ID, gid)
+	tx.MustExec(`INSERT INTO bom_item (bom_id, gid, gname,count) VALUES
+	    (?,?,?,?)`, b.ID, gid, gname, cnt)
+	return b.ID, nil
 }

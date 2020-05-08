@@ -59,7 +59,7 @@ func setupSchema() {
         "gname"   TEXT NOT NULL,                               -- 货品名称
         "price"   NUMERIC NOT NULL,                            -- 单价
         "count"   INTEGER NOT NULL,                            -- 数量
-        "status"  INTEGER NOT NULL,                            -- 状态（0表示出入库未完成；1表示完成）
+        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（0表示出入库未完成；1表示完成）
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最后更新时间戳
         FOREIGN KEY(bom_id) REFERENCES bom(id),

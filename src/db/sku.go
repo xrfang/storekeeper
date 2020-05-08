@@ -206,8 +206,6 @@ func UpdateSKUs(skus []Goods) (err error) {
 	if len(skus) == 0 {
 		return
 	}
-	var units []string
-	assert(db.Select(&units, `SELECT caption FROM sku WHERE base='' AND count=1`))
 	tx := db.MustBegin()
 	defer tx.Commit()
 	for _, h := range skus {
@@ -236,11 +234,7 @@ func UpdateSKUs(skus []Goods) (err error) {
 	return
 }
 
-func GetSKU(id int) (goods Goods, units []string, err error) {
+func GetSKU(id int) (goods Goods, err error) {
 	err = db.Get(&goods, `SELECT * FROM goods WHERE id=?`, id)
-	if err != nil {
-		return
-	}
-	err = db.Select(&units, `SELECT caption FROM sku WHERE base='' AND count=1`)
 	return
 }

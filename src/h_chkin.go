@@ -83,9 +83,9 @@ func chkInEdit(w http.ResponseWriter, r *http.Request) {
 			items = append(items, g.Name)
 		}
 		if len(items) == 1 {
-			if id == 0 {
-
-			}
+			bill := db.Bill{ID: id, User: uid, Type: 1}
+			id, err = db.AddGoodsToBill(bill, goods[0].ID, goods[0].Name, cnt)
+			assert(err)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{

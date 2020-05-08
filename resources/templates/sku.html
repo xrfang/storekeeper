@@ -139,8 +139,8 @@ $(document).ready(function () {
   $('#edsku').on('show.bs.modal', function (e) {
     var id = $('#edsku #gid').val()
     $.get(`/api/sku/${id}`, function(e) {
-      $('#edsku #name').val(e.goods.name)
-      $('#edsku #pinyin').val(e.goods.pinyin)
+      $('#edsku #name').val(e.name)
+      $('#edsku #pinyin').val(e.pinyin)
     })
   })
   $('#edsku').on('hide.bs.modal', function (e) {

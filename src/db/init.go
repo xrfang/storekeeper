@@ -30,24 +30,18 @@ func setupSchema() {
         "stock"  INTEGER NOT NULL DEFAULT 0,         -- 存货数量
         "cost"   NUMERIC NOT NULL DEFAULT 0          -- 平均成本单价
     )`)
-	tx.MustExec(`CREATE TABLE IF NOT EXISTS "markup" ( -- 定价策略表
-        "id"     INTEGER PRIMARY KEY AUTOINCREMENT,
-        "multi"  NUMERIC NOT NULL DEFAULT 1,           -- 成本的倍数
-        "plus"   NUMERIC NOT NULL DEFAULT 0            -- 加固定金额
-    )`)
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS "bom" (            -- 单据表
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
         "type"    INTEGER NOT NULL,                            -- 单据类型（1=入库；2=出库；3=盘点）
         "user_id" INTEGER NOT NULL,                            -- 操作用户ID
-        "amount"  NUMERIC NOT NULL DEFAULT 0,                  -- 总金额
-        "markup"  INTEGER NOT NULL DEFAULT 0,                  -- 定价策略
+        "cost"    NUMERIC NOT NULL DEFAULT 0,                  -- 总成本
+        "charge"  NUMERIC NOT NULL DEFAULT 0,                  -- 总价格
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（不含在总金额内，如运费）
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
         "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（1=未配齐；2=未发货；3=未收款；4=完成）
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最后更新时间戳
-        FOREIGN KEY(user_id) REFERENCES user(id),
-        FOREIGN KEY(markup) REFERENCES markup(id)
+        FOREIGN KEY(user_id) REFERENCES user(id)
     )`)
 	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS updated AFTER UPDATE ON "bom"
         FOR EACH ROW BEGIN UPDATE "bom" SET updated=CURRENT_TIMESTAMP WHERE
@@ -57,7 +51,7 @@ func setupSchema() {
         "bom_id"  INTEGER NOT NULL,                            -- 单据ID
         "gid"     INTEGER NOT NULL,                            -- 货品ID
         "gname"   TEXT NOT NULL,                               -- 货品名称
-        "price"   NUMERIC NOT NULL,                            -- 单价
+        "price"   NUMERIC NOT NULL DEFAULT 0,                  -- 单价
         "count"   INTEGER NOT NULL,                            -- 数量
         "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（0表示出入库未完成；1表示完成）
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳

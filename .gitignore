@@ -4,4 +4,6 @@ src/version.go
 src/*/errors.go
 utils/pack
 webroot/*
+conf/*
+exp/*
 .vscode/*

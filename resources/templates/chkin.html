@@ -68,8 +68,11 @@ function listBills(status) {
   $('#blist').text("")
   $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}进货单</p>`)
   $.each(bs, function(_, b) {
-    $('#blist').append(`<div style="margin-top:0.4rem;font-family:'Courier New',
-      Courier,monospace"><a href="#">[${b.updated.substring(0, 10)}] ${b.count}种货品，总价${b.amount}元</a></div>`)
+    var item = `<div style="margin-top:0.4rem;font-family:'Courier New',Courier,monospace">
+      <a href="/chkin/${b.id}">[${b.updated.substring(0, 10)}] ${b.count}种货品`
+    if (typeof(b.cost) != 'undefined' && b.cost > 0) item += `，总价${b.cost}元`
+    item += `</a></div>`
+    $('#blist').append(item)
   })
 }
 </script>

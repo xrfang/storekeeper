@@ -13,8 +13,8 @@ type Bill struct {
 	ID      int       `json:"id"`
 	Type    byte      `json:"type"` //1=入库；2=出库；3=盘点
 	User    int       `json:"user" db:"user_id"`
-	Amount  float64   `json:"amount"`
-	Markup  string    `json:"markup"`
+	Charge  float64   `json:"charge"`
+	Cost    string    `json:"cost"`
 	Fee     float64   `json:"fee"`
 	Count   int       `json:"count"`
 	Memo    string    `json:"memo"`
@@ -97,12 +97,14 @@ items:
 	return
 }
 
-func GetBill(id int) (bill *Bill, items []BillItem, err error) {
+func GetBill(id int) (bill Bill, items []BillItem, err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			err = e.(error)
+			err = trace("%v", e)
 		}
 	}()
+	assert(db.Get(&bill, `SELECT * FROM bom WHERE id=?`, id))
+	assert(db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=?`, id))
 	return
 }
 

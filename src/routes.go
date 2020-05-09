@@ -6,6 +6,7 @@ import (
 
 func setupRoutes() {
 	http.HandleFunc("/", home)
+	http.HandleFunc("/api/bom/", apiBom)
 	http.HandleFunc("/api/sku", apiSkuList)
 	http.HandleFunc("/api/sku/", apiSkuEdit)
 	http.HandleFunc("/api/users", apiUsers)

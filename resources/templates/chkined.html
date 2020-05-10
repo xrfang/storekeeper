@@ -61,12 +61,44 @@
 	</div>
   </div>  
 </div>
+<div class="modal fade" id="editem" tabindex="-1" role="dialog">
+  <input type=hidden id="gid" />
+  <div class="modal-dialog modal-dialog-centered" role="document">
+	<div class="modal-content">
+	<div class="modal-header">
+		<h5 class="modal-title">编辑条目</h5>
+		<button type="button" class="close" data-dismiss="modal">&times;</button>
+	</div>
+	<div class="modal-body">
+	  <div class="form-group">
+		<input type="text" class="form-control-plaintext" id="gname">
+	  </div>
+	  <div class="form-group">
+		<label for="count">数量</label>
+		<input type="text" class="form-control" id="count">
+	  </div>
+	  <div class="form-group">
+		<label for="count">单价</label>
+		<input type="text" class="form-control" id="price">
+	  </div>	  
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-danger" data-dismiss="modal">删除</button>
+		<button type="button" class="btn btn-success" data-dismiss="modal">保存</button>
+	</div>
+	</div>
+  </div>
+</div>
 <script>
 var arg = {{.}}
+function editItem(gid) {
+	$('#editem #gid').val(gid)
+    $('#editem').modal('show')
+}
 function switchVS() {
 	if($('#viewstyle').attr('value') == "0") {
 	  $('#viewstyle').attr('value', '1')
-	  $('#viewstyle').text('切换为行式显示')
+	  $('#viewstyle').text('切换为普通显示')
 	} else {
 	  $('#viewstyle').attr('value', '0')
       $('#viewstyle').text('切换为表格显示')
@@ -104,7 +136,9 @@ function addGoods() {
 	var id = $('#bid').val()
 	$('#choice').empty()
 	$('#cart').empty()
-	$.post(`/api/bom/${id}`, {item:item,count:cnt,memo:memo}, function(e) {
+	console.log(`POST /api/chkin/${id}:`)
+	$.post(`/api/chkin/${id}`, {item:item,count:cnt}, function(e) {
+		console.log(`/api/chkin/${id}:`, e)
 		switch (e.item.length) {
 		case 0:
     	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
@@ -133,16 +167,17 @@ function addGoods() {
 function getBillInfo() {
   var bid = $('#bid').val()
   var so = $('#sortorder').attr('value')
-  $.get(`/api/bom/${bid}?order=${so}`, function(e) {
+  $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
+	console.log(`get billinfo(${bid})`, e)
 	$('#goods').val('')
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)
 	$('#cart').empty()
-	if (e.items.length > 0) {
+	if (e.items != null && e.items.length > 0) {
 	  switch ($('#viewstyle').attr('value')) {
 	  case "0":
 	    $.each(e.items, function(_, item) {
-	      $('#cart').append(`<a href="#">${item.gname} ${item.count}克</a> &nbsp; `)
+	      $('#cart').append(`<a href="#" onclick="editItem(${bid}, ${item.gid})">${item.gname} ${item.request}克</a> &nbsp; `)
 	    })
 	    break
 	  case "1":
@@ -150,7 +185,7 @@ function getBillInfo() {
 			<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
 			<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
 		$.each(e.items, function(_, item) {
-		  tbl += `<tr><td>${item.gname}</td><td class="text-right">${item.count}</td>
+		  tbl += `<tr><td>${item.gname}</td><td class="text-right">${item.request}</td>
 			<td class="text-right">--</td><td class="text-right">--</td></tr>`
 		})
 		tbl += `</tbody></table>`
@@ -174,6 +209,15 @@ $(document).ready(function () {
   }
   $('#goods').on('keypress', function (e) {
     if (e.which === 13) addGoods()
+  })
+  $('#editem').on('show.bs.modal', function(e) {
+	var bid = $('#bid').val()
+	var gid = $('#editem #gid').val()
+	$.get(`/api/chkin/${bid}?item=${gid}`, function(e) {
+		// $('#editem #gname').val(e.gname)
+		// $('#editem #count').val(e.count)
+		console.log("get bill item:", e)
+	})
   })
 })
 </script>

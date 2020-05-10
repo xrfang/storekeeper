@@ -23,21 +23,19 @@
 <div class="container" style="padding-top:1em">
   <p style="margin-top:1rem;font-weight:bold">当前进货单概况</p>
   <p style="font-family: 'Courier New', Courier, monospace">
-  {{range $stat, $bill := .Bills }}
-    {{if eq $stat 1}}
-      <a {{if gt (len $bill) 0}}href="javascript:listBills(1)"{{end}}>{{len $bill}}张</a>待提交&nbsp;
-    {{else if eq $stat 2}}
-      <a {{if gt (len $bill) 0}}href="javascript:listBills(2)"{{end}}>{{len $bill}}张</a>待收货&nbsp;
-    {{else if eq $stat 3}}
-      <a {{if gt (len $bill) 0}}href="javascript:listBills(3)"{{end}}>{{len $bill}}张</a>已入库&nbsp;
+  {{range $stat, $bill := index . "bills" }}
+    {{if eq $stat 0}}
+    未完成进货单：<a href="javascript:listBills('0')">{{len $bill}}张</a> &nbsp;
+    {{else}}
+    已完成进货单：<a href="javascript:listBills('1')">{{len $bill}}张</a> &nbsp;
     {{end}}  
   {{end}}
   </p>
   <p>
-    {{if gt (len .Bills) 0}}
+    {{if gt (len (index . "bills")) 0}}
     请点击上面的连接获取各状态进货单详情，或
     {{else}}
-    0张待提交&nbsp; 0张待收货&nbsp; 0张已入库<br><br>
+    0张未完成&nbsp; 0张已完成<br><br>
     {{end}}<a href="/chkin/">新建进货单</a>
   </p>
   <p id="blist"></p>
@@ -51,18 +49,15 @@ function un(id) {
   return `user#${id}`
 }
 function listBills(status) {
-  var bs = data.Bills[status]
-  var us = data.Users
+  var bs = data.bills[status]
+  var us = data.users
   var st = ""
   switch(status) {
-  case 1:
-    st = "待提交"
+  case '0':
+    st = "未完成"
     break
-  case 2:
-    st = "待收货"
-    break
-  case 3:
-    st = "已入库"
+  default:
+    st = "已完成"
   }
   $('#blist').text("")
   $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}进货单</p>`)

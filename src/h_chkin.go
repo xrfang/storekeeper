@@ -24,18 +24,9 @@ func chkInList(w http.ResponseWriter, r *http.Request) {
 	for _, b := range bills {
 		bm[b.Status] = append(bm[b.Status], b)
 	}
-	for i := 1; i < 5; i++ {
-		_, ok := bm[byte(i)]
-		if !ok {
-			bm[byte(i)] = nil
-		}
-	}
 	users, err := db.ListUsers(1)
 	assert(err)
-	renderTemplate(w, "chkin.html", struct {
-		Bills map[byte][]db.Bill
-		Users []db.User
-	}{bm, users})
+	renderTemplate(w, "chkin.html", map[string]interface{}{"bills": bm, "users": users})
 }
 
 func chkInEdit(w http.ResponseWriter, r *http.Request) {

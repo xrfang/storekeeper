@@ -51,7 +51,7 @@ func setupSchema() {
         "bom_id"  INTEGER NOT NULL,                            -- 单据ID
         "gid"     INTEGER NOT NULL,                            -- 货品ID
         "gname"   TEXT NOT NULL,                               -- 货品名称
-        "cost"    NUMERIC NOT NULL DEFAULT 0,                  -- 总成本
+        "cost"    NUMERIC NOT NULL DEFAULT 0,                  -- 单位成本
         "request" INTEGER NOT NULL,                            -- 需求数量
         "confirm" INTEGER NOT NULL,                            -- 确认数量
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳

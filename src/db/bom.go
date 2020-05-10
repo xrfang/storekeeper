@@ -9,7 +9,7 @@ import (
 var ErrItemAlreadyExists = errors.New("item already exists")
 
 /*
-入库单状态：1=待提交；2=待收货；3=已入库
+入库单状态：0=未完成；1=已完成
 出库单状态：1=未配齐；2=未发货；3=未结账；4=已完成
 */
 type Bill struct {
@@ -17,9 +17,9 @@ type Bill struct {
 	Type    byte      `json:"type"` //1=入库；2=出库；3=盘点
 	User    int       `json:"user" db:"user_id"`
 	Charge  float64   `json:"charge"`
-	Cost    string    `json:"cost"`
 	Fee     float64   `json:"fee"`
-	Count   int       `json:"count"`
+	Cost    string    `json:"cost"`  //非数据库条目，实时计算
+	Count   int       `json:"count"` //非数据库条目，实时计算
 	Memo    string    `json:"memo"`
 	Status  byte      `json:"status"`
 	Created time.Time `json:"created"`
@@ -31,9 +31,9 @@ type BillItem struct {
 	BomID     int       `json:"bid" db:"bom_id"`
 	GoodsID   int       `json:"gid" db:"gid"`
 	GoodsName string    `json:"gname" db:"gname"`
-	Price     float64   `json:"price"`
-	Count     int       `json:"count"`
-	Status    int       `json:"status"`
+	Cost      float64   `json:"cost"`
+	Request   int       `json:"request"`
+	Confirm   int       `json:"confirm"`
 	Created   time.Time `json:"created"`
 	Updated   time.Time `json:"updated"`
 }
@@ -116,6 +116,16 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 	return
 }
 
+func GetBillItem(bid, gid int) (item BillItem, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = trace("%v", e)
+		}
+	}()
+	assert(db.Get(&item, `SELECT * FROM bom_item WHERE bom_id=? AND gid=?`, bid, gid))
+	return
+}
+
 func SearchGoods(term string) (goods []Goods, err error) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -142,10 +152,30 @@ func SearchGoods(term string) (goods []Goods, err error) {
 	return
 }
 
-func AddGoodsToBill(b Bill, gid int, gname string, cnt int) (id int, err error) {
+func SetBill(b Bill) (id int, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	if b.ID == 0 {
+		res := db.MustExec(`INSERT INTO bom (type,user_id,fee,memo,status) VALUES
+			(?,?,?,?,0)`, b.Type, b.User, b.Fee, b.Memo)
+		id, err := res.LastInsertId()
+		return int(id), err
+	}
+	db.MustExec(`UPDATE bom SET charge=?,fee=?,memo=?,status=? WHERE ID=?`, b.Charge,
+		b.Fee, b.Memo, b.Status, b.ID)
+	return b.ID, nil
+}
+
+func SetBillItem(bi BillItem, mode int) (err error) {
+	if bi.BomID <= 0 {
+		return errors.New("invalid bom_id")
+	}
 	tx, err := db.Beginx()
 	if err != nil {
-		return 0, err
+		return err
 	}
 	defer func() {
 		if e := recover(); e != nil {
@@ -155,21 +185,17 @@ func AddGoodsToBill(b Bill, gid int, gname string, cnt int) (id int, err error) 
 		}
 		err = tx.Commit()
 	}()
-	if b.ID == 0 {
-		res := tx.MustExec(`INSERT INTO bom (type,user_id,fee,memo,status) VALUES
-			(?,?,?,?1)`, b.Type, b.User, b.Fee, b.Memo)
-		rid, err := res.LastInsertId()
-		assert(err)
-		b.ID = int(rid)
-	} else {
-		tx.MustExec(`UPDATE bom SET fee=?, memo=? WHERE ID=?`, b.Fee, b.Memo, b.ID)
+	switch mode {
+	case 0: //insert
+		var cnt int
+		assert(tx.Get(&cnt, `SELECT COUNT(id) FROM bom_item WHERE bom_id=? AND gid=?`, bi.BomID, bi.GoodsID))
+		if cnt > 0 {
+			panic(ErrItemAlreadyExists)
+		}
+	case 1: //update
+		assert(tx.MustExec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bi.BomID, bi.GoodsID))
 	}
-	var bi int
-	assert(tx.Get(&bi, `SELECT COUNT(id) FROM bom_item WHERE bom_id=? AND gid=?`, b.ID, gid))
-	if bi > 0 {
-		panic(ErrItemAlreadyExists)
-	}
-	tx.MustExec(`INSERT INTO bom_item (bom_id, gid, gname,count) VALUES
-		(?,?,?,?)`, b.ID, gid, gname, cnt)
-	return b.ID, nil
+	tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm) VALUES (?,?,?,?,?,?)`,
+		bi.BomID, bi.GoodsID, bi.GoodsName, bi.Cost, bi.Request, bi.Confirm)
+	return
 }

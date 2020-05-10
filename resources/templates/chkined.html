@@ -94,6 +94,7 @@
 <script>
 var arg = {{.}}
 function editItem(gid) {
+	$('#choice').css('display', 'none')
 	$('#editem #gid').val(gid)
     $('#editem').modal('show')
 }

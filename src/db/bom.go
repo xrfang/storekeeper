@@ -147,17 +147,22 @@ func SearchGoods(term string) (goods []Goods, err error) {
 	args := []interface{}{term, term}
 	qry := `SELECT id,name FROM goods WHERE name LIKE ? OR pinyin LIKE ?`
 	assert(db.Select(&goods, qry, args...))
-	if len(goods) == 1 {
-		ns := strings.FieldsFunc(goods[0].Name, func(c rune) bool {
+	idx := -1
+	for i, g := range goods {
+		ns := strings.FieldsFunc(g.Name, func(c rune) bool {
 			return c == ' ' || c == '　' || c == '\t' || c == ',' || c == '，' ||
 				c == '/' || c == '(' || c == ')' || c == '（' || c == '）'
 		})
 		for _, n := range ns {
 			if strings.TrimSpace(n) == name {
-				goods[0].Name = n
+				idx = i
+				goods[i].Name = n
 				break
 			}
 		}
+	}
+	if idx >= 0 {
+		goods = []Goods{goods[idx]}
 	}
 	return
 }

@@ -173,7 +173,7 @@ function getBillInfo() {
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)
 	$('#cart').empty()
-	$('#summary').text(`${e.bill.count}种货品，共计${e.bill.cost}元`)
+	$('#summary').text(`${e.bill.count}种货品，总价${e.bill.cost}元`)
 	if (e.items != null && e.items.length > 0) {
 	  switch ($('#viewstyle').attr('value')) {
 	  case "0":

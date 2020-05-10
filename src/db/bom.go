@@ -83,19 +83,25 @@ items:
 	for _, b := range bills {
 		ids = append(ids, b.ID)
 	}
-	qry = `SELECT bom_id,COUNT(id) FROM bom_item WHERE bom_id IN (?` +
-		strings.Repeat(`,?`, len(ids)-1) + `) GROUP BY bom_id`
+	qry = `SELECT bom_id,COUNT(id),SUM(cost*request) FROM bom_item WHERE bom_id
+	    IN (?` + strings.Repeat(`,?`, len(ids)-1) + `) GROUP BY bom_id`
 	rows, err := db.Query(qry, ids...)
 	assert(err)
 	defer rows.Close()
-	cm := make(map[int]int)
+	type summary struct {
+		cnt int
+		sum float64
+	}
+	cm := make(map[int]summary)
 	for rows.Next() {
-		var bid, cnt int
-		assert(rows.Scan(&bid, &cnt))
-		cm[bid] = cnt
+		var bid int
+		var s summary
+		assert(rows.Scan(&bid, &s.cnt, &s.sum))
+		cm[bid] = s
 	}
 	for i, b := range bills {
-		bills[i].Count = cm[b.ID]
+		bills[i].Count = cm[b.ID].cnt
+		bills[i].Cost = cm[b.ID].sum
 	}
 	return
 }

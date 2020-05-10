@@ -175,7 +175,9 @@ function getBillInfo() {
 	  switch ($('#viewstyle').attr('value')) {
 	  case "0":
 	    $.each(e.items, function(_, item) {
-	      $('#cart').append(`<a href="#" onclick="editItem(${item.gid})">${item.gname} ${item.request}克</a> &nbsp; `)
+		  var bg =  (item.cost == 0) ? "lightpink" : "white"
+		  $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
+		    >${item.gname} ${item.request}克</a> &nbsp; `)
 	    })
 	    break
 	  case "1":
@@ -183,10 +185,11 @@ function getBillInfo() {
 			<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
 			<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
 		$.each(e.items, function(_, item) {
+     	  var bg =  (item.cost == 0) ? "lightpink" : "white"
 		  var total = item.cost * item.request
-		  tbl += `<tr><td><a href="#" onclick="editItem(${item.gid})">${item.gname}</a></td><td
-			class="text-right">${item.request}</td><td class="text-right">${item.cost}</td><td
-			class="text-right">${total}</td></tr>`
+		  tbl += `<tr style="background:${bg}"><td><a href="#" onclick="editItem(${item.gid})"
+			>${item.gname}</a></td><td class="text-right">${item.request}</td><td class="text-right"
+			>${item.cost}</td><td class="text-right">${total}</td></tr>`
 		})
 		tbl += `</tbody></table>`
 		$('#cart').append(tbl)

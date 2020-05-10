@@ -18,7 +18,7 @@ type Bill struct {
 	User    int       `json:"user" db:"user_id"`
 	Charge  float64   `json:"charge"`
 	Fee     float64   `json:"fee"`
-	Cost    string    `json:"cost"`  //非数据库条目，实时计算
+	Cost    float64   `json:"cost"`  //非数据库条目，实时计算
 	Count   int       `json:"count"` //非数据库条目，实时计算
 	Memo    string    `json:"memo"`
 	Status  byte      `json:"status"`
@@ -112,6 +112,10 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 	} else {
 		assert(db.Select(&items, `SELECT bi.* FROM bom_item bi JOIN goods g ON g.id=gid
 		    WHERE bom_id=? ORDER BY g.pinyin`, id))
+	}
+	bill.Count = len(items)
+	for _, it := range items {
+		bill.Cost += it.Cost * float64(it.Request)
 	}
 	return
 }

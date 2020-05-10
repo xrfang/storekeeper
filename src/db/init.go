@@ -34,7 +34,6 @@ func setupSchema() {
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
         "type"    INTEGER NOT NULL,                            -- 单据类型（1=入库；2=出库；3=盘点）
         "user_id" INTEGER NOT NULL,                            -- 操作用户ID
-        "cost"    NUMERIC NOT NULL DEFAULT 0,                  -- 总成本
         "charge"  NUMERIC NOT NULL DEFAULT 0,                  -- 总价格
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（不含在总金额内，如运费）
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注

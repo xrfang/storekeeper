@@ -59,6 +59,7 @@
 	    </div>
 	  </div>
 	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
+	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
 	  <p id="cart"></p>			
 	</div>
   </div>  
@@ -143,6 +144,7 @@ function addGoods() {
     	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
 		  break
 		case 1:
+		  $('#bid').val(e.id)
 		  if (e.count < 0) 
 		    $('#choice').append(`<p><span style='color:red'>${e.item[0]}</span> 已经添加了</p>`)
 		  break
@@ -171,6 +173,7 @@ function getBillInfo() {
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)
 	$('#cart').empty()
+	$('#summary').text(`${e.bill.count}种货品，共计${e.bill.cost}元`)
 	if (e.items != null && e.items.length > 0) {
 	  switch ($('#viewstyle').attr('value')) {
 	  case "0":

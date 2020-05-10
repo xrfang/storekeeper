@@ -217,6 +217,44 @@ $(document).ready(function () {
 		$('#editem #price').val(e.cost)
 	})
   })
+  $('#editem').on('hide.bs.modal', function (e) {
+	var btn = $(document.activeElement)
+	var bid = $('#bid').val()
+	var gid = $('#editem #gid').val()
+	var cnt = $('#editem #count').val()
+	var price = $('#editem #price').val()
+    if (btn.hasClass("btn-success")) {
+      $.post(`/api/chkin/${bid}`, {gid:gid,cost:price,request:cnt}, function(e) {
+		getBillInfo()
+	  })
+	}
+	if (btn.hasClass("btn-danger")) {
+		var bid = $('#bid').val()
+		var gid = $('#editem #gid').val()
+		$.ajax({
+            url: `/api/chkin/${bid}/${gid}`,
+            type: 'DELETE',
+            complete: function(xhr) {
+              if (xhr.status != 200)
+                toast("操作失败", xhr.responseText, 'error')
+              else
+                $.toast({
+                  heading: '操作成功',
+                  text: '条目已被删除',
+                  icon: 'success',
+                  position: 'mid-center',
+                  loader: false,
+                  textAlign: 'left',
+                  allowToastClose: false,
+                  showHideTransition: 'fade',
+                  afterHidden: function () {
+					getBillInfo() 
+                  }
+                })
+            }
+        })
+	}
+  })
 })
 </script>
 {{template "footer"}} {{end}}

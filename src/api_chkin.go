@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"storekeeper/db"
 )
@@ -59,7 +61,21 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		assert(r.ParseForm())
 		gid, _ := strconv.Atoi(r.FormValue("gid"))
 		if gid > 0 { //提交单条目编辑
-			//TODO
+			item, err := db.GetBillItem(id, gid)
+			assert(err)
+			cost, err := strconv.ParseFloat(r.FormValue("cost"), 64)
+			if err == nil {
+				item.Cost = cost
+			}
+			req, err := strconv.Atoi(r.FormValue("request"))
+			if err == nil {
+				item.Request = req
+			}
+			cfm, err := strconv.Atoi(r.FormValue("confirm"))
+			if err == nil {
+				item.Confirm = cfm
+			}
+			assert(db.SetBillItem(item, 1))
 			return
 		}
 		memo := r.FormValue("memo")
@@ -100,6 +116,24 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			"item":  items,
 			"count": cnt,
 		})
+	case "DELETE":
+		ids := strings.SplitN(strings.TrimSpace(r.URL.Path[11:]), "/", 2)
+		bid, _ := strconv.Atoi(ids[0])
+		if bid <= 0 {
+			panic(errors.New("invalid bom id"))
+		}
+		gid := 0
+		if len(ids) == 2 && len(ids[1]) > 0 {
+			gid, _ = strconv.Atoi(ids[1])
+			if gid <= 0 {
+				panic(errors.New("invalid goods id"))
+			}
+		}
+		if gid == 0 {
+			assert(db.DeleteBill(bid))
+		} else {
+			assert(db.DeleteBillItem(bid, gid))
+		}
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}

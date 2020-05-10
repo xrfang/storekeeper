@@ -193,9 +193,19 @@ func SetBillItem(bi BillItem, mode int) (err error) {
 			panic(ErrItemAlreadyExists)
 		}
 	case 1: //update
-		assert(tx.MustExec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bi.BomID, bi.GoodsID))
+		tx.MustExec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bi.BomID, bi.GoodsID)
 	}
 	tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm) VALUES (?,?,?,?,?,?)`,
 		bi.BomID, bi.GoodsID, bi.GoodsName, bi.Cost, bi.Request, bi.Confirm)
+	return
+}
+
+func DeleteBill(bid int) (err error) {
+	_, err = db.Exec(`DELETE FROM bom WHERE id=?`, bid)
+	return
+}
+
+func DeleteBillItem(bid, gid int) (err error) {
+	_, err = db.Exec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bid, gid)
 	return
 }

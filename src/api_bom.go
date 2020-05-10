@@ -63,7 +63,12 @@ func apiBom(w http.ResponseWriter, r *http.Request) {
 			memo := r.FormValue("memo")
 			bill := db.Bill{ID: id, User: uid, Type: 1, Memo: memo, Fee: fee}
 			id, err = db.AddGoodsToBill(bill, goods[0].ID, goods[0].Name, cnt)
-			assert(err)
+			if err != nil {
+				if err != db.ErrItemAlreadyExists {
+					panic(err)
+				}
+				cnt = -cnt
+			}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{

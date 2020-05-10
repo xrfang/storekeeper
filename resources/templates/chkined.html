@@ -104,12 +104,14 @@ function addGoods() {
 	var id = $('#bid').val()
 	$('#choice').empty()
 	$('#cart').empty()
-	$.post(`/api/bom/${id}`, {item:item,count:cnt,fee:fee,memo:memo}, function(e) {
+	$.post(`/api/bom/${id}`, {item:item,count:cnt,memo:memo}, function(e) {
 		switch (e.item.length) {
 		case 0:
     	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
 		  break
 		case 1:
+		  if (e.count < 0) 
+		    $('#choice').append(`<p><span style='color:red'>${e.item[0]}</span> 已经添加了</p>`)
 		  break
 		default:
     	  var choice = `<p><span style="color:red">${item}</span> 是指`

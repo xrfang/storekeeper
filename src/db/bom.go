@@ -1,9 +1,12 @@
 package db
 
 import (
+	"errors"
 	"strings"
 	"time"
 )
+
+var ErrItemAlreadyExists = errors.New("item already exists")
 
 /*
 入库单状态：1=待提交；2=待收货；3=已入库
@@ -140,13 +143,18 @@ func SearchGoods(term string) (goods []Goods, err error) {
 }
 
 func AddGoodsToBill(b Bill, gid int, gname string, cnt int) (id int, err error) {
+	tx, err := db.Beginx()
+	if err != nil {
+		return 0, err
+	}
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
+			tx.Rollback()
+			return
 		}
+		err = tx.Commit()
 	}()
-	tx := db.MustBegin()
-	defer tx.Commit()
 	if b.ID == 0 {
 		res := tx.MustExec(`INSERT INTO bom (type,user_id,fee,memo,status) VALUES
 			(?,?,?,?1)`, b.Type, b.User, b.Fee, b.Memo)
@@ -156,10 +164,12 @@ func AddGoodsToBill(b Bill, gid int, gname string, cnt int) (id int, err error) 
 	} else {
 		tx.MustExec(`UPDATE bom SET fee=?, memo=? WHERE ID=?`, b.Fee, b.Memo, b.ID)
 	}
-	tx.MustExec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, b.ID, gid)
-	if cnt > 0 {
-		tx.MustExec(`INSERT INTO bom_item (bom_id, gid, gname,count) VALUES
-	        (?,?,?,?)`, b.ID, gid, gname, cnt)
+	var bi int
+	assert(tx.Get(&bi, `SELECT COUNT(id) FROM bom_item WHERE bom_id=? AND gid=?`, b.ID, gid))
+	if bi > 0 {
+		panic(ErrItemAlreadyExists)
 	}
+	tx.MustExec(`INSERT INTO bom_item (bom_id, gid, gname,count) VALUES
+		(?,?,?,?)`, b.ID, gid, gname, cnt)
 	return b.ID, nil
 }

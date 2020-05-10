@@ -70,22 +70,21 @@
 		<button type="button" class="close" data-dismiss="modal">&times;</button>
 	</div>
 	<div class="modal-body">
-	  <div class="form-group">
-		<input type="text" class="form-control-plaintext" id="gname">
+	  <div class="form-group"><h4 id="gname"></h4></div>
+	  <div class="form-group row">
+		<div class="col">
+		  <input type="text" class="form-control" id="count" />
+		  <small class="form-text text-muted">数量（克）</small>
+		</div>
+		<div class="col">
+		  <input type="text" class="form-control" id="price" />
+		  <small class="form-text text-muted">价格（元/克）</small>
+		</div>
 	  </div>
-	  <div class="form-group">
-		<label for="count">数量</label>
-		<input type="text" class="form-control" id="count">
-	  </div>
-	  <div class="form-group">
-		<label for="count">单价</label>
-		<input type="text" class="form-control" id="price">
-	  </div>	  
-	</div>
-	<div class="modal-footer">
+	  <div class="modal-footer" style="padding-right:0">
 		<button type="button" class="btn btn-danger" data-dismiss="modal">删除</button>
 		<button type="button" class="btn btn-success" data-dismiss="modal">保存</button>
-	</div>
+	  </div>
 	</div>
   </div>
 </div>
@@ -136,9 +135,7 @@ function addGoods() {
 	var id = $('#bid').val()
 	$('#choice').empty()
 	$('#cart').empty()
-	console.log(`POST /api/chkin/${id}:`)
 	$.post(`/api/chkin/${id}`, {item:item,count:cnt}, function(e) {
-		console.log(`/api/chkin/${id}:`, e)
 		switch (e.item.length) {
 		case 0:
     	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
@@ -168,7 +165,6 @@ function getBillInfo() {
   var bid = $('#bid').val()
   var so = $('#sortorder').attr('value')
   $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
-	console.log(`get billinfo(${bid})`, e)
 	$('#goods').val('')
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)
@@ -177,7 +173,7 @@ function getBillInfo() {
 	  switch ($('#viewstyle').attr('value')) {
 	  case "0":
 	    $.each(e.items, function(_, item) {
-	      $('#cart').append(`<a href="#" onclick="editItem(${bid}, ${item.gid})">${item.gname} ${item.request}克</a> &nbsp; `)
+	      $('#cart').append(`<a href="#" onclick="editItem(${item.gid})">${item.gname} ${item.request}克</a> &nbsp; `)
 	    })
 	    break
 	  case "1":
@@ -185,8 +181,10 @@ function getBillInfo() {
 			<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
 			<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
 		$.each(e.items, function(_, item) {
-		  tbl += `<tr><td>${item.gname}</td><td class="text-right">${item.request}</td>
-			<td class="text-right">--</td><td class="text-right">--</td></tr>`
+		  var total = item.cost * item.request
+		  tbl += `<tr><td><a href="#" onclick="editItem(${item.gid})">${item.gname}</a></td><td
+			class="text-right">${item.request}</td><td class="text-right">${item.cost}</td><td
+			class="text-right">${total}</td></tr>`
 		})
 		tbl += `</tbody></table>`
 		$('#cart').append(tbl)
@@ -214,9 +212,9 @@ $(document).ready(function () {
 	var bid = $('#bid').val()
 	var gid = $('#editem #gid').val()
 	$.get(`/api/chkin/${bid}?item=${gid}`, function(e) {
-		// $('#editem #gname').val(e.gname)
-		// $('#editem #count').val(e.count)
-		console.log("get bill item:", e)
+		$('#editem #gname').text(e.gname)
+		$('#editem #count').val(e.request)
+		$('#editem #price').val(e.cost)
 	})
   })
 })

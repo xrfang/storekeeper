@@ -22,11 +22,11 @@ func apiBom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := strconv.Atoi(r.URL.Path[9:])
-	fmt.Println("/api/bom/: id is", id)
 	switch r.Method {
 	case "GET":
+		so, _ := strconv.Atoi(r.URL.Query().Get("order"))
 		var res map[string]interface{}
-		bill, items, err := db.GetBill(id)
+		bill, items, err := db.GetBill(id, so)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "Not Found", http.StatusNotFound)
@@ -49,7 +49,7 @@ func apiBom(w http.ResponseWriter, r *http.Request) {
 		assert(r.ParseForm())
 		item := r.FormValue("item")
 		cnt, _ := strconv.Atoi(r.FormValue("count"))
-		if cnt <= 0 {
+		if cnt < 0 {
 			panic(fmt.Errorf("invalid count"))
 		}
 		goods, err := db.SearchGoods(item)
@@ -59,7 +59,9 @@ func apiBom(w http.ResponseWriter, r *http.Request) {
 			items = append(items, g.Name)
 		}
 		if len(items) == 1 {
-			bill := db.Bill{ID: id, User: uid, Type: 1}
+			fee, _ := strconv.ParseFloat(r.FormValue("fee"), 64)
+			memo := r.FormValue("memo")
+			bill := db.Bill{ID: id, User: uid, Type: 1, Memo: memo, Fee: fee}
 			id, err = db.AddGoodsToBill(bill, goods[0].ID, goods[0].Name, cnt)
 			assert(err)
 		}

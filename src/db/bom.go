@@ -97,14 +97,19 @@ items:
 	return
 }
 
-func GetBill(id int) (bill Bill, items []BillItem, err error) {
+func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = trace("%v", e)
 		}
 	}()
 	assert(db.Get(&bill, `SELECT * FROM bom WHERE id=?`, id))
-	assert(db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=?`, id))
+	if itmOrd == 0 {
+		assert(db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=? ORDER BY id DESC`, id))
+	} else {
+		assert(db.Select(&items, `SELECT bi.* FROM bom_item bi JOIN goods g ON g.id=gid
+		    WHERE bom_id=? ORDER BY g.pinyin`, id))
+	}
 	return
 }
 
@@ -143,14 +148,18 @@ func AddGoodsToBill(b Bill, gid int, gname string, cnt int) (id int, err error) 
 	tx := db.MustBegin()
 	defer tx.Commit()
 	if b.ID == 0 {
-		res := tx.MustExec(`INSERT INTO bom (type,user_id,status) VALUES
-			(?,?,1)`, b.Type, b.User)
+		res := tx.MustExec(`INSERT INTO bom (type,user_id,fee,memo,status) VALUES
+			(?,?,?,?1)`, b.Type, b.User, b.Fee, b.Memo)
 		rid, err := res.LastInsertId()
 		assert(err)
 		b.ID = int(rid)
+	} else {
+		tx.MustExec(`UPDATE bom SET fee=?, memo=? WHERE ID=?`, b.Fee, b.Memo, b.ID)
 	}
 	tx.MustExec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, b.ID, gid)
-	tx.MustExec(`INSERT INTO bom_item (bom_id, gid, gname,count) VALUES
-	    (?,?,?,?)`, b.ID, gid, gname, cnt)
+	if cnt > 0 {
+		tx.MustExec(`INSERT INTO bom_item (bom_id, gid, gname,count) VALUES
+	        (?,?,?,?)`, b.ID, gid, gname, cnt)
+	}
 	return b.ID, nil
 }

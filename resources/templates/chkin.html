@@ -53,7 +53,6 @@ function un(id) {
 function listBills(status) {
   var bs = data.Bills[status]
   var us = data.Users
-  console.log(us)
   var st = ""
   switch(status) {
   case 1:
@@ -71,6 +70,7 @@ function listBills(status) {
     var item = `<div style="margin-top:0.4rem;font-family:'Courier New',Courier,monospace">
       <a href="/chkin/${b.id}">[${b.updated.substring(0, 10)}] ${b.count}种货品`
     if (typeof(b.cost) != 'undefined' && b.cost > 0) item += `，总价${b.cost}元`
+    if (typeof(b.memo) != 'undefined' && b.memo.length > 0) item+= ` (${b.memo})`
     item += `</a></div>`
     $('#blist').append(item)
   })

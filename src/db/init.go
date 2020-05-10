@@ -38,7 +38,7 @@ func setupSchema() {
         "charge"  NUMERIC NOT NULL DEFAULT 0,                  -- 总价格
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（不含在总金额内，如运费）
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
-        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（1=未配齐；2=未发货；3=未收款；4=完成）
+        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（0=未完成；1=已完成）
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最后更新时间戳
         FOREIGN KEY(user_id) REFERENCES user(id)
@@ -51,9 +51,9 @@ func setupSchema() {
         "bom_id"  INTEGER NOT NULL,                            -- 单据ID
         "gid"     INTEGER NOT NULL,                            -- 货品ID
         "gname"   TEXT NOT NULL,                               -- 货品名称
-        "price"   NUMERIC NOT NULL DEFAULT 0,                  -- 单价
-        "count"   INTEGER NOT NULL,                            -- 数量
-        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（0表示出入库未完成；1表示完成）
+        "cost"    NUMERIC NOT NULL DEFAULT 0,                  -- 总成本
+        "request" INTEGER NOT NULL,                            -- 需求数量
+        "confirm" INTEGER NOT NULL,                            -- 确认数量
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最后更新时间戳
         FOREIGN KEY(bom_id) REFERENCES bom(id),

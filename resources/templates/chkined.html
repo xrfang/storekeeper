@@ -23,49 +23,71 @@
 <div class="container" style="padding-top:1em">
   <input type="hidden" id="bid" />
   <input type="hidden" id="uid" />
-  <div class="row" style="margin-bottom:1rem">
-	<div class="col" style="padding-right:0">
-	  <label for="creator">创建者</label>
+  <div class="row" style="margin-bottom:0.8rem">
+	<div class="col col-3" style="padding-right:0">
+	  <label for="creator"><b>创建者</b></label>
 	  <input type="text" readonly class="form-control" id="creator" />
 	</div>
-	<div class="col" style="padding-right:0">
-	  <label for="status">状态</label>
-	  <input type="text" readonly class="form-control" id="status" />
-	</div>
-	<div class="col">
-	  <label>&nbsp;</label>
-	  <div><button id="action" style="width:100%" class="btn btn-success"></button></div>  
-	</div>
-  </div>
-  <div class="row" style="margin-bottom: 1rem">
-	<div class="col col-3" style="padding-right:0">
-	<label for="fee">附加费用</label>
-	<input type="text" class="form-control" name="fee" value="0" />
-	<small class="form-text text-muted">如运费等</small>
-	</div>
 	<div class="col col-9">
-	<label for="memo">备注</label>
-	<input type="text" class="form-control" name="memo" value="" />
-	</div>
+	  <label for="fee"><b>备注</b></label>
+	  <input type="text" class="form-control" id="memo" value="0" />
+	</div>	
   </div>
-  <div id="addItem" class="row" style="margin-bottom: 1rem">
-	<div class="col col-9" style="padding-right:0">
-      <label for="goods">添加货品</label>
-      <input type="text" class="form-control" id="goods" placeholder="格式：品名 数量" />
-      <small class="form-text text-muted">可以输入品名或其拼音索引</small>
-	</div>
-	<div class="col col-3">
-	  <label>&nbsp;</label>
-	  <div>
-	    <input style="width:100%" type=button onclick="addGoods()" class="btn btn-success" value="添加" />
+  <div class="card border-success">
+	<div class="card-header">
+	  <div class="row">
+		<div class="col"><b>货品清单</b></div>
+		<div class="op col">
+		  <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
+		  <div class="dropdown-menu dropdown-menu-right">
+			<a class="dropdown-item" href="#" id="viewstyle" value="0" onclick="switchVS()">切换为表格显示</a>
+			<a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为拼音排序</a>
+		  </div>			
+		</div>  
 	  </div>
 	</div>
-  </div>
-  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
-  <p id="cart"></p>
+	<div class="card-body">
+	  <div class="row" style="margin-bottom: 1rem">
+	    <div class="col col-9">
+	      <input type="text" class="form-control" id="goods" placeholder="格式：品名 数量" />
+	      <small class="form-text text-muted">可以输入品名或其拼音索引</small>
+	    </div>
+	    <div class="col col-3" style="padding-left:0">
+          <input style="width:100%" type=button onclick="addGoods()" class="btn btn-success" value="添 加" />
+	    </div>
+	  </div>
+	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
+	  <p id="cart"></p>			
+	</div>
+  </div>  
 </div>
 <script>
 var arg = {{.}}
+function switchVS() {
+	if($('#viewstyle').attr('value') == "0") {
+	  $('#viewstyle').attr('value', '1')
+	  $('#viewstyle').text('切换为行式显示')
+	} else {
+	  $('#viewstyle').attr('value', '0')
+      $('#viewstyle').text('切换为表格显示')
+	}
+	getBillInfo()
+}
+function switchSO() {
+	if($('#sortorder').attr('value') == "0") {
+	  $('#sortorder').attr('value', '1')
+	  $('#sortorder').text('切换为后录在前')
+	} else {
+	  $('#sortorder').attr('value', '0')
+      $('#sortorder').text('切换为拼音排序')
+	}
+	getBillInfo()
+}
+function pick(item, cnt) {
+	var name = $(item).text()
+	$('#goods').val(`${name} ${cnt}`)
+	addGoods()
+}
 function addGoods() {
 	var spec = $('#goods').val().trim().split(/\s+/)
 	if (spec.length != 2) {
@@ -75,77 +97,63 @@ function addGoods() {
 	var item = spec[0]
 	var cnt = parseInt(spec[1])
 	if (isNaN(cnt) || (cnt <= 0)) {
-		toast("输入错误", "数量不是一个正整数", "warning")
+		toast("输入错误", "数量必须是大于0的整数", "warning")
 		return
 	}
+	var memo = $('#memo').val()
 	var id = $('#bid').val()
 	$('#choice').empty()
 	$('#cart').empty()
-	$.post(`/api/bom/${id}`, {item:item, count:cnt}, function(e) {
-		console.log(e)
-	})
-	/*
-	$.get('/api/goods', {type: 1, terms: goods}, function(e) {
-		$('#goods').val('')
-		$.each(e, function(name, goods) {
-			switch(goods.length) {
-			case 0:
-				$('#choice').append(`<p><span style='color:red'>${name}</span> 没有找到</p>`)
-				break
-			case 1:
-			    $('#cart').append(`<a href="#">${goods[0].name}</a>&nbsp; `)
-				break
-			default:
-				var choice = `<p><span style="color:red">${name}</span> 是指`
-    			$.each(goods, function(i, g) {
-					choice += ` &nbsp;<a href="#">${g.name}</a>&nbsp; `
-					if(i < goods.length-1) choice += '还是'
-				})
-				choice += '?'
-			    $('#choice').append(choice)
-			}
-		})
+	$.post(`/api/bom/${id}`, {item:item,count:cnt,fee:fee,memo:memo}, function(e) {
+		switch (e.item.length) {
+		case 0:
+    	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
+		  break
+		case 1:
+		  break
+		default:
+    	  var choice = `<p><span style="color:red">${item}</span> 是指`
+    	  $.each(e.item, function(i, it) {
+		  	choice += ` &nbsp;<a onclick="pick(this, ${cnt})" href="#">${it}</a>&nbsp; `
+		  	if(i < e.item.length-1) choice += '还是'
+		  })
+		  choice += '?'
+		  $('#choice').append(choice)	
+		}
+		getBillInfo()
 		if ($('#choice').is(':empty')) {
 		    $('#choice').css('display', 'none')
 		} else { 
 		    $('#choice').css('display', '')
-		}
-		if (!$('#cart').is(':empty')) {
-			$('#cart').prepend('<p style="font-weight:bold"><u>购物车</u></p>')
-			$('#cart').append('<p style="margin-top:1rem;color:#555555">请点击品名更改采购数量</p>')
-		}
+		}		
 	})
-	*/
 }
 function getBillInfo() {
   var bid = $('#bid').val()
-  $.get(`/api/bom/${bid}`, function(e) {
+  var so = $('#sortorder').attr('value')
+  $.get(`/api/bom/${bid}?order=${so}`, function(e) {
+	$('#goods').val('')
 	$('#creator').val(e.user)
-	$('#status').val('&nbsp;')	
-	$('#action').text('&nbsp;')
-	$('#action').prop('disabled', false)
-	switch (e.bill.status) {
-    case 1:
-	  $('#status').val('待提交')
-	  $('#action').text('提交')
-	  break
-	case 2:
-	  $('#status').val('待收货')	
-      $('#action').text('收货')
-	  break
-	case 3:
-	  $('#stauts').val('已完成')
-	  //fallthrough
-	default:
-	  $('#action').prop('disabled', true)
-	}
+	$('#memo').val(e.bill.memo)
 	$('#cart').empty()
 	if (e.items.length > 0) {
-	  $('#cart').append('<p style="font-weight:bold"><u>货品清单</u></p>')
-	  $.each(e.items, function(_, item) {
-		$('#cart').append(`<a href="#">${item.gname} ${item.count}克</a>&nbsp; `)
-	  })
-	  $('#cart').append('<p style="margin-top:1rem;color:#555555">点击品名可更改采购数量或删除之</p>')
+	  switch ($('#viewstyle').attr('value')) {
+	  case "0":
+	    $.each(e.items, function(_, item) {
+	      $('#cart').append(`<a href="#">${item.gname} ${item.count}克</a> &nbsp; `)
+	    })
+	    break
+	  case "1":
+		var tbl = `<table class="table table-sm table-hover">
+			<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
+			<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
+		$.each(e.items, function(_, item) {
+		  tbl += `<tr><td>${item.gname}</td><td class="text-right">${item.count}</td>
+			<td class="text-right">--</td><td class="text-right">--</td></tr>`
+		})
+		tbl += `</tbody></table>`
+		$('#cart').append(tbl)
+	  }
 	}
   })
 }
@@ -155,8 +163,6 @@ $(document).ready(function () {
   if (arg.bill == 0) {
 	$('#title').text('新建进货单')
 	$('#creator').text(arg.user.name)
-	$('#status').val('待提交')
-	$('#action').text('提交')
 	$('#bid').val(0)
 	$('#creator').val(arg.user.name)
   } else {
@@ -164,7 +170,6 @@ $(document).ready(function () {
 	$('#bid').val(arg.bill)
 	getBillInfo()
   }
-  //OTHER setup tasks...
   $('#goods').on('keypress', function (e) {
     if (e.which === 13) addGoods()
   })

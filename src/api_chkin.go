@@ -85,6 +85,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		}
 		//增加新条目
 		item := r.FormValue("item")
+		//TODO：将count改为request，增加confirm，用于区分采购开单与入库
 		cnt, _ := strconv.Atoi(r.FormValue("count"))
 		goods, err := db.SearchGoods(item)
 		assert(err)

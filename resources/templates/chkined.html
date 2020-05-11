@@ -43,7 +43,7 @@
 			<a class="dropdown-item" href="#" id="viewstyle" value="0" onclick="switchVS()">切换为表格显示</a>
 			<a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为拼音排序</a>
 			<div class="dropdown-divider"></div>
-			<a class="dropdown-item" href="#">到货入库</a>
+			<a class="dropdown-item" href="#" id="docheckin" value="0" onclick="switchCI()">到货入库</a>
 		  </div>
 		</div>  
 	  </div>
@@ -55,7 +55,7 @@
 	      <small class="form-text text-muted">可以输入品名或其拼音索引</small>
 	    </div>
 	    <div class="col col-3" style="padding-left:0">
-          <input style="width:100%" type=button onclick="addGoods()" class="btn btn-success" value="添 加" />
+          <input style="width:100%" type=button id="act" onclick="addGoods()" class="btn btn-success" value="添  加" />
 	    </div>
 	  </div>
 	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
@@ -85,8 +85,8 @@
 		</div>
 	  </div>
 	  <div class="modal-footer" style="padding-right:0">
-		<button type="button" class="btn btn-danger" data-dismiss="modal">删除</button>
-		<button type="button" class="btn btn-success" data-dismiss="modal">保存</button>
+		<button type="button" class="btn btn-danger" data-dismiss="modal">删 除</button>
+		<button type="button" class="btn btn-success" data-dismiss="modal">保 存</button>
 	  </div>
 	</div>
   </div>
@@ -115,6 +115,22 @@ function switchSO() {
 	} else {
 	  $('#sortorder').attr('value', '0')
       $('#sortorder').text('切换为拼音排序')
+	}
+	getBillInfo()
+}
+function switchCI() {
+	if($('#docheckin').attr('value') == "0") {
+	  $('#docheckin').attr('value', '1')
+	  $('#docheckin').text('暂停入库')
+	  $('#act').val("入  库")
+	  $('#act').removeClass('btn-success')
+	  $('#act').addClass('btn-info')
+	} else {
+	  $('#docheckin').attr('value', '0')
+      $('#docheckin').text('到货入库')
+	  $('#act').val('添  加')
+	  $('#act').removeClass('btn-info')
+	  $('#act').addClass('btn-success')
 	}
 	getBillInfo()
 }
@@ -170,6 +186,7 @@ function getBillInfo() {
   var bid = $('#bid').val()
   var so = $('#sortorder').attr('value')
   $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
+	console.log(`GET /api/chkin/${bid}`, e)
 	$('#goods').val('')
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)

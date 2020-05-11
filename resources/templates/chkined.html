@@ -43,7 +43,7 @@
 			<a class="dropdown-item" href="#" id="viewstyle" value="0" onclick="switchVS()">切换为表格显示</a>
 			<a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为拼音排序</a>
 			<div class="dropdown-divider"></div>
-			<a class="dropdown-item" href="#" id="docheckin" value="" onclick="switchCI()">到货入库</a>
+			<a class="dropdown-item" href="#" id="docheckin" value="0" onclick="switchCI()">到货入库</a>
 		  </div>
 		</div>  
 	  </div>
@@ -60,7 +60,10 @@
 	  </div>
 	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
 	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
-	  <p id="cart"></p>			
+	  <p id="cart"></p>
+	  <p id="wait"></p>
+	  <p id="wip"></p>
+	  <p id="done"></p>			
 	</div>
   </div>  
 </div>
@@ -197,46 +200,71 @@ function getBillInfo() {
   var vs = $('#viewstyle').attr('value')
   var ci = $('#docheckin').attr('value')
   $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
-	console.log(`GET /api/chkin/${bid}`, e)
 	$('#goods').val('')
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)
 	$('#cart').empty()
-	$('#summary').text(`${e.bill.count}种货品，总价${e.bill.cost}元`)
-	$('#docheckin').attr('value', '')
+	$('#wait').empty()
+	$('#wip').empty()
+	$('#done').empty()
+	$('#summary').text('')
 	if (e.items != null && e.items.length > 0) {
-	  var cs = ci
-	  switch (vs) {
-	  case "0":
-	    $.each(e.items, function(_, item) {
-		  var bg =  'white'
-		  if (item.cost == 0) {
-			  bg = 'lightpink'
-			  cs = '2'
-		  }
-		  $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
-		    >${item.gname} ${item.request}克</a> &nbsp; `)
-	    })
-	    break
-	  case "1":
-		var tbl = `<table class="table table-sm table-hover">
-			<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
-			<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
-		$.each(e.items, function(_, item) {
-     	  var bg =  'white'
-		  if (item.cost == 0) {
-		    bg = 'lightpink'
-		    cs = '2'
-		  }
-		  var total = item.cost * item.request
-		  tbl += `<tr style="background:${bg}"><td><a href="#" onclick="editItem(${item.gid})"
-			>${item.gname}</a></td><td class="text-right">${item.request}</td><td class="text-right"
-			>${item.cost}</td><td class="text-right">${total}</td></tr>`
+	  if (ci == "0" || ci == "") {
+		ci = "0"
+		$('#summary').text(`${e.bill.count}种货品，总价${e.bill.cost}元`)
+		switch (vs) {
+	    case "0":
+	      $.each(e.items, function(_, item) {
+	    	  var bg =  'white'
+	    	  if (item.cost == 0) {
+	    		  bg = 'lightpink'
+	    		  ci = '2'
+	    	  }
+	    	  $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
+	    	    >${item.gname} ${item.request}克</a> &nbsp; `)
+	      })
+	      break
+	    case "1":
+	      var tbl = `<table class="table table-sm table-hover">
+	    	<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
+	    	<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
+	      $.each(e.items, function(_, item) {
+            var bg =  'white'
+	        if (item.cost == 0) {
+	          bg = 'lightpink'
+	          ci = '2'
+	        }
+	        var total = item.cost * item.request
+	        tbl += `<tr style="background:${bg}"><td><a href="#" onclick="editItem(${item.gid})"
+	          >${item.gname}</a></td><td class="text-right">${item.request}</td><td class="text-right"
+	          >${item.cost}</td><td class="text-right">${total}</td></tr>`
+	      })
+	      tbl += `</tbody></table>`
+	      $('#cart').append(tbl)
+	    }
+	    $('#docheckin').attr('value', ci)
+	  } else {
+		$.each(e.items, function(i, it) {
+			if (it.confirm == 0) {
+				$('#wait').append(`${it.gname} ${it.request}克 &nbsp; `)
+			} else if (it.confirm == it.request) {
+				$('#done').append(`${it.gname} ${it.request}克 &nbsp; `)
+			} else {
+				$('#wip').append(`<a href="#">${it.gname} ${it.request}克（入库${it.confirm}克）</a> &nbsp; `)
+			}
 		})
-		tbl += `</tbody></table>`
-		$('#cart').append(tbl)
-		$('#docheckin').attr('value', '')
+		if (!$('#wait').is(':empty')) {
+			$('#wait').prepend(`<p><b>未入库货品</b></p>`)
+		}
+		if (!$('#wip').is(':empty')) {
+			$('#wip').prepend(`<p><b>正在入库货品</b></p>`)
+		}
+		if (!$('#done').is(':empty')) {
+			$('#done').prepend(`<p><b>已完成入库货品</b></p>`)
+		}
 	  }
+	} else {
+	  $('#docheckin').attr('value', "")	
 	}
   })
 }
@@ -251,8 +279,8 @@ $(document).ready(function () {
   } else {
 	$('#title').text('编辑进货单')
 	$('#bid').val(arg.bill)
-	getBillInfo()
   }
+  getBillInfo()
   $('#goods').on('keypress', function (e) {
     if (e.which === 13) addGoods()
   })
@@ -285,20 +313,8 @@ $(document).ready(function () {
             complete: function(xhr) {
               if (xhr.status != 200)
                 toast("操作失败", xhr.responseText, 'error')
-              else
-                $.toast({
-                  heading: '操作成功',
-                  text: '条目已被删除',
-                  icon: 'success',
-                  position: 'mid-center',
-                  loader: false,
-                  textAlign: 'left',
-                  allowToastClose: false,
-                  showHideTransition: 'fade',
-                  afterHidden: function () {
-					getBillInfo() 
-                  }
-                })
+			  else
+			    getBillInfo() 
             }
         })
 	}

@@ -43,7 +43,7 @@
 			<a class="dropdown-item" href="#" id="viewstyle" value="0" onclick="switchVS()">切换为表格显示</a>
 			<a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为拼音排序</a>
 			<div class="dropdown-divider"></div>
-			<a class="dropdown-item" href="#" id="docheckin" value="0" onclick="switchCI()">到货入库</a>
+			<a class="dropdown-item" href="#" id="docheckin" value="" onclick="switchCI()">到货入库</a>
 		  </div>
 		</div>  
 	  </div>
@@ -119,18 +119,27 @@ function switchSO() {
 	getBillInfo()
 }
 function switchCI() {
-	if($('#docheckin').attr('value') == "0") {
-	  $('#docheckin').attr('value', '1')
+	switch($('#docheckin').attr('value')) {
+	case "0":
+      $('#docheckin').attr('value', '1')
 	  $('#docheckin').text('暂停入库')
 	  $('#act').val("入  库")
 	  $('#act').removeClass('btn-success')
 	  $('#act').addClass('btn-info')
-	} else {
+	  break
+	case "1":
 	  $('#docheckin').attr('value', '0')
       $('#docheckin').text('到货入库')
 	  $('#act').val('添  加')
 	  $('#act').removeClass('btn-info')
 	  $('#act').addClass('btn-success')
+	  break
+	case "2":
+	  toast("错误", "尚有货品未设置价格，无法执行入库操作", "error")
+	  return
+	case "":
+	  toast("错误", "没有添加货品，无法执行入库操作", "error")
+	  return
 	}
 	getBillInfo()
 }
@@ -185,6 +194,8 @@ function addGoods() {
 function getBillInfo() {
   var bid = $('#bid').val()
   var so = $('#sortorder').attr('value')
+  var vs = $('#viewstyle').attr('value')
+  var ci = $('#docheckin').attr('value')
   $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
 	console.log(`GET /api/chkin/${bid}`, e)
 	$('#goods').val('')
@@ -192,11 +203,17 @@ function getBillInfo() {
 	$('#memo').val(e.bill.memo)
 	$('#cart').empty()
 	$('#summary').text(`${e.bill.count}种货品，总价${e.bill.cost}元`)
+	$('#docheckin').attr('value', '')
 	if (e.items != null && e.items.length > 0) {
-	  switch ($('#viewstyle').attr('value')) {
+	  var cs = ci
+	  switch (vs) {
 	  case "0":
 	    $.each(e.items, function(_, item) {
-		  var bg =  (item.cost == 0) ? "lightpink" : "white"
+		  var bg =  'white'
+		  if (item.cost == 0) {
+			  bg = 'lightpink'
+			  cs = '2'
+		  }
 		  $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
 		    >${item.gname} ${item.request}克</a> &nbsp; `)
 	    })
@@ -206,7 +223,11 @@ function getBillInfo() {
 			<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
 			<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
 		$.each(e.items, function(_, item) {
-     	  var bg =  (item.cost == 0) ? "lightpink" : "white"
+     	  var bg =  'white'
+		  if (item.cost == 0) {
+		    bg = 'lightpink'
+		    cs = '2'
+		  }
 		  var total = item.cost * item.request
 		  tbl += `<tr style="background:${bg}"><td><a href="#" onclick="editItem(${item.gid})"
 			>${item.gname}</a></td><td class="text-right">${item.request}</td><td class="text-right"
@@ -214,6 +235,7 @@ function getBillInfo() {
 		})
 		tbl += `</tbody></table>`
 		$('#cart').append(tbl)
+		$('#docheckin').attr('value', '')
 	  }
 	}
   })

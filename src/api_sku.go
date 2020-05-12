@@ -56,14 +56,14 @@ func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		id, _ := strconv.Atoi(r.URL.Path[9:])
-		if id <= 0 {
+		goods, err := db.GetSKU(id)
+		assert(err)
+		if len(goods) == 0 {
 			http.Error(w, "Not Found", http.StatusNotFound)
 			return
 		}
-		goods, err := db.GetSKU(id)
-		assert(err)
 		w.Header().Set("Content-Type", "application/json")
-		assert(json.NewEncoder(w).Encode(goods))
+		assert(json.NewEncoder(w).Encode(goods[0]))
 	case "POST":
 		var skus []db.Goods
 		assert(json.NewDecoder(r.Body).Decode(&skus))

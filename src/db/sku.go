@@ -234,7 +234,42 @@ func UpdateSKUs(skus []Goods) (err error) {
 	return
 }
 
-func GetSKU(id int) (goods Goods, err error) {
-	err = db.Get(&goods, `SELECT * FROM goods WHERE id=?`, id)
+func GetSKU(ids ...interface{}) (goods []Goods, err error) {
+	if len(ids) == 0 {
+		return nil, fmt.Errorf("GetSKU: no ID provided")
+	}
+	err = db.Select(&goods, `SELECT * FROM goods WHERE id IN (?`+
+		strings.Repeat(`,?`, len(ids)-1)+`)`, ids...)
+	return
+}
+
+func SearchGoods(term string) (goods []Goods, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	name := strings.ToUpper(strings.TrimSpace(term))
+	term = "%" + name + "%"
+	args := []interface{}{term, term}
+	qry := `SELECT id,name FROM goods WHERE name LIKE ? OR pinyin LIKE ?`
+	assert(db.Select(&goods, qry, args...))
+	idx := -1
+	for i, g := range goods {
+		ns := strings.FieldsFunc(g.Name, func(c rune) bool {
+			return c == ' ' || c == '　' || c == '\t' || c == ',' || c == '，' ||
+				c == '/' || c == '(' || c == ')' || c == '（' || c == '）'
+		})
+		for _, n := range ns {
+			if strings.TrimSpace(n) == name {
+				idx = i
+				goods[i].Name = n
+				break
+			}
+		}
+	}
+	if idx >= 0 {
+		goods = []Goods{goods[idx]}
+	}
 	return
 }

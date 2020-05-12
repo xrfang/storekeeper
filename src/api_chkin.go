@@ -26,10 +26,10 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		item, _ := strconv.Atoi(r.URL.Query().Get("item"))
 		if item > 0 { //在弹出框中编辑条目
-			bi, err := db.GetBillItem(id, item)
+			bis, err := db.GetBillItems(id, item)
 			assert(err)
 			w.Header().Set("Content-Type", "application/json")
-			assert(json.NewEncoder(w).Encode(bi))
+			assert(json.NewEncoder(w).Encode(bis[0]))
 			return
 		}
 		//编辑整个单据
@@ -61,8 +61,9 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		assert(r.ParseForm())
 		gid, _ := strconv.Atoi(r.FormValue("gid"))
 		if gid > 0 { //提交单条目编辑
-			item, err := db.GetBillItem(id, gid)
+			items, err := db.GetBillItems(id, gid)
 			assert(err)
+			item := items[0]
 			cost, err := strconv.ParseFloat(r.FormValue("cost"), 64)
 			if err == nil {
 				item.Cost = cost
@@ -83,20 +84,26 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			//TODO
 			return
 		}
-		//增加新条目
 		item := r.FormValue("item")
-		cfm, _ := strconv.Atoi(r.FormValue("confirm"))
-		if cfm > 0 {
-			//TODO:
-			return
-		}
-		req, _ := strconv.Atoi(r.FormValue("request"))
 		goods, err := db.SearchGoods(item)
 		assert(err)
+		cfm, _ := strconv.Atoi(r.FormValue("confirm"))
+		if cfm > 0 { //验货入库
+			var items []interface{}
+			for _, g := range goods {
+				items = append(items, g.ID)
+			}
+			if len(items) > 0 {
+				//TODO
+			}
+			return
+		}
+		//增加新条目
 		items := []string{}
 		for _, g := range goods {
 			items = append(items, g.Name)
 		}
+		req, _ := strconv.Atoi(r.FormValue("request"))
 		if len(items) == 1 {
 			if id == 0 {
 				id, err = db.SetBill(db.Bill{ID: id, User: uid, Type: 1})

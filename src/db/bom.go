@@ -126,13 +126,13 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 	return
 }
 
-func GetBillItem(bid, gid int) (item BillItem, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = trace("%v", e)
-		}
-	}()
-	assert(db.Get(&item, `SELECT * FROM bom_item WHERE bom_id=? AND gid=?`, bid, gid))
+func GetBillItems(bid int, gid ...interface{}) (items []BillItem, err error) {
+	if len(gid) == 0 {
+		return nil, errors.New("GetBillItem: no item-id provided")
+	}
+	ids := append([]interface{}{bid}, gid...)
+	err = db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=? AND gid IN (?`+
+		strings.Repeat(`,?`, len(gid)-1)+`)`, ids...)
 	return
 }
 

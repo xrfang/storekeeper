@@ -56,7 +56,7 @@ func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		id, _ := strconv.Atoi(r.URL.Path[9:])
-		goods, err := db.GetSKU(id)
+		goods, err := db.GetSKUs(id)
 		assert(err)
 		if len(goods) == 0 {
 			http.Error(w, "Not Found", http.StatusNotFound)

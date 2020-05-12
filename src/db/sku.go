@@ -234,7 +234,7 @@ func UpdateSKUs(skus []Goods) (err error) {
 	return
 }
 
-func GetSKU(ids ...interface{}) (goods []Goods, err error) {
+func GetSKUs(ids ...interface{}) (goods []Goods, err error) {
 	if len(ids) == 0 {
 		return nil, fmt.Errorf("GetSKU: no ID provided")
 	}

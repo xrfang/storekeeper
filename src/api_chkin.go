@@ -85,20 +85,40 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		goods, err := db.SearchGoods(item)
 		assert(err)
 		cfm, _ := strconv.Atoi(r.FormValue("confirm"))
-		if cfm > 0 { //验货入库
-			//res := map[string]interface{}{"id": id, "count": cfm}
+		if cfm != 0 { //验货入库
+			res := map[string]interface{}{"id": id, "item": []string{}, "count": cfm}
 			var items []interface{}
 			for _, g := range goods {
 				items = append(items, g.ID)
 			}
 			if len(items) == 0 {
-
+				jsonReply(w, res)
+				return
 			}
-			if len(items) > 0 {
-				bis, err := db.GetBillItems(id, items...)
-				assert(err)
-				_ = bis
-				//TODO
+			bis, err := db.GetBillItems(id, items...)
+			assert(err)
+			switch len(bis) {
+			case 0:
+				jsonReply(w, res)
+			case 1:
+				res["item"] = []string{bis[0].GoodsName}
+				diff := bis[0].Request - bis[0].Confirm
+				if cfm > diff {
+					res["count"] = diff - cfm
+					jsonReply(w, res)
+					return
+				}
+				bis[0].Confirm += cfm
+				assert(db.SetBillItem(bis[0], 1))
+				res["count"] = bis[0].Confirm
+				jsonReply(w, res)
+			default:
+				var names []string
+				for _, bi := range bis {
+					names = append(names, bi.GoodsName)
+				}
+				res["item"] = names
+				jsonReply(w, res)
 			}
 			return
 		}
@@ -108,7 +128,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			items = append(items, g.Name)
 		}
 		req, _ := strconv.Atoi(r.FormValue("request"))
-		if len(items) == 1 {
+		if req > 0 && len(items) == 1 {
 			if id == 0 {
 				id, err = db.SetBill(db.Bill{ID: id, User: uid, Type: 1})
 				assert(err)

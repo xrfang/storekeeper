@@ -159,8 +159,8 @@ function addGoods() {
 	}
 	var item = spec[0]
 	var cnt = parseInt(spec[1])
-	if (isNaN(cnt) || (cnt <= 0)) {
-		toast("输入错误", "数量必须是大于0的整数", "warning")
+	if (isNaN(cnt)) {
+		toast("输入错误", "数量必须是整数", "warning")
 		return
 	}
 	$('#choice').empty()
@@ -168,8 +168,36 @@ function addGoods() {
 	var id = $('#bid').val()
 	var ci = $('#docheckin').attr('value')
 	if (ci == 1) {
-		console.log('TODO: 验货入库')
-		reutrn
+		$.post(`/api/chkin/${id}`, {item:item,confirm:cnt}, function(e) {
+		  switch (e.item.length) {
+		  case 0:
+    	    $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
+		    break
+		  case 1:
+            if (e.count < 0) 
+              $('#choice').append(`<p><span style='color:red'>${e.item[0]}</span> 入库数量多了${-e.count}克</p>`)
+            break
+		  default:
+			var choice = `<p><span style="color:red">${item}</span> 是指`
+			$.each(e.item, function(i, it) {
+			  choice += ` &nbsp;<a onclick="pick(this, ${cnt})" href="#">${it}</a>&nbsp; `
+			  if(i < e.item.length-1) choice += '还是'
+			})
+			choice += '?'
+			$('#choice').append(choice)			  
+		  }
+		  getBillInfo()
+		  if ($('#choice').is(':empty')) {
+		    $('#choice').css('display', 'none')
+		  } else { 
+		    $('#choice').css('display', '')
+		  }			  
+		})
+		return
+	}
+	if (cnt <= 0) {
+      toast("输入错误", "数量必须大于0", "warning")
+      return
 	}
 	$.post(`/api/chkin/${id}`, {item:item,request:cnt}, function(e) {
 		switch (e.item.length) {
@@ -254,7 +282,7 @@ function getBillInfo() {
 			} else if (it.confirm == it.request) {
 				$('#done').append(`${it.gname} ${it.request}克 &nbsp; `)
 			} else {
-				$('#wip').append(`<a href="#">${it.gname} ${it.request}克（入库${it.confirm}克）</a> &nbsp; `)
+				$('#wip').append(`${it.gname} ${it.request}克（入库${it.confirm}克） &nbsp; `)
 			}
 		})
 		if (!$('#wait').is(':empty')) {

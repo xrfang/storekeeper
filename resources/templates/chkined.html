@@ -67,6 +67,7 @@
 	  <p id="chkin" style="display:none;text-align:center;margin-top:2rem">
 		<button onclick="doneCheckIn()" class="btn btn-info">&nbsp;完成入库&nbsp;</button>
 	  </p>
+	  <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
 	</div>
   </div>  
 </div>
@@ -142,6 +143,9 @@ function switchCI() {
 	  break
 	case "2":
 	  toast("错误", "尚有货品未设置价格，无法执行入库操作", "error")
+	  return
+	case "3":
+      toast("错误", "该订单已经完成入库", "error")
 	  return
 	case "":
 	  toast("错误", "没有添加货品，无法执行入库操作", "error")
@@ -235,7 +239,20 @@ function getBillInfo() {
   var vs = $('#viewstyle').attr('value')
   var ci = $('#docheckin').attr('value')
   $('#chkin').css('display', 'none')
+  $('#act').attr("disabled", false)
+  $('#goods').attr("disabled", false)
+  $('#memo').attr("disabled", false)
+  $('#finfo').text('')
   $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
+	if (e.bill.status == 1) {
+		$('#title').text('进货单')
+		ci = 3 //表示订单已经完成，checkin菜单不可再用
+		$('#act').attr("disabled", true)
+		$('#goods').attr("disabled", true)
+		$('#memo').attr("disabled", true)
+		var upd = new Date(e.bill.updated)
+		$('#finfo').text(`完成时间：${upd.toLocaleString()}`)
+	}
 	$('#goods').val('')
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)
@@ -246,18 +263,22 @@ function getBillInfo() {
 	$('#summary').text('')
 	if (e.items != null && e.items.length > 0) {
 	  if (ci != "1") {
-		ci = "0"
+		if (ci != 3) ci = "0"
 		$('#summary').text(`${e.bill.count}种货品，总价${e.bill.cost}元`)
 		switch (vs) {
 	    case "0":
 	      $.each(e.items, function(_, item) {
-	    	  var bg =  'white'
-	    	  if (item.cost == 0) {
-	    		  bg = 'lightpink'
-	    		  ci = '2'
-	    	  }
-	    	  $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
-	    	    >${item.gname} ${item.request}克</a> &nbsp; `)
+			if (e.bill.status == 0) {
+			  var bg =  'white'
+              if (item.cost == 0) {
+            	  bg = 'lightpink'
+            	  ci = '2'
+              }
+              $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
+                >${item.gname} ${item.request}克</a> &nbsp; `)
+			} else {
+			  $('#cart').append(`${item.gname} ${item.request}克 &nbsp; `)  
+			}
 	      })
 	      break
 	    case "1":
@@ -265,15 +286,19 @@ function getBillInfo() {
 	    	<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
 	    	<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
 	      $.each(e.items, function(_, item) {
-            var bg =  'white'
-	        if (item.cost == 0) {
-	          bg = 'lightpink'
-	          ci = '2'
-	        }
 	        var total = item.cost * item.request
-	        tbl += `<tr style="background:${bg}"><td><a href="#" onclick="editItem(${item.gid})"
-	          >${item.gname}</a></td><td class="text-right">${item.request}</td><td class="text-right"
-	          >${item.cost}</td><td class="text-right">${total}</td></tr>`
+			var bg =  'white'
+			var name = item.gname
+			if (e.bill.status == 0) {
+	          if (item.cost == 0) {
+	            bg = 'lightpink'
+	            ci = '2'
+	          }
+			  name = `<a href="#" onclick="editItem(${item.gid})">${name}</a>`
+			}
+	        tbl += `<tr style="background:${bg}"><td>${name}</td><td class="text-right"
+			  >${item.request}</td><td class="text-right">${item.cost}</td><td class="text-right"
+			  >${total}</td></tr>`
 	      })
 	      tbl += `</tbody></table>`
 	      $('#cart').append(tbl)
@@ -310,7 +335,10 @@ function doneCheckIn() {
 		toast('未全部入库', '请将所有货品入库，或返回修改订购信息', 'error')
 		return
 	}
-	console.log($('#done').is(':empty'))
+	var bid = $('#bid').val()
+	$.post(`/api/chkin/${bid}`, {status: 1}, function(e) {
+		getBillInfo()
+	})
 }
 $(document).ready(function () {
   $('#uid').val(arg.user.id)

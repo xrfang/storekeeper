@@ -56,6 +56,15 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		jsonReply(w, res)
 	case "POST":
 		assert(r.ParseForm())
+		status, _ := strconv.Atoi(r.FormValue("status"))
+		if status > 0 {
+			b, _, err := db.GetBill(id, -1) //第二参数不是0或1表示不需要获取条目
+			assert(err)
+			b.Status = 1
+			_, err = db.SetBill(b)
+			assert(err)
+			return
+		}
 		gid, _ := strconv.Atoi(r.FormValue("gid"))
 		if gid > 0 { //提交单条目编辑
 			items, err := db.GetBillItems(id, gid)

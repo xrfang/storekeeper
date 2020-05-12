@@ -113,11 +113,14 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 		}
 	}()
 	assert(db.Get(&bill, `SELECT * FROM bom WHERE id=?`, id))
-	if itmOrd == 0 {
+	switch itmOrd {
+	case 0:
 		assert(db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=? ORDER BY id DESC`, id))
-	} else {
+	case 1:
 		assert(db.Select(&items, `SELECT bi.* FROM bom_item bi JOIN goods g ON g.id=gid
 		    WHERE bom_id=? ORDER BY g.pinyin`, id))
+	default:
+		return
 	}
 	bill.Count = len(items)
 	for _, it := range items {

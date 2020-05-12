@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -28,8 +27,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		if item > 0 { //在弹出框中编辑条目
 			bis, err := db.GetBillItems(id, item)
 			assert(err)
-			w.Header().Set("Content-Type", "application/json")
-			assert(json.NewEncoder(w).Encode(bis[0]))
+			jsonReply(w, bis[0])
 			return
 		}
 		//编辑整个单据
@@ -55,8 +53,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-		w.Header().Set("Content-Type", "application/json")
-		assert(json.NewEncoder(w).Encode(res))
+		jsonReply(w, res)
 	case "POST":
 		assert(r.ParseForm())
 		gid, _ := strconv.Atoi(r.FormValue("gid"))
@@ -89,11 +86,18 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		assert(err)
 		cfm, _ := strconv.Atoi(r.FormValue("confirm"))
 		if cfm > 0 { //验货入库
+			//res := map[string]interface{}{"id": id, "count": cfm}
 			var items []interface{}
 			for _, g := range goods {
 				items = append(items, g.ID)
 			}
+			if len(items) == 0 {
+
+			}
 			if len(items) > 0 {
+				bis, err := db.GetBillItems(id, items...)
+				assert(err)
+				_ = bis
 				//TODO
 			}
 			return
@@ -122,8 +126,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 				req = -req
 			}
 		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		jsonReply(w, map[string]interface{}{
 			"id":    id,
 			"item":  items,
 			"count": req,

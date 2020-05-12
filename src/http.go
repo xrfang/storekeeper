@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
 	"net/http"
 	"path"
@@ -49,4 +50,9 @@ func renderTemplate(w http.ResponseWriter, tpl string, args interface{}) {
 	}
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	assert(t.Execute(w, args))
+}
+
+func jsonReply(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	assert(json.NewEncoder(w).Encode(data))
 }

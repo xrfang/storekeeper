@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -132,8 +131,7 @@ func users(w http.ResponseWriter, r *http.Request) {
 				resp["mesg"] = err.Error()
 			}
 		}
-		w.Header().Set("Content-Type", "application/json")
-		assert(json.NewEncoder(w).Encode(resp))
+		jsonReply(w, resp)
 	case "DELETE":
 		var ids string
 		if len(r.URL.Path) > 7 {

@@ -63,7 +63,10 @@
 	  <p id="cart"></p>
 	  <p id="wait"></p>
 	  <p id="wip"></p>
-	  <p id="done"></p>			
+	  <p id="done"></p>
+	  <p id="chkin" style="display:none;text-align:center;margin-top:2rem">
+		<button onclick="doneCheckIn()" class="btn btn-info">&nbsp;完成入库&nbsp;</button>
+	  </p>
 	</div>
   </div>  
 </div>
@@ -231,6 +234,7 @@ function getBillInfo() {
   var so = $('#sortorder').attr('value')
   var vs = $('#viewstyle').attr('value')
   var ci = $('#docheckin').attr('value')
+  $('#chkin').css('display', 'none')
   $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
 	$('#goods').val('')
 	$('#creator').val(e.user)
@@ -276,6 +280,7 @@ function getBillInfo() {
 	    }
 	    $('#docheckin').attr('value', ci)
 	  } else {
+		$('#chkin').css('display', '')
 		$.each(e.items, function(i, it) {
 			if (it.confirm == 0) {
 				$('#wait').append(`${it.gname} ${it.request}克 &nbsp; `)
@@ -292,7 +297,7 @@ function getBillInfo() {
 			$('#wip').prepend(`<p><b>正在入库货品</b></p>`)
 		}
 		if (!$('#done').is(':empty')) {
-			$('#done').prepend(`<p><b>已完成入库货品</b></p>`)
+			$('#done').prepend(`<p><b>已入库货品</b></p>`)
 		}
 	  }
 	} else {
@@ -300,7 +305,13 @@ function getBillInfo() {
 	}
   })
 }
-
+function doneCheckIn() {
+	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
+		toast('未全部入库', '请将所有货品入库，或返回修改订购信息', 'error')
+		return
+	}
+	console.log($('#done').is(':empty'))
+}
 $(document).ready(function () {
   $('#uid').val(arg.user.id)
   if (arg.bill == 0) {

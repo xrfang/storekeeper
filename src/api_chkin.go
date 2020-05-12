@@ -85,8 +85,12 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		}
 		//增加新条目
 		item := r.FormValue("item")
-		//TODO：将count改为request，增加confirm，用于区分采购开单与入库
-		cnt, _ := strconv.Atoi(r.FormValue("count"))
+		cfm, _ := strconv.Atoi(r.FormValue("confirm"))
+		if cmf > 0 {
+			//TODO:
+			return
+		}
+		req, _ := strconv.Atoi(r.FormValue("request"))
 		goods, err := db.SearchGoods(item)
 		assert(err)
 		items := []string{}
@@ -102,20 +106,20 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 				BomID:     id,
 				GoodsID:   goods[0].ID,
 				GoodsName: goods[0].Name,
-				Request:   cnt,
+				Request:   req,
 			}, 0)
 			if err != nil {
 				if err != db.ErrItemAlreadyExists {
 					panic(err)
 				}
-				cnt = -cnt
+				req = -req
 			}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"id":    id,
 			"item":  items,
-			"count": cnt,
+			"count": req,
 		})
 	case "DELETE":
 		ids := strings.SplitN(strings.TrimSpace(r.URL.Path[11:]), "/", 2)

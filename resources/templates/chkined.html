@@ -163,11 +163,15 @@ function addGoods() {
 		toast("输入错误", "数量必须是大于0的整数", "warning")
 		return
 	}
+	$('#choice').empty()
 	var memo = $('#memo').val()
 	var id = $('#bid').val()
-	$('#choice').empty()
-	$('#cart').empty()
-	$.post(`/api/chkin/${id}`, {item:item,count:cnt}, function(e) {
+	var ci = $('#docheckin').attr('value')
+	if (ci == 1) {
+		console.log('TODO: 验货入库')
+		reutrn
+	}
+	$.post(`/api/chkin/${id}`, {item:item,request:cnt}, function(e) {
 		switch (e.item.length) {
 		case 0:
     	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)

@@ -213,7 +213,7 @@ function getBillInfo() {
 	$('#done').empty()
 	$('#summary').text('')
 	if (e.items != null && e.items.length > 0) {
-	  if (ci == "0" || ci == "") {
+	  if (ci != "1") {
 		ci = "0"
 		$('#summary').text(`${e.bill.count}种货品，总价${e.bill.cost}元`)
 		switch (vs) {

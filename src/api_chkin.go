@@ -86,7 +86,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		//增加新条目
 		item := r.FormValue("item")
 		cfm, _ := strconv.Atoi(r.FormValue("confirm"))
-		if cmf > 0 {
+		if cfm > 0 {
 			//TODO:
 			return
 		}

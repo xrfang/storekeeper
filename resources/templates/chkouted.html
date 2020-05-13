@@ -1,0 +1,89 @@
+{{define "body"}} {{template "header"}}
+<nav class="navbar navbar-expand navbar-dark bg-dark">
+  <a class="navbar-brand" href="#"><img src="/imgs/nav_title.png"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMenu">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarMenu">
+    <a class="navbar-brand" href="#" id="title"></a>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+          <i class="fas fa-bars"></i>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
+          <a class="dropdown-item" href="/chkout"><i class="fas fa-file-powerpoint"></i>&nbsp;出货单管理</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/logout"><i class="fas fa-door-open"></i>&nbsp;退出</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div class="container" style="padding-top:1em">
+  <input type="hidden" id="bid" />
+  <input type="hidden" id="uid" />
+  <div class="row" style="margin-bottom:0.8rem">
+	<div class="col col-3" style="padding-right:0">
+	  <label for="creator"><b>创建者</b></label>
+	  <input type="text" readonly class="form-control" id="creator" />
+	</div>
+	<div class="col col-9">
+	  <label for="fee"><b>备注</b></label>
+	  <input type="text" class="form-control" id="memo" value="0" />
+	</div>	
+  </div>
+  <div class="card border-success">
+	<div class="card-header">
+	  <div class="row">
+		<div class="col"><b>货品清单</b></div>
+	  </div>
+	</div>
+	<div class="card-body">
+	  <div class="row" style="margin-bottom: 1rem">
+	    <div class="col col-9">
+	      <input type="text" class="form-control" id="goods" placeholder="格式：品名 数量" />
+	      <small class="form-text text-muted">可以输入品名或其拼音索引</small>
+	    </div>
+	    <div class="col col-3" style="padding-left:0">
+          <input style="width:100%" type=button id="act" onclick="addGoods()" class="btn btn-success" value="添  加" />
+	    </div>
+	  </div>
+	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
+	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
+	  <p id="cart"></p>
+	  <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
+	</div>
+  </div>  
+</div>
+<div class="modal fade" id="editem" tabindex="-1" role="dialog">
+  <input type=hidden id="gid" />
+  <div class="modal-dialog modal-dialog-centered" role="document">
+	<div class="modal-content">
+	<div class="modal-header">
+		<h5 class="modal-title">编辑条目</h5>
+		<button type="button" class="close" data-dismiss="modal">&times;</button>
+	</div>
+	<div class="modal-body">
+	  <div class="form-group"><h4 id="gname"></h4></div>
+	  <div class="form-group row">
+		<div class="col">
+		  <input type="text" class="form-control" id="count" />
+		  <small class="form-text text-muted">数量（克）</small>
+		</div>
+		<div class="col">
+		  <input type="text" class="form-control" id="price" />
+		  <small class="form-text text-muted">价格（元/克）</small>
+		</div>
+	  </div>
+	  <div class="modal-footer" style="padding-right:0">
+		<button type="button" class="btn btn-danger" data-dismiss="modal">删 除</button>
+		<button type="button" class="btn btn-success" data-dismiss="modal">保 存</button>
+	  </div>
+	</div>
+  </div>
+</div>
+<script>
+var arg = {{.}}
+</script>
+{{template "footer"}} {{end}}

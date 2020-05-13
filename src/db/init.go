@@ -37,7 +37,7 @@ func setupSchema() {
         "charge"  NUMERIC NOT NULL DEFAULT 0,                  -- 总价格
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（不含在总金额内，如运费）
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
-        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（0=未完成；1=已完成）
+        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（0=未完成；1=已完成；2=已收款）
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最后更新时间戳
         FOREIGN KEY(user_id) REFERENCES user(id)

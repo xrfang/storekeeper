@@ -21,11 +21,60 @@
   </div>
 </nav>
 <div class="container" style="padding-top:1em">
-    
+  <p style="margin-top:1rem;font-weight:bold">当前出货单概况</p>
+  <p style="font-family: 'Courier New', Courier, monospace">
+  {{range $stat, $bill := index . "bills" }}
+    {{if eq $stat 0}}
+    未出货：<a href="javascript:listBills('0')">{{len $bill}}张</a> &nbsp;
+    {{else if eq $stat 1}}
+    已出货：<a href="javascript:listBills('1')">{{len $bill}}张</a> &nbsp;
+    {{else}}
+    已收款：<a href="javascript:listBills('2')">{{len $bill}}张</a> &nbsp;
+    {{end}}  
+  {{end}}
+  </p>
+  <p>
+    {{if gt (len (index . "bills")) 0}}
+    请点击上面的连接获取各状态出货单详情，或
+    {{else}}
+    未出货：0张 &nbsp; 已出货：0张 &nbsp; 已收款：0张
+    <br><br>
+    {{end}}<a href="/chkin/">新建出货单</a>
+  </p>
+  <p id="blist"></p>    
 </div>
 <script>
-  $(document).ready(function () {
-    //TODO
+var data = {{.}}
+function un(id) {
+  for (i = 0; i < data.users.length; i++) {
+    if (data.users[i].id == id) return data.users[i].name
+  }
+  return `user#${id}`
+}
+function listBills(status) {
+  var bs = data.bills[status]
+  var us = data.users
+  var st = ""
+  switch(status) {
+  case '0':
+    st = "未出货"
+    break
+  case '1':
+    st = "已出货"
+    break
+  default:
+    st = "已付款"
+  }
+  $('#blist').text("")
+  $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}出货单</p>`)
+  $.each(bs, function(_, b) {
+    var item = `<div style="margin-top:0.4rem;font-family:'Courier New',Courier,monospace">
+      <a href="/chkin/${b.id}">[${b.updated.substring(0, 10)}] 给${un(b.user)}，${b.count}种货品`
+    if (typeof(b.cost) != 'undefined' && b.cost > 0) item += `，总价${b.cost}元`
+    if (typeof(b.memo) != 'undefined' && b.memo.length > 0) item+= ` (${b.memo})`
+    item += `</a></div>`
+    $('#blist').append(item)
   })
+}
 </script>
 {{template "footer"}} {{end}}

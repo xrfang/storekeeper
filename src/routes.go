@@ -15,7 +15,7 @@ func setupRoutes() {
 	http.HandleFunc("/otp/", otpShow)
 	http.HandleFunc("/chkin", chkInList)
 	http.HandleFunc("/chkin/", chkInEdit)
-	http.HandleFunc("/chkout", chkOut)
+	http.HandleFunc("/chkout", chkOutList)
 	http.HandleFunc("/inventory", inventory)
 	http.HandleFunc("/sku", sku)
 	http.HandleFunc("/sku/", sku)

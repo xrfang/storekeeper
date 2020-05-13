@@ -25,9 +25,9 @@
   <p style="font-family: 'Courier New', Courier, monospace">
   {{range $stat, $bill := index . "bills" }}
     {{if eq $stat 0}}
-    未完成进货单：<a href="javascript:listBills('0')">{{len $bill}}张</a> &nbsp;
+    未完成：<a href="javascript:listBills('0')">{{len $bill}}张</a> &nbsp;
     {{else}}
-    已完成进货单：<a href="javascript:listBills('1')">{{len $bill}}张</a> &nbsp;
+    已完成：<a href="javascript:listBills('1')">{{len $bill}}张</a> &nbsp;
     {{end}}  
   {{end}}
   </p>
@@ -35,7 +35,7 @@
     {{if gt (len (index . "bills")) 0}}
     请点击上面的连接获取各状态进货单详情，或
     {{else}}
-    未完成进货单：0张 &nbsp; 已完成进货单：0张 &nbsp;
+    未完成：0张 &nbsp; 已完成：0张 &nbsp;
     <br><br>
     {{end}}<a href="/chkin/">新建进货单</a>
   </p>

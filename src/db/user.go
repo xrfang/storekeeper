@@ -102,10 +102,6 @@ func UpdateUser(u *User) (err error) {
 	} else {
 		cmd := `UPDATE user SET name=?,login=?,memo=?`
 		args := []interface{}{u.Name, u.Login, u.Memo}
-		if u.Client >= 0 {
-			cmd += `,client=?`
-			args = append(args, u.Client)
-		}
 		cmd += ` WHERE id=?`
 		args = append(args, u.ID)
 		db.MustExec(cmd, args...)

@@ -114,19 +114,7 @@
         }
         var res = xhr.responseJSON
         if (res.stat) {
-          $.toast({
-            heading: '操作成功',
-            text: '用户信息已保存',
-            icon: 'success',
-            position: 'mid-center',
-            loader: false,
-            textAlign: 'left',
-            allowToastClose: false,
-            showHideTransition: 'fade',
-            afterHidden: function () {
-              window.location.href = res.goto
-            }
-          })
+          window.location.href = res.goto
           return
         }
         toast("操作失败", res.mesg, 'error')

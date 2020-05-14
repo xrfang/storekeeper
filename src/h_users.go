@@ -118,9 +118,6 @@ func users(w http.ResponseWriter, r *http.Request) {
 		}
 		resp := chkUser(&u)
 		if resp["stat"].(bool) {
-			if uid != 1 {
-				u.Client = -1 //禁止非admin用户设置u.Client
-			}
 			err := db.UpdateUser(&u)
 			if err == nil {
 				if strings.HasPrefix(resp["goto"].(string), "/otp/") {

@@ -18,7 +18,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	var mesg string
 
 	//TODO：开发模式，跳过登录
-	setCookie(w, "token", T.SignIn(1), 0)
+	setCookie(w, "token", T.SignIn(2), 0)
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	return
 

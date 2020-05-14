@@ -52,7 +52,12 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			assert(err)
 			u, err := db.GetUser(b.User)
 			assert(err)
-			us = []db.User{*u}
+			if u.Client == 0 {
+				us, err = db.ListUsers(u.ID)
+			} else {
+				us, err = db.ListUsers(u.Client)
+			}
+			assert(err)
 		}
 		renderTemplate(w, "chkouted.html", map[string]interface{}{"users": us, "bill": id})
 	default:

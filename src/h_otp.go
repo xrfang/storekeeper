@@ -44,6 +44,10 @@ func otpShow(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Path[5:])
 	u, err := db.GetUser(id)
 	assert(err)
+	if u.Client != 0 {
+		http.Redirect(w, r, "/users", http.StatusTemporaryRedirect)
+		return
+	}
 	key, err := otpGenKey(u.Login)
 	assert(err)
 	assert(db.UpdateOTPKey(u.Login, key.Secret()))

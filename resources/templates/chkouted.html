@@ -31,15 +31,17 @@
 	<div class="col" style="padding-right:0">
 	  <label for="markup"><b>溢价率</b></label>	  
       <div class="input-group">
-        <input type="text" class="form-control" id="markup" placeholder="20">
-		<div class="input-group-append">
-          <div class="input-group-text">%</div>
-        </div>
+		<input type="text" class="form-control border-right-0" id="markup" placeholder="20">
+		<div class="input-group-append" id="chgm">
+		  <div class="input-group-text">%</div>
+		</div>
 	  </div>
 	</div>
 	<div class="col">
 	  <label for="fee"><b>其他费用</b></label>
-	  <input type="text" class="form-control" id="fee" />
+	  <div class="input-group" id="igfee">
+		<input type="text" class="form-control" id="fee" />
+	  </div>
 	  <small class="form-text text-muted">如运费等</small>
 	</div>
   </div>
@@ -101,6 +103,22 @@
 </div>
 <script>
 var arg = {{.}}
+function revertFee() {
+	$('#fee').val($('#fee').attr('old'))
+	$('#chgf').remove()
+}
+function submitFee() {
+	console.log("TODO: submit fee to server...")
+	$('#chgf').remove()
+}
+function revertMarkup() {
+	$('#markup').val($('#markup').attr('old'))
+	$('#chgm').html(`<div class="input-group-text">%</div>`)
+}
+function submitMarkup() {
+	console.log("TODO: submit markup to server...")
+	$('#chgm').html(`<div class="input-group-text">%</div>`)
+}
 function setMemoHeight() {
 	var memo = $('#memo')
 	memo.css('overflow', 'hidden')
@@ -110,6 +128,46 @@ function setMemoHeight() {
 $(document).ready(function () {
 	$('#memo').keyup(function(e) {
 		setMemoHeight()
+	})
+	$('#markup').focus(function(e) {
+		$('#markup').attr('old', $('#markup').val())
+	})
+	$('#markup').keyup(function(e) {
+		var txt = $('#markup').val().trim()
+		if (txt == '') {
+			$('#chgm').html(`<div class="input-group-text">%</div>`)
+			return
+		}
+		if (txt.match(/^\d+$/)) {
+			$('#chgm').html(`<button onclick="submitMarkup()" class="btn btn-outline-success border-left-0 border" type="button">
+			  <i class="fas fa-check"></i></button>`)
+		} else {
+			$('#chgm').html(`<button onclick="revertMarkup()" class="btn btn-outline-danger border-left-0 border"
+			  type="button"><i class="fas fa-times"></i></button>`)
+		}
+	})
+	$('#fee').focus(function(e) {
+		$('#fee').attr('old', $('#fee').val())
+	})
+	$('#fee').keyup(function(e) {
+		var txt = $('#fee').val().trim()
+		if (txt == '') {
+			$('#chgf').remove()
+			return
+		}
+		var func = `revertFee()`
+        var btncls = `danger`
+        var btncap = `times`
+		if (txt.match(/^\d+$/)) {
+			func = `submitFee()`
+    		btncls = `success`
+	    	btncap = `check`
+		}
+		var btn = `<div class="input-group-append" id="chgf"><button onclick="${func}"
+		    class="btn btn-outline-${btncls} border-left-0 border"type="button"><i
+			class="fas fa-${btncap}"></i></button></div>`
+		$('#chgf').remove()
+		$('#igfee').append(btn)		
 	})
 	setMemoHeight()
 	$.each(arg.users, function(_, u) {

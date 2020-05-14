@@ -13,7 +13,7 @@ func apiChkOut(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
 		}
 	}()
-	ok, _ := T.Validate(getCookie(r, "token"))
+	ok, uid := T.Validate(getCookie(r, "token"))
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -57,6 +57,7 @@ func apiChkOut(w http.ResponseWriter, r *http.Request) {
 		}
 		jsonReply(w, res)
 	case "POST":
+		assert(r.ParseForm())
 	case "DELETE":
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

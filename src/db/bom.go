@@ -119,7 +119,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 	case 1:
 		assert(db.Select(&items, `SELECT bi.* FROM bom_item bi JOIN goods g ON g.id=gid
 		    WHERE bom_id=? ORDER BY g.pinyin`, id))
-	default:
+	default: //除以上两种itmOrd外，不返回items
 		return
 	}
 	bill.Count = len(items)

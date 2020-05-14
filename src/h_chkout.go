@@ -42,8 +42,18 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Path[8:])
 	switch r.Method {
 	case "GET":
-		us, err := db.ListUsers(uid)
-		assert(err)
+		var us []db.User
+		if id == 0 {
+			var err error
+			us, err = db.ListUsers(uid)
+			assert(err)
+		} else {
+			b, _, err := db.GetBill(id, -1)
+			assert(err)
+			u, err := db.GetUser(b.User)
+			assert(err)
+			us = []db.User{*u}
+		}
 		renderTemplate(w, "chkouted.html", map[string]interface{}{"users": us, "bill": id})
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

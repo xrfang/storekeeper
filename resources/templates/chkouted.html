@@ -25,17 +25,17 @@
   <input type="hidden" id="uid" />
   <div class="row">
 	<div class="col" style="padding-right:0">
-	  <label for="creator"><b>创建者</b></label>
-	  <input type="text" class="form-control" id="creator" />
+	  <label for="requester"><b>需求方</b></label>
+	  <select class="form-control" id="requester"></select>
 	</div>
 	<div class="col" style="padding-right:0">
 	  <label for="markup"><b>溢价率</b></label>	  
       <div class="input-group">
-        <input type="text" class="form-control" id="markup" placeholder="百分比">
+        <input type="text" class="form-control" id="markup" placeholder="20">
 		<div class="input-group-append">
           <div class="input-group-text">%</div>
         </div>
-      </div>
+	  </div>
 	</div>
 	<div class="col">
 	  <label for="fee"><b>其他费用</b></label>
@@ -112,6 +112,14 @@ $(document).ready(function () {
 		setMemoHeight()
 	})
 	setMemoHeight()
+	$.each(arg.users, function(_, u) {
+		$('#requester').append(`<option value="${u.id}">${u.name}</option>`)
+	})
+	if (arg.bill == 0) {
+	  $('#title').text('新建出货单')
+	} else {
+	  $('#title').text('编辑出货单')
+	}
 })
 </script>
 {{template "footer"}} {{end}}

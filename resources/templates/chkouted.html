@@ -23,16 +23,32 @@
 <div class="container" style="padding-top:1em">
   <input type="hidden" id="bid" />
   <input type="hidden" id="uid" />
-  <div class="row" style="margin-bottom:0.8rem">
-	<div class="col col-3" style="padding-right:0">
+  <div class="row">
+	<div class="col" style="padding-right:0">
 	  <label for="creator"><b>创建者</b></label>
-	  <input type="text" readonly class="form-control" id="creator" />
+	  <input type="text" class="form-control" id="creator" />
 	</div>
-	<div class="col col-9">
-	  <label for="fee"><b>备注</b></label>
-	  <input type="text" class="form-control" id="memo" value="0" />
-	</div>	
+	<div class="col" style="padding-right:0">
+	  <label for="markup"><b>溢价率</b></label>	  
+      <div class="input-group">
+        <input type="text" class="form-control" id="markup" placeholder="百分比">
+		<div class="input-group-append">
+          <div class="input-group-text">%</div>
+        </div>
+      </div>
+	</div>
+	<div class="col">
+	  <label for="fee"><b>其他费用</b></label>
+	  <input type="text" class="form-control" id="fee" />
+	  <small class="form-text text-muted">如运费等</small>
+	</div>
   </div>
+  <div class="row mb-3">
+	<div class="col">
+	  <label for="fee"><b>备注</b></label>
+	  <textarea class="form-control" id="memo" spellcheck="false" style="resize:none"></textarea>
+	</div>
+  </div>	
   <div class="card border-success">
 	<div class="card-header">
 	  <div class="row">
@@ -54,7 +70,7 @@
 	  <p id="cart"></p>
 	  <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
 	</div>
-  </div>  
+  </div>
 </div>
 <div class="modal fade" id="editem" tabindex="-1" role="dialog">
   <input type=hidden id="gid" />
@@ -85,5 +101,17 @@
 </div>
 <script>
 var arg = {{.}}
+function setMemoHeight() {
+	var memo = $('#memo')
+	memo.css('overflow', 'hidden')
+    memo.css('height', 0)
+    memo.css('height', memo.prop('scrollHeight'))
+}
+$(document).ready(function () {
+	$('#memo').keyup(function(e) {
+		setMemoHeight()
+	})
+	setMemoHeight()
+})
 </script>
 {{template "footer"}} {{end}}

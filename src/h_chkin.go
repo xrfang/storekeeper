@@ -18,6 +18,7 @@ func chkInList(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
+	assert(db.RemoveEmptyBills())
 	bills, err := db.ListBills(&db.Bill{Type: 1})
 	assert(err)
 	bm := make(map[byte][]db.Bill)

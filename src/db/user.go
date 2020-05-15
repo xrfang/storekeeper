@@ -67,6 +67,7 @@ func CheckLogin(login, code string) (int, error) {
 func GetUser(id int) (*User, error) {
 	var u User
 	err := db.Get(&u, `SELECT * FROM user WHERE id=?`, id)
+	u.OTPKey = ""
 	return &u, err
 }
 
@@ -76,13 +77,25 @@ func ListUsers(account int) (users []User, err error) {
 		qry += fmt.Sprintf(` WHERE client=%d OR id=%d`, account, account)
 	}
 	err = db.Select(&users, qry)
+	if err != nil {
+		return
+	}
+	for i := range users {
+		users[i].OTPKey = ""
+	}
 	return
 }
 
 func GetPrimaryUsers() ([]User, error) {
 	var us []User
 	err := db.Select(&us, `SELECT id,name from user WHERE id>1 AND client=0`)
-	return us, err
+	if err != nil {
+		return nil, err
+	}
+	for i := range us {
+		us[i].OTPKey = ""
+	}
+	return us, nil
 }
 
 func UpdateUser(u *User) (err error) {

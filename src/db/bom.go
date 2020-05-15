@@ -38,6 +38,12 @@ type BillItem struct {
 	Updated   time.Time `json:"updated"`
 }
 
+func RemoveEmptyBills() error {
+	_, err := db.Exec(`DELETE FROM bom WHERE NOT id IN 
+		(SELECT distinct bom_id FROM bom_item)`)
+	return err
+}
+
 //tpl模板可以指定的参数：ID、Type、User、Status
 func ListBills(tpl *Bill) (bills []Bill, err error) {
 	defer func() {

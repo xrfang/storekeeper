@@ -108,7 +108,7 @@ function revertFee() {
 	$('#chgf').remove()
 }
 function submitFee() {
-	console.log("TODO: submit fee to server...")
+	console.log("TODO: submit fee to server...", $('#bid').val())
 	$('#chgf').remove()
 }
 function revertMarkup() {
@@ -116,7 +116,7 @@ function revertMarkup() {
 	$('#chgm').html(`<div class="input-group-text">%</div>`)
 }
 function submitMarkup() {
-	console.log("TODO: submit markup to server...")
+	console.log("TODO: submit markup to server...", $('#bid').val())
 	$('#chgm').html(`<div class="input-group-text">%</div>`)
 }
 function setMemoHeight() {
@@ -173,7 +173,8 @@ $(document).ready(function () {
 	$.each(arg.users, function(_, u) {
 		$('#requester').append(`<option value="${u.id}">${u.name}</option>`)
 	})
-	if (arg.bill == 0) {
+	$('#bid').val(Math.abs(arg.bill))
+	if (arg.bill < 0) {
 	  $('#title').text('新建出货单')
 	} else {
 	  $('#title').text('编辑出货单')

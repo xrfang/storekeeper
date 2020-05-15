@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"storekeeper/db"
 	"strconv"
@@ -17,6 +18,7 @@ func chkOutList(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
+	assert(db.RemoveEmptyBills())
 	bills, err := db.ListBills(&db.Bill{Type: 2})
 	assert(err)
 	bm := make(map[byte][]db.Bill)
@@ -47,6 +49,9 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			var err error
 			us, err = db.ListUsers(uid)
 			assert(err)
+			id, err = db.SetBill(db.Bill{Type: 2, User: uid})
+			assert(err)
+			id = -id
 		} else {
 			b, _, err := db.GetBill(id, -1)
 			assert(err)
@@ -63,4 +68,47 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+func chkOutSetFee(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[12:])
+	fmt.Fprintln(w, "bill id:", id)
+}
+func chkOutSetMarkup(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[13:])
+	fmt.Fprintln(w, "bill id:", id)
+}
+func chkOutSetRequester(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[12:])
+	fmt.Fprintln(w, "bill id:", id)
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"storekeeper/db"
@@ -43,20 +42,22 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := strconv.Atoi(r.URL.Path[8:])
+	var bill db.Bill
 	switch r.Method {
 	case "GET":
 		var us []db.User
+		var err error
 		if id == 0 {
-			var err error
 			us, err = db.ListUsers(uid)
 			assert(err)
-			id, err = db.SetBill(db.Bill{Type: 2, User: uid, Markup: 20})
+			bill = db.Bill{Type: 2, User: uid, Markup: 20, Fee: 0}
+			id, err = db.SetBill(bill)
 			assert(err)
-			id = -id
+			bill.ID = -id
 		} else {
-			b, _, err := db.GetBill(id, -1)
+			bill, _, err = db.GetBill(id, -1)
 			assert(err)
-			u, err := db.GetUser(b.User)
+			u, err := db.GetUser(bill.User)
 			assert(err)
 			if u.Client == 0 {
 				us, err = db.ListUsers(u.ID)
@@ -65,7 +66,7 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			}
 			assert(err)
 		}
-		renderTemplate(w, "chkouted.html", map[string]interface{}{"users": us, "bill": id})
+		renderTemplate(w, "chkouted.html", map[string]interface{}{"users": us, "bill": bill})
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
@@ -91,7 +92,6 @@ func chkOutSetFee(w http.ResponseWriter, r *http.Request) {
 		panic(fmt.Errorf("invalid ID"))
 	}
 	assert(r.ParseForm())
-	json.NewEncoder(w).Encode(r.Form)
 	fee, err := strconv.ParseFloat(r.FormValue("fee"), 64)
 	assert(err)
 	b, _, err := db.GetBill(id, -1)
@@ -121,7 +121,6 @@ func chkOutSetMarkup(w http.ResponseWriter, r *http.Request) {
 		panic(fmt.Errorf("invalid ID"))
 	}
 	assert(r.ParseForm())
-	json.NewEncoder(w).Encode(r.Form)
 	markup, err := strconv.Atoi(r.FormValue("markup"))
 	assert(err)
 	b, _, err := db.GetBill(id, -1)
@@ -151,7 +150,6 @@ func chkOutSetRequester(w http.ResponseWriter, r *http.Request) {
 		panic(fmt.Errorf("invalid ID"))
 	}
 	assert(r.ParseForm())
-	json.NewEncoder(w).Encode(r.Form)
 	req, _ := strconv.Atoi(r.FormValue("user"))
 	if req <= 0 {
 		panic(fmt.Errorf("invalid user_id"))
@@ -161,4 +159,53 @@ func chkOutSetRequester(w http.ResponseWriter, r *http.Request) {
 	b.User = req
 	_, err = db.SetBill(b)
 	assert(err)
+}
+
+func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[13:])
+	switch r.Method {
+	case "POST":
+		assert(r.ParseForm())
+		item := r.FormValue("item")
+		goods, err := db.SearchGoods(item)
+		assert(err)
+		items := []string{}
+		for _, g := range goods {
+			items = append(items, g.Name)
+		}
+		req, _ := strconv.Atoi(r.FormValue("request"))
+		if req > 0 && len(items) == 1 {
+			err = db.SetBillItem(db.BillItem{
+				BomID:     id,
+				GoodsID:   goods[0].ID,
+				GoodsName: goods[0].Name,
+				Request:   req,
+			}, 0)
+			if err != nil {
+				if err != db.ErrItemAlreadyExists {
+					panic(err)
+				}
+				req = -req
+			}
+		}
+		jsonReply(w, map[string]interface{}{
+			"id":    id,
+			"item":  items,
+			"count": req,
+		})
+	case "DELETE":
+		//TODO: remove item from bom
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
 }

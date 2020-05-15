@@ -165,8 +165,9 @@ func SetBill(b Bill) (id int, err error) {
 }
 
 func SetBillItem(bi BillItem, mode int) (err error) {
-	if bi.BomID <= 0 {
-		return errors.New("invalid bom_id")
+	b, _, err := GetBill(bi.BomID, -1)
+	if err != nil {
+		return err
 	}
 	tx, err := db.Beginx()
 	if err != nil {
@@ -180,6 +181,14 @@ func SetBillItem(bi BillItem, mode int) (err error) {
 		}
 		err = tx.Commit()
 	}()
+	if b.Type == 2 { //出库单，数量转化为负值
+		if bi.Request > 0 {
+			bi.Request = -bi.Request
+		}
+		if bi.Confirm > 0 {
+			bi.Confirm = -bi.Confirm
+		}
+	}
 	switch mode {
 	case 0: //insert
 		var cnt int

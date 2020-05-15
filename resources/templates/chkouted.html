@@ -40,7 +40,7 @@
 	<div class="col">
 	  <label for="fee"><b>其他费用</b></label>
 	  <div class="input-group" id="igfee">
-		<input type="text" class="form-control" id="fee" />
+		<input type="text" class="form-control" id="fee" placeholder="0" />
 	  </div>
 	  <small class="form-text text-muted">如运费等</small>
 	</div>
@@ -78,13 +78,13 @@
   <input type=hidden id="gid" />
   <div class="modal-dialog modal-dialog-centered" role="document">
 	<div class="modal-content">
-	<div class="modal-header">
+	  <div class="modal-header">
 		<h5 class="modal-title">编辑条目</h5>
 		<button type="button" class="close" data-dismiss="modal">&times;</button>
-	</div>
-	<div class="modal-body">
-	  <div class="form-group"><h4 id="gname"></h4></div>
-	  <div class="form-group row">
+	  </div>
+	  <div class="modal-body">
+	    <div class="form-group"><h4 id="gname"></h4></div>
+	    <div class="form-group row">
 		<div class="col">
 		  <input type="text" class="form-control" id="count" />
 		  <small class="form-text text-muted">数量（克）</small>
@@ -93,10 +93,11 @@
 		  <input type="text" class="form-control" id="price" />
 		  <small class="form-text text-muted">价格（元/克）</small>
 		</div>
-	  </div>
-	  <div class="modal-footer" style="padding-right:0">
+	    </div>
+	    <div class="modal-footer" style="padding-right:0">
 		<button type="button" class="btn btn-danger" data-dismiss="modal">删 除</button>
 		<button type="button" class="btn btn-success" data-dismiss="modal">保 存</button>
+	    </div>
 	  </div>
 	</div>
   </div>
@@ -107,15 +108,9 @@ function revertFee() {
 	$('#fee').val($('#fee').attr('old'))
 	$('#chgf').remove()
 }
-/*
-/chkout/req/`
-*/
 function submitFee() {
 	var id = $('#bid').val()
-	console.log("TODO: submit fee to server...", id)
-	$.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {
-		console.log(e)
-	})
+	$.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {})
 	$('#chgf').remove()
 }
 function revertMarkup() {
@@ -124,10 +119,7 @@ function revertMarkup() {
 }
 function submitMarkup() {
 	var id = $('#bid').val()
-	console.log("TODO: submit markup to server...", id)
-	$.post(`/chkout/mark/${id}`, {markup: $('#markup').val()}, function(e) {
-		console.log(e)
-	})
+	$.post(`/chkout/mark/${id}`, {markup: $('#markup').val()}, function(e) {})
 	$('#chgm').html(`<div class="input-group-text">%</div>`)
 }
 function setMemoHeight() {
@@ -135,6 +127,60 @@ function setMemoHeight() {
 	memo.css('overflow', 'hidden')
     memo.css('height', 0)
     memo.css('height', memo.prop('scrollHeight'))
+}
+function pick(item, cnt) {
+	var name = $(item).text()
+	$('#goods').val(`${name} ${cnt}`)
+	addGoods()
+}
+function addGoods() {
+	var spec = $('#goods').val().trim().split(/\s+/)
+	if (spec.length != 2) {
+		toast("输入错误", "示例: “甘草 500”表示“500克甘草”", "warning")
+		return
+	}
+	var item = spec[0]
+	var cnt = parseInt(spec[1])
+	if (isNaN(cnt)) {
+		toast("输入错误", "数量必须是整数", "warning")
+		return
+	}
+	$('#choice').empty()
+	var memo = $('#memo').val()
+	var id = $('#bid').val()
+	if (cnt <= 0) {
+      toast("输入错误", "数量必须大于0", "warning")
+      return
+	}
+	$.post(`/chkout/item/${id}`, {item:item,request:cnt}, function(e) {
+		switch (e.item.length) {
+		case 0:
+    	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
+		  break
+		case 1:
+		  $('#bid').val(e.id)
+		  if (e.count < 0) 
+		    $('#choice').append(`<p><span style='color:red'>${e.item[0]}</span> 已经添加了</p>`)
+		  break
+		default:
+    	  var choice = `<p><span style="color:red">${item}</span> 是指`
+    	  $.each(e.item, function(i, it) {
+		  	choice += ` &nbsp;<a onclick="pick(this, ${cnt})" href="#">${it}</a>&nbsp; `
+		  	if(i < e.item.length-1) choice += '还是'
+		  })
+		  choice += '?'
+		  $('#choice').append(choice)	
+		}
+		getBillInfo()
+		if ($('#choice').is(':empty')) {
+		    $('#choice').css('display', 'none')
+		} else { 
+		    $('#choice').css('display', '')
+		}		
+	})
+}
+function getBillInfo() {
+	console.log("TODO: getBillInfo()")
 }
 $(document).ready(function () {
 	$('#memo').keyup(function(e) {
@@ -184,13 +230,22 @@ $(document).ready(function () {
 	$.each(arg.users, function(_, u) {
 		$('#requester').append(`<option value="${u.id}">${u.name}</option>`)
 	})
-	$('#bid').val(Math.abs(arg.bill))
-	if (arg.bill < 0) {
+	$('#requester').change(function(e) {
+		var id = $('#bid').val()
+		$.post(`/chkout/req/${id}`, {user: $('#requester').val()}, function(e) {})
+	})
+	$('#bid').val(Math.abs(arg.bill.id))
+	if (arg.bill.id < 0) {
 	  $('#title').text('新建出货单')
 	} else {
 	  $('#title').text('编辑出货单')
-	  //TODO: set user to match current...
+	  $('#markup').val(arg.bill.markup)
+	  $('#fee').val(arg.bill.fee)
+	  $('#requester').val(arg.bill.user)
 	}
+	$('#goods').on('keypress', function (e) {
+      if (e.which === 13) addGoods()
+    })	
 })
 </script>
 {{template "footer"}} {{end}}

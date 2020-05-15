@@ -17,6 +17,7 @@ type Bill struct {
 	Type    byte      `json:"type"` //1=入库；2=出库；3=盘点
 	User    int       `json:"user" db:"user_id"`
 	Charge  float64   `json:"charge"`
+	Markup  int       `json:"markup"`
 	Fee     float64   `json:"fee"`
 	Cost    float64   `json:"cost"`  //非数据库条目，实时计算
 	Count   int       `json:"count"` //非数据库条目，实时计算
@@ -152,13 +153,14 @@ func SetBill(b Bill) (id int, err error) {
 		}
 	}()
 	if b.ID == 0 {
-		res := db.MustExec(`INSERT INTO bom (type,user_id,fee,memo,status) VALUES
-			(?,?,?,?,0)`, b.Type, b.User, b.Fee, b.Memo)
+		res := db.MustExec(`INSERT INTO bom (type,user_id,markup,fee,memo) VALUES
+		    (?,?,?,?,?)`, b.Type, b.User, b.Markup, b.Fee, b.Memo)
 		id, err := res.LastInsertId()
 		return int(id), err
 	}
-	db.MustExec(`UPDATE bom SET charge=?,fee=?,memo=?,status=? WHERE ID=?`, b.Charge,
-		b.Fee, b.Memo, b.Status, b.ID)
+	//TODO: calculate charge if set status to larger than 1
+	db.MustExec(`UPDATE bom SET user_id=?,markup=?,charge=?,fee=?,memo=?,status=?
+	    WHERE ID=?`, b.User, b.Markup, b.Charge, b.Fee, b.Memo, b.Status, b.ID)
 	return b.ID, nil
 }
 

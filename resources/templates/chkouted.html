@@ -107,8 +107,15 @@ function revertFee() {
 	$('#fee').val($('#fee').attr('old'))
 	$('#chgf').remove()
 }
+/*
+/chkout/req/`
+*/
 function submitFee() {
-	console.log("TODO: submit fee to server...", $('#bid').val())
+	var id = $('#bid').val()
+	console.log("TODO: submit fee to server...", id)
+	$.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {
+		console.log(e)
+	})
 	$('#chgf').remove()
 }
 function revertMarkup() {
@@ -116,7 +123,11 @@ function revertMarkup() {
 	$('#chgm').html(`<div class="input-group-text">%</div>`)
 }
 function submitMarkup() {
-	console.log("TODO: submit markup to server...", $('#bid').val())
+	var id = $('#bid').val()
+	console.log("TODO: submit markup to server...", id)
+	$.post(`/chkout/mark/${id}`, {markup: $('#markup').val()}, function(e) {
+		console.log(e)
+	})
 	$('#chgm').html(`<div class="input-group-text">%</div>`)
 }
 function setMemoHeight() {

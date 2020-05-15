@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"storekeeper/db"
@@ -49,7 +50,7 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			var err error
 			us, err = db.ListUsers(uid)
 			assert(err)
-			id, err = db.SetBill(db.Bill{Type: 2, User: uid})
+			id, err = db.SetBill(db.Bill{Type: 2, User: uid, Markup: 20})
 			assert(err)
 			id = -id
 		} else {
@@ -81,9 +82,25 @@ func chkOutSetFee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	id, _ := strconv.Atoi(r.URL.Path[12:])
-	fmt.Fprintln(w, "bill id:", id)
+	if id <= 0 {
+		panic(fmt.Errorf("invalid ID"))
+	}
+	assert(r.ParseForm())
+	json.NewEncoder(w).Encode(r.Form)
+	fee, err := strconv.ParseFloat(r.FormValue("fee"), 64)
+	assert(err)
+	b, _, err := db.GetBill(id, -1)
+	assert(err)
+	b.Fee = fee
+	_, err = db.SetBill(b)
+	assert(err)
 }
+
 func chkOutSetMarkup(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -95,9 +112,25 @@ func chkOutSetMarkup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	id, _ := strconv.Atoi(r.URL.Path[13:])
-	fmt.Fprintln(w, "bill id:", id)
+	if id <= 0 {
+		panic(fmt.Errorf("invalid ID"))
+	}
+	assert(r.ParseForm())
+	json.NewEncoder(w).Encode(r.Form)
+	markup, err := strconv.Atoi(r.FormValue("markup"))
+	assert(err)
+	b, _, err := db.GetBill(id, -1)
+	assert(err)
+	b.Markup = markup
+	_, err = db.SetBill(b)
+	assert(err)
 }
+
 func chkOutSetRequester(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -109,6 +142,23 @@ func chkOutSetRequester(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	id, _ := strconv.Atoi(r.URL.Path[12:])
-	fmt.Fprintln(w, "bill id:", id)
+	if id <= 0 {
+		panic(fmt.Errorf("invalid ID"))
+	}
+	assert(r.ParseForm())
+	json.NewEncoder(w).Encode(r.Form)
+	req, _ := strconv.Atoi(r.FormValue("user"))
+	if req <= 0 {
+		panic(fmt.Errorf("invalid user_id"))
+	}
+	b, _, err := db.GetBill(id, -1)
+	assert(err)
+	b.User = req
+	_, err = db.SetBill(b)
+	assert(err)
 }

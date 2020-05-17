@@ -264,3 +264,30 @@ func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }
+
+func chkOutSetAmount(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[12:])
+	if id <= 0 {
+		panic(fmt.Errorf("invalid ID"))
+	}
+	assert(r.ParseForm())
+	sets, _ := strconv.Atoi(r.FormValue("sets"))
+	if sets <= 0 {
+		panic(fmt.Errorf("invalid sets"))
+	}
+	b, _, err := db.GetBill(id, -1)
+	assert(err)
+	b.Sets = sets
+	_, err = db.SetBill(b)
+	assert(err)
+}

@@ -99,12 +99,12 @@
         <div class="form-group"><h4 id="gname"></h4></div>
         <div class="form-group row">
           <div class="col">
-            <input type="text" class="form-control" id="count" />
-            <small class="form-text text-muted">数量（克）</small>
-          </div>
-          <div class="col">
-            <input type="text" class="form-control" id="price" />
-            <small class="form-text text-muted">价格（元/克）</small>
+			<div class="input-group mb-2">
+              <div class="input-group-prepend">
+                <div class="input-group-text">数量（克）</div>
+              </div>
+              <input type="text" class="form-control" id="count">
+            </div>
           </div>
         </div>
         <div class="modal-footer" style="padding-right:0">
@@ -144,6 +144,13 @@
 </div>
 <script>
 var arg = {{.}}
+function editItem(gid, gname, count) {
+	$('#choice').css('display', 'none')
+	$('#editem #gid').val(gid)
+	$('#editem #gname').text(gname)
+	$('#editem #count').val(count)
+    $('#editem').modal('show')
+}
 function editSets() {
     $('#edsets #sets').val($('#sets').text())
     $('#edsets').modal('show')
@@ -251,7 +258,7 @@ function getBillInfo() {
     var markup = (100 + parseInt(e.bill.markup)) / 100
     var sp = e.bill.cost * markup
     $('#setprice').text(sp)
-    $('#charge').text(sp * e.bill.sets)
+    $('#charge').text((sp * e.bill.sets).toFixed(2))
 
     //if (e.bill.status != 0) { //已完成
     //    $('#title').text('出货单')
@@ -264,13 +271,10 @@ function getBillInfo() {
     $('#goods').val('')
     $('#memo').val(e.bill.memo)
     $('#cart').empty()
-    //$('#summary').text('')
     if (e.items != null && e.items.length > 0) {
-    //   $('#summary').html(`${e.bill.count}种货品，每服价格${e.bill.charge}元，
-    //   <input type="text" class="form-control`)
       $.each(e.items, function(_, item) {
         if (e.bill.status == 0) {
-          $('#cart').append(`<a href="#" onclick="editItem(${item.gid})"
+          $('#cart').append(`<a href="#" onclick="editItem(${item.gid}, '${item.gname}', ${item.request})"
             >${item.gname} ${item.request}克</a> &nbsp; `)
         } else {
           $('#cart').append(`${item.gname} ${item.request}克 &nbsp; `)  
@@ -280,13 +284,13 @@ function getBillInfo() {
   })
 }
 $(document).ready(function () {
-    $('#memo').keyup(function(e) {
-        setMemoHeight()
-    })
-    $('#markup').focus(function(e) {
-        $('#markup').attr('old', $('#markup').val())
-    })
-    $('#markup').keyup(function(e) {
+  $('#memo').keyup(function(e) {
+      setMemoHeight()
+  })
+  $('#markup').focus(function(e) {
+      $('#markup').attr('old', $('#markup').val())
+  })
+  $('#markup').keyup(function(e) {
         var txt = $('#markup').val().trim()
         if (txt == '') {
             $('#chgm').html(`<div class="input-group-text">%</div>`)
@@ -300,10 +304,10 @@ $(document).ready(function () {
               type="button"><i class="fas fa-times"></i></button>`)
         }
     })
-    $('#fee').focus(function(e) {
-        $('#fee').attr('old', $('#fee').val())
-    })
-    $('#fee').keyup(function(e) {
+  $('#fee').focus(function(e) {
+      $('#fee').attr('old', $('#fee').val())
+  })
+  $('#fee').keyup(function(e) {
         var txt = $('#fee').val().trim()
         if (txt == '') {
             $('#chgf').remove()
@@ -323,32 +327,52 @@ $(document).ready(function () {
         $('#chgf').remove()
         $('#igfee').append(btn)        
     })
-    setMemoHeight()
-    $.each(arg.users, function(_, u) {
-        $('#requester').append(`<option value="${u.id}">${u.name}</option>`)
-    })
-    $('#requester').change(function(e) {
-        var id = $('#bid').val()
-        $.post(`/chkout/req/${id}`, {user: $('#requester').val()}, function(e) {})
-    })
-    $('#bid').val(Math.abs(arg.bill))
-    if (arg.bill < 0) {
-      $('#title').text('新建出货单')
-    } else {
-      $('#title').text('编辑出货单')
+  setMemoHeight()
+  $.each(arg.users, function(_, u) {
+      $('#requester').append(`<option value="${u.id}">${u.name}</option>`)
+  })
+  $('#requester').change(function(e) {
+      var id = $('#bid').val()
+      $.post(`/chkout/req/${id}`, {user: $('#requester').val()}, function(e) {})
+  })
+  $('#bid').val(Math.abs(arg.bill))
+  if (arg.bill < 0) {
+    $('#title').text('新建出货单')
+  } else {
+    $('#title').text('编辑出货单')
+  }
+  $('#goods').on('keypress', function (e) {
+    if (e.which === 13) addGoods()
+  })
+  $('#edsets').on('shown.bs.modal', function (e) {
+  	$('#edsets #sets').focus()
+  	$('#edsets #sets').select()
+  })
+  $('#edsets').on('hide.bs.modal', function (e) {
+    var btn = $(document.activeElement)
+    if (btn.hasClass("btn-success")) {
+  	  var bid = $('#bid').val()
+      var sets = $('#edsets #sets').val()
+      $.post(`/chkout/sets/${bid}`, {sets:sets}, function(e) {
+        getBillInfo()
+      })
     }
-    $('#goods').on('keypress', function (e) {
-      if (e.which === 13) addGoods()
-    })
-    $('#edsets').on('hide.bs.modal', function (e) {
-      var btn = $(document.activeElement)
-      if (btn.hasClass("btn-success")) {
-		var bid = $('#bid').val()
-        var sets = $('#edsets #sets').val()
-        $.post(`/chkout/sets/${bid}`, {sets:sets}, function(e) {
-          getBillInfo()
-        })
-      }
+  })
+  $('#editem').on('shown.bs.modal', function(e) {
+	$('#editem #count').focus()
+  	$('#editem #count').select()
+  })
+  $('#editem').on('hide.bs.modal', function(e) {
+    var btn = $(document.activeElement)
+    if (btn.hasClass("btn-success")) {
+  	  var bid = $('#bid').val()
+	  var gid = $('#editem #gid').val()
+      var cnt = $('#editem #count').val()
+	  console.log("edit item,", bid, gid, cnt)
+    //   $.post(`/chkout/sets/${bid}`, {sets:sets}, function(e) {
+        // getBillInfo()
+    //   })
+    }
   })
   getBillInfo()    
 })

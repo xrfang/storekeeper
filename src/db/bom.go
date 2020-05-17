@@ -136,7 +136,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 			items[i].Request = -items[i].Request
 			items[i].Confirm = -items[i].Confirm
 		}
-		bill.Cost += it.Cost * float64(it.Request)
+		bill.Cost -= it.Cost * float64(it.Request)
 	}
 	return
 }
@@ -159,13 +159,13 @@ func SetBill(b Bill) (id int, err error) {
 	}()
 	if b.ID == 0 {
 		res := db.MustExec(`INSERT INTO bom (type,user_id,markup,fee,memo) VALUES
-		    (?,?,?,?,?)`, b.Type, b.User, b.Markup, b.Fee, b.Memo)
+		    (?,?,?,?,?,?)`, b.Type, b.User, b.Markup, b.Fee, b.Memo, b.Sets)
 		id, err := res.LastInsertId()
 		return int(id), err
 	}
 	//TODO: calculate charge if set status to larger than 1
-	db.MustExec(`UPDATE bom SET user_id=?,markup=?,charge=?,fee=?,memo=?,status=?
-	    WHERE ID=?`, b.User, b.Markup, b.Charge, b.Fee, b.Memo, b.Status, b.ID)
+	db.MustExec(`UPDATE bom SET user_id=?,markup=?,charge=?,fee=?,memo=?,sets=?,status=?
+	    WHERE ID=?`, b.User, b.Markup, b.Charge, b.Fee, b.Memo, b.Sets, b.Status, b.ID)
 	return b.ID, nil
 }
 

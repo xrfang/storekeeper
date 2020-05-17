@@ -184,6 +184,37 @@ func chkOutSetRequester(w http.ResponseWriter, r *http.Request) {
 	assert(err)
 }
 
+func chkOutSetSets(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[13:])
+	if id <= 0 {
+		panic(fmt.Errorf("invalid ID"))
+	}
+	assert(r.ParseForm())
+	sets, _ := strconv.Atoi(r.FormValue("sets"))
+	if sets <= 0 {
+		panic(fmt.Errorf("invalid sets"))
+	}
+	b, _, err := db.GetBill(id, -1)
+	assert(err)
+	b.Sets = sets
+	_, err = db.SetBill(b)
+	assert(err)
+}
+
 func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -210,6 +241,7 @@ func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
 		if req > 0 && len(items) == 1 {
 			err = db.SetBillItem(db.BillItem{
 				BomID:     id,
+				Cost:      goods[0].Cost,
 				GoodsID:   goods[0].ID,
 				GoodsName: goods[0].Name,
 				Request:   req,

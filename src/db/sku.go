@@ -252,7 +252,7 @@ func SearchGoods(term string) (goods []Goods, err error) {
 	name := strings.ToUpper(strings.TrimSpace(term))
 	term = "%" + name + "%"
 	args := []interface{}{term, term}
-	qry := `SELECT id,name FROM goods WHERE name LIKE ? OR pinyin LIKE ?`
+	qry := `SELECT * FROM goods WHERE name LIKE ? OR pinyin LIKE ?`
 	assert(db.Select(&goods, qry, args...))
 	idx := -1
 	for i, g := range goods {

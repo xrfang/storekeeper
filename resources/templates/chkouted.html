@@ -55,6 +55,12 @@
 	<div class="card-header">
 	  <div class="row">
 		<div class="col"><b>货品清单</b></div>
+		<div class="op col">
+		  <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
+		  <div class="dropdown-menu dropdown-menu-right">
+		    <a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为拼音排序</a>
+		  </div>
+		</div>
 	  </div>
 	</div>
 	<div class="card-body">
@@ -68,8 +74,15 @@
 	    </div>
 	  </div>
 	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
-	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
+	  <p id="summary" style="font-weight:bold">
+		<span id="itemcount"></span> 种药材，每剂价格
+		<span id="setprice"></span> 元，抓 <a id="sets" href="#">0</a> 剂，共计
+		<span id="charge"></span> 元
+	  </p>
 	  <p id="cart"></p>
+	  <p id="chkout" style="display:none;text-align:center;margin-top:2rem">
+		<button onclick="doneCheckOut()" class="btn btn-info">&nbsp;完成出库&nbsp;</button>
+	  </p>
 	  <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
 	</div>
   </div>
@@ -104,6 +117,16 @@
 </div>
 <script>
 var arg = {{.}}
+function switchSO() {
+	if($('#sortorder').attr('value') == "0") {
+	  $('#sortorder').attr('value', '1')
+	  $('#sortorder').text('切换为后录在前')
+	} else {
+	  $('#sortorder').attr('value', '0')
+      $('#sortorder').text('切换为拼音排序')
+	}
+	getBillInfo()
+}
 function revertFee() {
 	$('#fee').val($('#fee').attr('old'))
 	$('#chgf').remove()
@@ -180,7 +203,47 @@ function addGoods() {
 	})
 }
 function getBillInfo() {
-	console.log("TODO: getBillInfo()")
+  var bid = $('#bid').val()
+  var so = $('#sortorder').attr('value')
+  $('#chkout').css('display', 'none')
+  $('#act').attr("disabled", false)
+  $('#goods').attr("disabled", false)
+  $('#memo').attr("disabled", false)
+  $('#finfo').text('')
+  $.get(`/chkout/bill/${bid}?order=${so}`, function(e) {
+	console.log("checkout:", e)
+	$('#requester').val(e.bill.user)
+	$('#markup').val(e.bill.markup)
+	$('#fee').val(e.bill.fee)
+	$('#itemcount').text(e.bill.count)
+	$('#setprice').text("calc")
+	$('#charge').text(e.bill.charge)
+
+	//if (e.bill.status != 0) { //已完成
+	//	$('#title').text('出货单')
+	//	$('#act').attr("disabled", true)
+	//	$('#goods').attr("disabled", true)
+	//	$('#memo').attr("disabled", true)
+	//	var upd = new Date(e.bill.updated)
+	//	$('#finfo').text(`完成时间：${upd.toLocaleString()}`)
+	//}
+	$('#goods').val('')
+	$('#memo').val(e.bill.memo)
+	$('#cart').empty()
+	//$('#summary').text('')
+	if (e.items != null && e.items.length > 0) {
+	//   $('#summary').html(`${e.bill.count}种货品，每服价格${e.bill.charge}元，
+	//   <input type="text" class="form-control`)
+	  $.each(e.items, function(_, item) {
+	    if (e.bill.status == 0) {
+          $('#cart').append(`<a href="#" onclick="editItem(${item.gid})"
+	  	  >${item.gname} ${item.request}克</a> &nbsp; `)
+	    } else {
+	      $('#cart').append(`${item.gname} ${item.request}克 &nbsp; `)  
+	    }
+	  })
+	}
+  })
 }
 $(document).ready(function () {
 	$('#memo').keyup(function(e) {
@@ -234,18 +297,16 @@ $(document).ready(function () {
 		var id = $('#bid').val()
 		$.post(`/chkout/req/${id}`, {user: $('#requester').val()}, function(e) {})
 	})
-	$('#bid').val(Math.abs(arg.bill.id))
-	if (arg.bill.id < 0) {
+	$('#bid').val(Math.abs(arg.bill))
+	if (arg.bill < 0) {
 	  $('#title').text('新建出货单')
 	} else {
 	  $('#title').text('编辑出货单')
-	  $('#markup').val(arg.bill.markup)
-	  $('#fee').val(arg.bill.fee)
-	  $('#requester').val(arg.bill.user)
 	}
 	$('#goods').on('keypress', function (e) {
       if (e.which === 13) addGoods()
-    })	
+    })
+	getBillInfo()	
 })
 </script>
 {{template "footer"}} {{end}}

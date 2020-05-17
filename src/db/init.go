@@ -37,6 +37,7 @@ func setupSchema() {
         "charge"  NUMERIC NOT NULL DEFAULT 0,                  -- 总价格
         "markup"  INTEGER NOT NULL DEFAULT 0,                  -- 默认加价百分比
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（不含在总金额内，如运费）
+        "sets"    INTEGER NOT NULL DEFAULT 1,                  -- 服数
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
         "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（0=未完成；1=已完成；2=已收款）
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳

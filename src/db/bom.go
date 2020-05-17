@@ -19,6 +19,7 @@ type Bill struct {
 	Charge  float64   `json:"charge"`
 	Markup  int       `json:"markup"`
 	Fee     float64   `json:"fee"`
+	Sets    int       `json:"sets"`
 	Cost    float64   `json:"cost"`  //非数据库条目，实时计算
 	Count   int       `json:"count"` //非数据库条目，实时计算
 	Memo    string    `json:"memo"`
@@ -130,7 +131,11 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 		return
 	}
 	bill.Count = len(items)
-	for _, it := range items {
+	for i, it := range items {
+		if bill.Type == 2 {
+			items[i].Request = -items[i].Request
+			items[i].Confirm = -items[i].Confirm
+		}
 		bill.Cost += it.Cost * float64(it.Request)
 	}
 	return
@@ -201,6 +206,9 @@ func SetBillItem(bi BillItem, mode int) (err error) {
 	}
 	tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm) VALUES (?,?,?,?,?,?)`,
 		bi.BomID, bi.GoodsID, bi.GoodsName, bi.Cost, bi.Request, bi.Confirm)
+	if b.Type == 1 { //入库单，用当前价格更新药品单价
+		tx.MustExec(`UPDATE goods SET cost=? WHERE id=?`, bi.Cost, bi.GoodsID)
+	}
 	return
 }
 

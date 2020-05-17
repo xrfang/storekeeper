@@ -30,6 +30,31 @@ func chkOutList(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "chkout.html", map[string]interface{}{"bills": bm, "users": users})
 }
 
+func chkOutBill(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[13:])
+	so, _ := strconv.Atoi(r.URL.Query().Get("order"))
+	var (
+		res   map[string]interface{}
+		bill  db.Bill
+		items []db.BillItem
+		err   error
+	)
+	bill, items, err = db.GetBill(id, so)
+	assert(err)
+	res = map[string]interface{}{"bill": bill, "items": items}
+	jsonReply(w, res)
+}
+
 func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -42,7 +67,6 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := strconv.Atoi(r.URL.Path[8:])
-	var bill db.Bill
 	switch r.Method {
 	case "GET":
 		var us []db.User
@@ -50,14 +74,13 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 		if id == 0 {
 			us, err = db.ListUsers(uid)
 			assert(err)
-			bill = db.Bill{Type: 2, User: uid, Markup: 20, Fee: 0}
-			id, err = db.SetBill(bill)
+			id, err = db.SetBill(db.Bill{Type: 2, User: uid, Markup: 20, Fee: 0})
 			assert(err)
-			bill.ID = -id
+			id = -id
 		} else {
-			bill, _, err = db.GetBill(id, -1)
+			b, _, err := db.GetBill(id, -1)
 			assert(err)
-			u, err := db.GetUser(bill.User)
+			u, err := db.GetUser(b.User)
 			assert(err)
 			if u.Client == 0 {
 				us, err = db.ListUsers(u.ID)
@@ -66,7 +89,7 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			}
 			assert(err)
 		}
-		renderTemplate(w, "chkouted.html", map[string]interface{}{"users": us, "bill": bill})
+		renderTemplate(w, "chkouted.html", map[string]interface{}{"users": us, "bill": id})
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}

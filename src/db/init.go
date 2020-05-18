@@ -50,8 +50,8 @@ func setupSchema() {
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS "bom_item" (       -- 单据条目表
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
         "bom_id"  INTEGER NOT NULL,                            -- 单据ID
-        "gid"     INTEGER NOT NULL,                            -- 货品ID
-        "gname"   TEXT NOT NULL,                               -- 货品名称
+        "gid"     INTEGER NOT NULL,                            -- 药材ID
+        "gname"   TEXT NOT NULL,                               -- 药材名称
         "cost"    NUMERIC NOT NULL DEFAULT 0,                  -- 单位成本
         "request" INTEGER NOT NULL,                            -- 需求数量
         "confirm" INTEGER NOT NULL,                            -- 确认数量

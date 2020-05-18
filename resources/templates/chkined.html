@@ -143,13 +143,13 @@ function switchCI() {
 	  $('#act').addClass('btn-success')
 	  break
 	case "2":
-	  toast("错误", "尚有货品未设置价格，无法执行入库操作", "error")
+	  toast("错误", "尚有药材未设置价格，无法执行入库操作", "error")
 	  return
 	case "3":
       toast("错误", "该订单已经完成入库", "error")
 	  return
 	case "":
-	  toast("错误", "没有添加货品，无法执行入库操作", "error")
+	  toast("错误", "没有添加药材，无法执行入库操作", "error")
 	  return
 	}
 	getBillInfo()
@@ -265,7 +265,7 @@ function getBillInfo() {
 	if (e.items != null && e.items.length > 0) {
 	  if (ci != "1") {
 		if (ci != 3) ci = "0"
-		$('#summary').text(`${e.bill.count}种货品，总价${e.bill.cost}元`)
+		$('#summary').text(`${e.bill.count}种药材，总价${e.bill.cost}元`)
 		switch (vs) {
 	    case "0":
 	      $.each(e.items, function(_, item) {
@@ -317,13 +317,13 @@ function getBillInfo() {
 			}
 		})
 		if (!$('#wait').is(':empty')) {
-			$('#wait').prepend(`<p><b>未入库货品</b></p>`)
+			$('#wait').prepend(`<p><b>未入库药材</b></p>`)
 		}
 		if (!$('#wip').is(':empty')) {
-			$('#wip').prepend(`<p><b>正在入库货品</b></p>`)
+			$('#wip').prepend(`<p><b>正在入库药材</b></p>`)
 		}
 		if (!$('#done').is(':empty')) {
-			$('#done').prepend(`<p><b>已入库货品</b></p>`)
+			$('#done').prepend(`<p><b>已入库药材</b></p>`)
 		}
 	  }
 	} else {
@@ -333,7 +333,7 @@ function getBillInfo() {
 }
 function doneCheckIn() {
 	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
-		toast('未全部入库', '请将所有货品入库，或返回修改订购信息', 'error')
+		toast('未全部入库', '请将所有药材入库，或返回修改订购信息', 'error')
 		return
 	}
 	var bid = $('#bid').val()

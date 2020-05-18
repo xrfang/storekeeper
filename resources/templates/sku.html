@@ -5,7 +5,7 @@
     <span class="navbar-toggler-icon"></span>
   </button>
   <div class="collapse navbar-collapse" id="navbarMenu">
-    <a class="navbar-brand" href="#">货品管理</a>
+    <a class="navbar-brand" href="#">药材管理</a>
     <ul class="navbar-nav ml-auto">
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
@@ -29,12 +29,12 @@
       </div>
     </div>
   </div>
-  <small class="form-text text-muted">输入货品名称，多个用空格隔开。</small>
+  <small class="form-text text-muted">输入药材名称，多个用空格隔开。</small>
   <div id="list">
     <p style="margin-top:1rem;color:#555555">请在上方搜索框中输入需要添加、编辑的药材名称。
       系统将检查输入的品名是否已经存在，并让您添加不存在的药材。</p>
     <p style="margin-top:1rem;color:#555555">目前共有<span style="color:red;font-weight:bold">
-      {{.Total}} </span>种货品（直接点击搜索按钮可查看全部）。</p>    
+      {{.Total}} </span>种药材（直接点击搜索按钮可查看全部）。</p>    
   </div>
 </div>
 <div class="modal fade" id="edsku" tabindex="-1" role="dialog">
@@ -42,7 +42,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">编辑货品定义</h5>
+        <h5 class="modal-title">编辑药材定义</h5>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
@@ -104,21 +104,21 @@ function doSearch() {
     $('#search').removeAttr("disabled")
     $('#list').empty()
     if (e.found != null && e.found.length > 0) {
-      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">${e.found.length}</span> 个货品</p>`)
+      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">${e.found.length}</span> 个药材</p>`)
       $.each(e.found, function(_, h) {
         $('#list').append(`<a onclick="editSku(this)" href="#" id="${h.id}" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
       })
       $('#list').append(`<p style="margin:1rem 0 1rem 0">您可点击上面的品名进行编辑（更改其名称或拼音索引）</p>`)
     } else if (terms.length == 0) {
-      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">0</span> 个货品</p>`)
+      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">0</span> 个药材</p>`)
     }
     if (e.missing != null && e.missing.length > 0) {
-      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">未找到 <span style="color:red">${e.missing.length}</span> 个货品</p>`)
+      $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">未找到 <span style="color:red">${e.missing.length}</span> 个药材</p>`)
       $.each(e.missing, function(_, h) {
         $('#list').append(`<a class="newsku" href="#" onclick="submitSku(this)" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
       })
       $('#list').append(`<p style="margin:1rem 0 1rem 0">您可以将它们 <a style="font-weight:bold" href="#"
-        id="addall" onclick="submitSku(this)">全部添加</a> 到货品定义，或者点击上面的品名逐一添加。</p>`)
+        id="addall" onclick="submitSku(this)">全部添加</a> 到药材定义，或者点击上面的品名逐一添加。</p>`)
     }
     if (e.match != null && e.match.length > 0) {
       $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">${e.match.length}</span> 个部分匹配条目</p>`)
@@ -152,7 +152,7 @@ $(document).ready(function () {
       var data = new Array()
       data.push({id:id, name: name, pinyin: pinyin})
       $.post("/api/sku/", JSON.stringify(data), function(e) {
-        toast("操作成功", "货品信息已保存", "success")
+        toast("操作成功", "药材信息已保存", "success")
         $(`#${id}`).text(name)
       })
     }

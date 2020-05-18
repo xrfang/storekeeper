@@ -23,7 +23,7 @@ func setupSchema() {
 	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS updated AFTER UPDATE ON "user"
         FOR EACH ROW BEGIN UPDATE "user" SET updated=CURRENT_TIMESTAMP WHERE
         id=OLD.id; END`)
-	tx.MustExec(`CREATE TABLE IF NOT EXISTS "goods" ( -- 货品表
+	tx.MustExec(`CREATE TABLE IF NOT EXISTS "goods" ( -- 药材表
         "id"     INTEGER PRIMARY KEY AUTOINCREMENT,
         "name"   TEXT NOT NULL UNIQUE,               -- 品名
         "pinyin" TEXT NOT NULL DEFAULT "",           -- 拼音首字母索引

@@ -29,6 +29,13 @@
       <select class="form-control" id="requester"></select>
     </div>
     <div class="col" style="padding-right:0">
+      <label for="fee"><b>其他费用</b></label>
+      <div class="input-group" id="igfee">
+        <input type="text" class="form-control" id="fee" placeholder="0" />
+      </div>
+      <small class="form-text text-muted">如运费、外配等</small>
+    </div>    
+    <div class="col">
       <label for="markup"><b>溢价率</b></label>
       <div class="input-group">
         <input type="text" class="form-control border-right-0" id="markup" placeholder="20">
@@ -36,13 +43,6 @@
           <div class="input-group-text">%</div>
         </div>
       </div>
-    </div>
-    <div class="col">
-      <label for="fee"><b>其他费用</b></label>
-      <div class="input-group" id="igfee">
-        <input type="text" class="form-control" id="fee" placeholder="0" />
-      </div>
-      <small class="form-text text-muted">如运费等</small>
     </div>
   </div>
   <div class="row mb-3">
@@ -59,9 +59,7 @@
           <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
           <div class="dropdown-menu dropdown-menu-right">
             <a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为拼音排序</a>
-			<div class="dropdown-divider"></div>
-			<a class="dropdown-item" href="#" id="docheckout" value="0" onclick="switchCO()">配药出库</a>
-    	  </div>
+      	  </div>
         </div>
       </div>
     </div>
@@ -82,8 +80,8 @@
         <span id="charge"></span> 元
       </p>
       <p id="cart"></p>
-      <p id="chkout" style="display:none;text-align:center;margin-top:2rem">
-        <button onclick="doneCheckOut()" class="btn btn-info">&nbsp;完成出库&nbsp;</button>
+      <p id="chkout" style="text-align:center;margin-top:2rem">
+        <button onclick="doneCheckOut()" class="btn btn-success">&nbsp;完成出库&nbsp;</button>
       </p>
       <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
     </div>
@@ -249,7 +247,6 @@ function addGoods() {
 function getBillInfo() {
   var bid = $('#bid').val()
   var so = $('#sortorder').attr('value')
-  $('#chkout').css('display', 'none')
   $('#act').attr("disabled", false)
   $('#goods').attr("disabled", false)
   $('#memo').attr("disabled", false)

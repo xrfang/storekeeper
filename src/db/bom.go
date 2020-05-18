@@ -2,6 +2,7 @@ package db
 
 import (
 	"errors"
+	"math"
 	"strings"
 	"time"
 )
@@ -136,7 +137,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 			items[i].Request = -items[i].Request
 			items[i].Confirm = -items[i].Confirm
 		}
-		bill.Cost -= it.Cost * float64(it.Request)
+		bill.Cost += math.Abs(it.Cost * float64(it.Request))
 	}
 	return
 }
@@ -158,7 +159,7 @@ func SetBill(b Bill) (id int, err error) {
 		}
 	}()
 	if b.ID == 0 {
-		res := db.MustExec(`INSERT INTO bom (type,user_id,markup,fee,memo) VALUES
+		res := db.MustExec(`INSERT INTO bom (type,user_id,markup,fee,memo,sets) VALUES
 		    (?,?,?,?,?,?)`, b.Type, b.User, b.Markup, b.Fee, b.Memo, b.Sets)
 		id, err := res.LastInsertId()
 		return int(id), err

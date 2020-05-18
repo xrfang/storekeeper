@@ -171,7 +171,9 @@ function revertFee() {
 }
 function submitFee() {
     var id = $('#bid').val()
-    $.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {})
+    $.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {
+		getBillInfo()
+	})
     $('#chgf').remove()
 }
 function revertMarkup() {
@@ -180,7 +182,9 @@ function revertMarkup() {
 }
 function submitMarkup() {
     var id = $('#bid').val()
-    $.post(`/chkout/mark/${id}`, {markup: $('#markup').val()}, function(e) {})
+    $.post(`/chkout/mark/${id}`, {markup: $('#markup').val()}, function(e) {
+		getBillInfo()
+	})
     $('#chgm').html(`<div class="input-group-text">%</div>`)
 }
 function setMemoHeight() {
@@ -249,7 +253,6 @@ function getBillInfo() {
   $('#memo').attr("disabled", false)
   $('#finfo').text('')
   $.get(`/chkout/bill/${bid}?order=${so}`, function(e) {
-    console.log("checkout:", e)
     $('#requester').val(e.bill.user)
     $('#markup').val(e.bill.markup)
     $('#fee').val(e.bill.fee)
@@ -257,8 +260,8 @@ function getBillInfo() {
     $('#itemcount').text(e.bill.count)
     var markup = (100 + parseInt(e.bill.markup)) / 100
     var sp = e.bill.cost * markup
-    $('#setprice').text(sp)
-    $('#charge').text((sp * e.bill.sets).toFixed(2))
+    $('#setprice').text(sp.toFixed(2))
+    $('#charge').text((sp * e.bill.sets + e.bill.fee).toFixed(2))
 
     //if (e.bill.status != 0) { //已完成
     //    $('#title').text('出货单')
@@ -367,11 +370,10 @@ $(document).ready(function () {
     if (btn.hasClass("btn-success")) {
   	  var bid = $('#bid').val()
 	  var gid = $('#editem #gid').val()
-      var cnt = $('#editem #count').val()
-	  console.log("edit item,", bid, gid, cnt)
-    //   $.post(`/chkout/sets/${bid}`, {sets:sets}, function(e) {
-        // getBillInfo()
-    //   })
+      var cnt = $('#editem #count').val()  
+      $.post(`/chkout/amt/${bid}`, {gid:gid,amt:cnt}, function(e) {
+        getBillInfo()
+      })
     }
   })
   getBillInfo()    

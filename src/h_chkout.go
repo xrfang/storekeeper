@@ -281,13 +281,21 @@ func chkOutSetAmount(w http.ResponseWriter, r *http.Request) {
 		panic(fmt.Errorf("invalid ID"))
 	}
 	assert(r.ParseForm())
-	sets, _ := strconv.Atoi(r.FormValue("sets"))
-	if sets <= 0 {
-		panic(fmt.Errorf("invalid sets"))
+	gid, _ := strconv.Atoi(r.FormValue("gid"))
+	amt, _ := strconv.Atoi(r.FormValue("amt"))
+	_, _, err := db.GetBill(id, -1)
+	assert(err)
+	if amt > 0 {
+		bis, err := db.GetBillItems(id, gid)
+		assert(err)
+		assert(db.SetBillItem(db.BillItem{
+			BomID:     id,
+			Cost:      bis[0].Cost,
+			GoodsName: bis[0].GoodsName,
+			GoodsID:   gid,
+			Request:   amt,
+		}, 1))
+	} else {
+		assert(db.DeleteBillItem(id, gid))
 	}
-	b, _, err := db.GetBill(id, -1)
-	assert(err)
-	b.Sets = sets
-	_, err = db.SetBill(b)
-	assert(err)
 }

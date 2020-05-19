@@ -194,11 +194,11 @@ function revertFee() {
     $('#chgf').remove()
 }
 function submitFee() {
-    var id = $('#bid').val()
-    $.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {
+  var id = $('#bid').val()
+  $.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {
 		getBillInfo()
 	})
-    $('#chgf').remove()
+  $('#chgf').remove()
 }
 function revertMarkup() {
     $('#markup').val($('#markup').attr('old'))
@@ -333,19 +333,19 @@ $(document).ready(function () {
       $('#markup').attr('old', $('#markup').val())
   })
   $('#markup').keyup(function(e) {
-        var txt = $('#markup').val().trim()
-        if (txt == '') {
-            $('#chgm').html(`<div class="input-group-text">%</div>`)
-            return
-        }
-        if (txt.match(/^\d+$/)) {
-            $('#chgm').html(`<button onclick="submitMarkup()" class="btn btn-outline-success border-left-0 border" type="button">
-              <i class="fas fa-check"></i></button>`)
-        } else {
-            $('#chgm').html(`<button onclick="revertMarkup()" class="btn btn-outline-danger border-left-0 border"
-              type="button"><i class="fas fa-times"></i></button>`)
-        }
-    })
+    var txt = $('#markup').val().trim()
+    if (txt == '') {
+      $('#chgm').html(`<div class="input-group-text">%</div>`)
+      return
+    }
+    if (txt.match(/^\d+$/)) {
+      $('#chgm').html(`<button onclick="submitMarkup()" class="btn btn-outline-success border-left-0 border" type="button">
+        <i class="fas fa-check"></i></button>`)
+    } else {
+      $('#chgm').html(`<button onclick="revertMarkup()" class="btn btn-outline-danger border-left-0 border"
+        type="button"><i class="fas fa-times"></i></button>`)
+    }
+  })
   $('#fee').focus(function(e) {
       $('#fee').attr('old', $('#fee').val())
   })

@@ -30,8 +30,10 @@
 	</div>
 	<div class="col col-9">
 	  <label for="fee"><b>备注</b></label>
-	  <input type="text" class="form-control" id="memo" value="0" />
-	</div>	
+	  <div class="input-group" id="igmm">
+		<input type="text" class="form-control" id="memo" value="0" />
+	  </div>
+	</div>
   </div>
   <div class="card border-success">
 	<div class="card-header">
@@ -331,6 +333,14 @@ function getBillInfo() {
 	}
   })
 }
+function submitMemo() {
+  var id = $('#bid').val()
+  console.log('TODO: submit memo for', id)
+  //$.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {
+  //	getBillInfo()
+  //})
+  $('#chgm').remove()
+}
 function doneCheckIn() {
 	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
 		toast('未全部入库', '请将所有药材入库，或返回修改订购信息', 'error')
@@ -355,6 +365,21 @@ $(document).ready(function () {
   getBillInfo()
   $('#goods').on('keypress', function (e) {
     if (e.which === 13) addGoods()
+  })
+  $('#memo').focus(function(e) {
+      $('#memo').attr('old', $('#memo').val())
+  })
+  $('#memo').keyup(function(e) {
+	if (e.which === 27) {
+		$('#memo').val($('#memo').attr('old'))
+		return
+	}
+	var txt = $('#memo').val().trim()
+	var btn = `<div class="input-group-append" id="chgm"><button onclick="submitMemo()"
+        class="btn btn-outline-success border-left-0 border"type="button"><i
+        class="fas fa-check"></i></button></div>`
+    $('#chgm').remove()
+    $('#igmm').append(btn)        
   })
   $('#editem').on('show.bs.modal', function(e) {
 	var bid = $('#bid').val()

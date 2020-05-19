@@ -258,8 +258,6 @@ func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
 			"item":  items,
 			"count": req,
 		})
-	case "DELETE":
-		//TODO: remove item from bom
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
@@ -321,30 +319,5 @@ func chkOutSetStat(w http.ResponseWriter, r *http.Request) {
 	}
 	assert(r.ParseForm())
 	stat, _ := strconv.Atoi(r.FormValue("stat"))
-	b, _, err := db.GetBill(id, -1)
-	assert(err)
-	if b.Type != 2 {
-		http.Error(w, "for checkout (type=2) only", http.StatusBadRequest)
-		return
-	}
-	switch b.Status {
-	case 0:
-		if stat != 1 {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
-		b.Status = 1
-	case 1:
-		if stat != 2 {
-			http.Error(w, "Bad Request", http.StatusBadRequest)
-			return
-		}
-		b.Status = 2
-	default:
-		http.Error(w, "historical bill frozen", http.StatusBadRequest)
-		return
-	}
-	_, err = db.SetBill(b)
-	assert(err)
-	assert(db.SetInventoryByBill(id))
+	assert(db.SetInventoryByBill(id, stat))
 }

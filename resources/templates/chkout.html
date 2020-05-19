@@ -68,11 +68,12 @@ function listBills(status) {
   $('#blist').text("")
   $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}出货单</p>`)
   $.each(bs, function(_, b) {
+    var markup = (100 + parseInt(b.markup)) / 100
+    var sp = b.cost
+    var charge = (sp * b.sets + b.fee) * markup
     var item = `<div style="margin-top:0.4rem;font-family:'Courier New',Courier,monospace">
-      <a href="/chkout/${b.id}">[${b.updated.substring(0, 10)}] 给${un(b.user)}，${b.count}种药材`
-    if (typeof(b.cost) != 'undefined' && b.cost > 0) item += `，总价${b.charge}元`
-    if (typeof(b.memo) != 'undefined' && b.memo.length > 0) item+= ` (${b.memo})`
-    item += `</a></div>`
+      <a href="/chkout/${b.id}">[${b.updated.substring(0, 10)}] 给${un(b.user)}，${b.count}种药材，
+      总价${charge}元</a></div>`
     $('#blist').append(item)
   })
 }

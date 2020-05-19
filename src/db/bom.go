@@ -1,13 +1,20 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
+	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
-var ErrItemAlreadyExists = errors.New("item already exists")
+var (
+	ErrItemAlreadyExists = errors.New("item already exists")
+	iop                  sync.Mutex
+)
 
 /*
 入库单状态：0=未完成；1=已完成
@@ -92,8 +99,8 @@ items:
 	for _, b := range bills {
 		ids = append(ids, b.ID)
 	}
-	qry = `SELECT bom_id,COUNT(id),SUM(cost*request) FROM bom_item WHERE bom_id
-	    IN (?` + strings.Repeat(`,?`, len(ids)-1) + `) GROUP BY bom_id`
+	qry = `SELECT bom_id,COUNT(id),SUM(ABS(cost)*ABS(request)) FROM bom_item WHERE 
+	    bom_id IN (?` + strings.Repeat(`,?`, len(ids)-1) + `) GROUP BY bom_id`
 	rows, err := db.Query(qry, ids...)
 	assert(err)
 	defer rows.Close()
@@ -164,9 +171,8 @@ func SetBill(b Bill) (id int, err error) {
 		id, err := res.LastInsertId()
 		return int(id), err
 	}
-	//TODO: calculate charge if set status to larger than 1
-	db.MustExec(`UPDATE bom SET user_id=?,markup=?,charge=?,fee=?,memo=?,sets=?,status=?
-	    WHERE ID=?`, b.User, b.Markup, b.Charge, b.Fee, b.Memo, b.Sets, b.Status, b.ID)
+	db.MustExec(`UPDATE bom SET user_id=?,markup=?,fee=?,memo=?,sets=?,status=?
+	    WHERE ID=?`, b.User, b.Markup, b.Fee, b.Memo, b.Sets, b.Status, b.ID)
 	return b.ID, nil
 }
 
@@ -223,7 +229,43 @@ func DeleteBillItem(bid, gid int) (err error) {
 	return
 }
 
-func SetInventoryByBill(bid int) (err error) {
-	//TODO
+func SetInventoryByBill(bid, stat int) (err error) {
+	iop.Lock()
+	defer iop.Unlock()
+	tx, err := db.Beginx()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+			tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+	}()
+	var b Bill
+	assert(tx.Get(&b, `SELECT * FROM bom WHERE id=?`, bid))
+	if b.Type != 2 {
+		panic(fmt.Errorf("bill#%d.type=%d; wanted: 2", bid, b.Type))
+	}
+	switch b.Status {
+	case 0:
+		if stat != 1 {
+			panic(fmt.Errorf("bill#%d.status=0; stat=%d", bid, stat))
+		}
+		b.Status = 1
+	case 1:
+		if stat != 2 {
+			panic(fmt.Errorf("bill#%d.status=1; stat=%d", bid, stat))
+		}
+		b.Status = 2
+	default:
+		panic(fmt.Errorf("bill#%d.status=%d; stat=%d", bid, b.Status, stat))
+	}
+	//TODO: 1. set bill status, 2. calc inventory for all goods in the bill
+	je := json.NewEncoder(os.Stdout)
+	je.SetIndent("", "    ")
+	je.Encode(b)
 	return nil
 }

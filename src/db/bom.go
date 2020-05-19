@@ -262,9 +262,12 @@ func SetInventoryByBill(bid, stat int) (err error) {
 	default:
 		panic(fmt.Errorf("bill#%d.status=%d; stat=%d", bid, b.Status, stat))
 	}
+	var gs []Goods
+	assert(tx.Select(&gs, `SELECT g.* FROM goods g,bom_item bi WHERE bi.bom_id=? 
+	    AND g.id=bi.gid`, bid))
 	//TODO: 1. set bill status, 2. calc inventory for all goods in the bill
 	je := json.NewEncoder(os.Stdout)
 	je.SetIndent("", "    ")
-	je.Encode(b)
+	je.Encode(map[string]interface{}{"bill": b, "items": gs})
 	return nil
 }

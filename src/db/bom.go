@@ -159,19 +159,33 @@ func GetBillItems(bid int, gid ...interface{}) (items []BillItem, err error) {
 }
 
 func SetBill(b Bill) (id int, err error) {
+	tx, err := db.Beginx()
+	if err != nil {
+		return 0, err
+	}
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
+			tx.Rollback()
+			return
 		}
+		err = tx.Commit()
 	}()
 	if b.ID == 0 {
-		res := db.MustExec(`INSERT INTO bom (type,user_id,markup,fee,memo,sets) VALUES
+		res := tx.MustExec(`INSERT INTO bom (type,user_id,markup,fee,memo,sets) VALUES
 		    (?,?,?,?,?,?)`, b.Type, b.User, b.Markup, b.Fee, b.Memo, b.Sets)
 		id, err := res.LastInsertId()
 		return int(id), err
 	}
-	db.MustExec(`UPDATE bom SET user_id=?,markup=?,fee=?,memo=?,sets=?,status=?
-	    WHERE ID=?`, b.User, b.Markup, b.Fee, b.Memo, b.Sets, b.Status, b.ID)
+	tx.MustExec(`UPDATE bom SET user_id=?,markup=?,fee=?,memo=?,sets=?,status=?
+		WHERE ID=?`, b.User, b.Markup, b.Fee, b.Memo, b.Sets, b.Status, b.ID)
+	if b.Status > 0 && b.Type == 1 { //TODO：确认入库（status>0）时需要修改库存
+		var bis []BillItem
+		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, b.ID))
+		for _, bi := range bis {
+			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, bi.Confirm, bi.GoodsID)
+		}
+	}
 	return b.ID, nil
 }
 

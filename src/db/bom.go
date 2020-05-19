@@ -24,11 +24,10 @@ type Bill struct {
 	ID      int       `json:"id"`
 	Type    byte      `json:"type"` //1=入库；2=出库；3=盘点
 	User    int       `json:"user" db:"user_id"`
-	Charge  float64   `json:"charge"`
 	Markup  int       `json:"markup"`
 	Fee     float64   `json:"fee"`
 	Sets    int       `json:"sets"`
-	Cost    float64   `json:"cost"`  //非数据库条目，实时计算
+	Cost    float64   `json:"cost"`  //非数据库条目，实时计算，表示单剂药的成本
 	Count   int       `json:"count"` //非数据库条目，实时计算
 	Memo    string    `json:"memo"`
 	Status  byte      `json:"status"`

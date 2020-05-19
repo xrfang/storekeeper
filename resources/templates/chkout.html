@@ -72,8 +72,7 @@ function listBills(status) {
     var sp = b.cost
     var charge = (sp * b.sets + b.fee) * markup
     var item = `<div style="margin-top:0.4rem;font-family:'Courier New',Courier,monospace">
-      <a href="/chkout/${b.id}">[${b.updated.substring(0, 10)}] 给${un(b.user)}，${b.count}种药材，
-      总价${charge}元</a></div>`
+      <a href="/chkout/${b.id}">[${b.updated.substring(0, 10)}] 给${un(b.user)}，总价${charge}元</a></div>`
     $('#blist').append(item)
   })
 }

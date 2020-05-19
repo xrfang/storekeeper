@@ -1,11 +1,9 @@
 package db
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -252,6 +250,7 @@ func SetInventoryByBill(bid, stat int) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
+			fmt.Println(trace("%v", err))
 			tx.Rollback()
 			return
 		}
@@ -267,21 +266,34 @@ func SetInventoryByBill(bid, stat int) (err error) {
 		if stat != 1 {
 			panic(fmt.Errorf("bill#%d.status=0; stat=%d", bid, stat))
 		}
-		b.Status = 1
 	case 1:
 		if stat != 2 {
 			panic(fmt.Errorf("bill#%d.status=1; stat=%d", bid, stat))
 		}
-		b.Status = 2
 	default:
 		panic(fmt.Errorf("bill#%d.status=%d; stat=%d", bid, b.Status, stat))
 	}
-	var gs []Goods
-	assert(tx.Select(&gs, `SELECT g.* FROM goods g,bom_item bi WHERE bi.bom_id=? 
-	    AND g.id=bi.gid`, bid))
-	//TODO: 1. set bill status, 2. calc inventory for all goods in the bill
-	je := json.NewEncoder(os.Stdout)
-	je.SetIndent("", "    ")
-	je.Encode(map[string]interface{}{"bill": b, "items": gs})
-	return nil
+	type billReq struct {
+		ID        int
+		Stock     int
+		Requested int
+	}
+	var br []billReq
+	assert(tx.Select(&br, `SELECT g.id,g.stock,ABS(bi.request)*b.sets AS requested
+		FROM goods g,bom_item bi,bom b WHERE b.id=bi.bom_id AND bi.gid=g.id AND
+		b.id=?`, bid))
+	tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
+	for _, r := range br {
+		if r.Requested <= r.Stock {
+			tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, r.Requested, r.ID)
+			tx.MustExec(`UPDATE bom_item SET confirm=request WHERE gid=? AND bom_id=?`,
+				r.ID, bid)
+		} else {
+			confirm := -r.Stock / b.Sets
+			tx.MustExec(`UPDATE goods SET stock=0 WHERE id=?`, r.ID)
+			tx.MustExec(`UPDATE bom_item SET confirm=? WHERE gid=? AND bom_id=?`,
+				confirm, r.ID, bid)
+		}
+	}
+	return
 }

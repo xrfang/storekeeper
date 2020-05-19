@@ -286,7 +286,7 @@ function getBillInfo() {
       var lack = []
       $.each(e.items, function(_, it) {
         var diff = it.request - it.confirm
-        if (diff != 0) lack.push({"name": it.gname, "diff": diff})
+        if (diff != 0) lack.push({"name": it.gname, "diff": diff*e.bill.sets})
       })
       if (lack.length > 0) {
         $('#xbitems').empty()

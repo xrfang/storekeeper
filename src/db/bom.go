@@ -11,7 +11,7 @@ var ErrItemAlreadyExists = errors.New("item already exists")
 
 /*
 入库单状态：0=未完成；1=已完成
-出库单状态：1=未配齐；2=未发货；3=未结账；4=已完成
+出库单状态：0=未完成；1=已完成；2=已收款
 */
 type Bill struct {
 	ID      int       `json:"id"`
@@ -221,4 +221,9 @@ func DeleteBill(bid int) (err error) {
 func DeleteBillItem(bid, gid int) (err error) {
 	_, err = db.Exec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bid, gid)
 	return
+}
+
+func SetInventoryByBill(bid int) (err error) {
+	//TODO
+	return nil
 }

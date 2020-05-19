@@ -299,3 +299,52 @@ func chkOutSetAmount(w http.ResponseWriter, r *http.Request) {
 		assert(db.DeleteBillItem(id, gid))
 	}
 }
+
+func chkOutSetStat(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[13:])
+	if id <= 0 {
+		panic(fmt.Errorf("invalid ID"))
+	}
+	assert(r.ParseForm())
+	stat, _ := strconv.Atoi(r.FormValue("stat"))
+	b, _, err := db.GetBill(id, -1)
+	assert(err)
+	if b.Type != 2 {
+		http.Error(w, "for checkout (type=2) only", http.StatusBadRequest)
+		return
+	}
+	switch b.Status {
+	case 0:
+		if stat != 1 {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+		b.Status = 1
+	case 1:
+		if stat != 2 {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+		b.Status = 2
+	default:
+		http.Error(w, "historical bill frozen", http.StatusBadRequest)
+		return
+	}
+	_, err = db.SetBill(b)
+	assert(err)
+	assert(db.SetInventoryByBill(id))
+}

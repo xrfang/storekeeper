@@ -76,13 +76,17 @@
       <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
       <p id="summary" style="font-weight:bold">
         <span id="itemcount"></span> 种药材，每剂成本
-        <span id="setprice"></span> 元，抓 <a id="sets" onclick="editSets()" href="#">0</a> 剂，共计
+        <span id="setprice"></span> 元，抓 <span id="sets"></span> 剂，共计
         <span id="charge"></span> 元
       </p>
       <p id="cart"></p>
       <p id="chkout" style="text-align:center;margin-top:2rem">
         <button onclick="doneCheckOut()" class="btn btn-success">&nbsp;完成出库&nbsp;</button>
       </p>
+      <div id='extbuy' style="display:none">
+        <p><b><u>需外购货品清单</u></b></p>
+        <p id="xbitems"></p>
+      </div>
       <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
     </div>
   </div>
@@ -99,7 +103,7 @@
         <div class="form-group"><h4 id="gname"></h4></div>
         <div class="form-group row">
           <div class="col">
-			<div class="input-group mb-2">
+			      <div class="input-group mb-2">
               <div class="input-group-prepend">
                 <div class="input-group-text">数量（克）</div>
               </div>
@@ -142,8 +146,28 @@
       </div>
   </div>
 </div>
+<div class="modal fade" id="cfmdone" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">确认出库</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>出库完成后条目不能再更改（但可以修改费用和备注等）</p>
+          <div class="modal-footer" style="padding-right:0;padding-bottom:0">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">取 消</button>
+            <button type="button" class="btn btn-success" data-dismiss="modal">完 成</button>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
 <script>
 var arg = {{.}}
+function doneCheckOut() {
+  $('#cfmdone').modal('show')
+}
 function editItem(gid, gname, count) {
 	$('#choice').css('display', 'none')
 	$('#editem #gid').val(gid)
@@ -251,11 +275,34 @@ function getBillInfo() {
   $('#goods').attr("disabled", false)
   $('#memo').attr("disabled", false)
   $('#finfo').text('')
+  $('#chkout').css('display', 'none')
+  $('#extbuy').css('display', 'none')
   $.get(`/chkout/bill/${bid}?order=${so}`, function(e) {
+    if (e.bill.status == 0) {
+      $('#chkout').css('display', '')
+      $('#sets').html(`<a id="sets" onclick="editSets()" href="#">${e.bill.sets}</a>`)
+    } else {
+      $('#sets').text(e.bill.sets)
+      var lack = []
+      $.each(e.items, function(_, it) {
+        var diff = it.request - it.confirm
+        if (diff != 0) lack.push({"name": it.gname, "diff": diff})
+      })
+      if (lack.length > 0) {
+        $('#xbitems').empty()
+        $.each(lack, function(_, l) {
+          $('#xbitems').append(`<span>${l["name"]} ${l["diff"]}克 &nbsp; </span>`)
+        })
+        $('#extbuy').css('display', '')
+      }
+      $('#act').attr("disabled", true)
+      var upd = new Date(e.bill.updated)
+      var st = (e.bill.status == 1) ? '完成' : '结账'
+      $('#finfo').text(`${st}时间：${upd.toLocaleString()}`)
+    }
     $('#requester').val(e.bill.user)
     $('#markup').val(e.bill.markup)
     $('#fee').val(e.bill.fee)
-    $('#sets').text(e.bill.sets)
     $('#itemcount').text(e.bill.count)
     var markup = (100 + parseInt(e.bill.markup)) / 100
     var sp = e.bill.cost
@@ -361,11 +408,20 @@ $(document).ready(function () {
     var btn = $(document.activeElement)
     if (btn.hasClass("btn-success")) {
   	  var bid = $('#bid').val()
-	  var gid = $('#editem #gid').val()
+	    var gid = $('#editem #gid').val()
       var cnt = $('#editem #count').val()  
       $.post(`/chkout/amt/${bid}`, {gid:gid,amt:cnt}, function(e) {
         getBillInfo()
       })
+    }
+  })
+  $('#cfmdone').on('hide.bs.modal', function(e) {
+    var btn = $(document.activeElement)
+    if (btn.hasClass("btn-success")) {
+        var bid = $('#bid').val()
+        $.post(`/chkout/stat/${bid}`, {stat:1}, function(e) {
+          getBillInfo()
+        })
     }
   })
   getBillInfo()    

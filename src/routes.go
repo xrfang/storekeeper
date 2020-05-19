@@ -22,6 +22,7 @@ func setupRoutes() {
 	http.HandleFunc("/chkout/mark/", chkOutSetMarkup)
 	http.HandleFunc("/chkout/req/", chkOutSetRequester)
 	http.HandleFunc("/chkout/sets/", chkOutSetSets)
+	http.HandleFunc("/chkout/stat/", chkOutSetStat)
 	http.HandleFunc("/chkout/item/", chkOutEditItem)
 	http.HandleFunc("/chkout/amt/", chkOutSetAmount)
 	http.HandleFunc("/inventory", inventory)

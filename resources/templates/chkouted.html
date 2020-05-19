@@ -75,7 +75,7 @@
       </div>
       <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
       <p id="summary" style="font-weight:bold">
-        <span id="itemcount"></span> 种药材，每剂价格
+        <span id="itemcount"></span> 种药材，每剂成本
         <span id="setprice"></span> 元，抓 <a id="sets" onclick="editSets()" href="#">0</a> 剂，共计
         <span id="charge"></span> 元
       </p>
@@ -258,18 +258,11 @@ function getBillInfo() {
     $('#sets').text(e.bill.sets)
     $('#itemcount').text(e.bill.count)
     var markup = (100 + parseInt(e.bill.markup)) / 100
-    var sp = e.bill.cost * markup
+    var sp = e.bill.cost
+    var charge = (sp * e.bill.sets + e.bill.fee) * markup
     $('#setprice').text(sp.toFixed(2))
-    $('#charge').text((sp * e.bill.sets + e.bill.fee).toFixed(2))
-
-    //if (e.bill.status != 0) { //已完成
-    //    $('#title').text('出货单')
-    //    $('#act').attr("disabled", true)
-    //    $('#goods').attr("disabled", true)
-    //    $('#memo').attr("disabled", true)
-    //    var upd = new Date(e.bill.updated)
-    //    $('#finfo').text(`完成时间：${upd.toLocaleString()}`)
-    //}
+    $('#charge').text(charge.toFixed(2))
+  
     $('#goods').val('')
     $('#memo').val(e.bill.memo)
     $('#cart').empty()

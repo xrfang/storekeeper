@@ -30,9 +30,9 @@ func chkUser(u *db.User) map[string]interface{} {
 		resp["mesg"] = "不可编辑管理员信息（但可以重置其登录密钥）"
 		return resp
 	}
-	r := regexp.MustCompile(`^[0-9a-z]{6,32}$`)
+	r := regexp.MustCompile(`^[0-9a-z]{5,32}$`)
 	if !r.MatchString(u.Login) {
-		resp["mesg"] = "登录标识必须由6~32个数字字母构成"
+		resp["mesg"] = "登录标识必须由5~32个数字字母构成"
 		return resp
 	}
 	redir := "/users"

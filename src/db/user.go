@@ -37,8 +37,15 @@ func UpdateOTPKey(login, key string) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec(`UPDATE "user" SET "otpkey"=? WHERE "id"=?`, key, u.ID)
-	return err
+	res, err := db.Exec(`UPDATE "user" SET "otpkey"=? WHERE "id"=?`, key, u.ID)
+	if err != nil {
+		return err
+	}
+	ra, _ := res.RowsAffected()
+	if ra == 0 {
+		return fmt.Errorf("set otpkey for %s(%d) failed", login, u.ID)
+	}
+	return nil
 }
 
 func CheckLogin(login, code string) (int, error) {

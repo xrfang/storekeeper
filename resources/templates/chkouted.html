@@ -47,8 +47,13 @@
   </div>
   <div class="row mb-3">
     <div class="col">
-      <label for="fee"><b>备注</b></label>
-      <textarea class="form-control" id="memo" spellcheck="false" style="resize:none"></textarea>
+      <label for="memo"><b>备注</b></label>
+      <div style="position:relative">
+        <textarea class="form-control" id="memo" spellcheck="false" style="height:33px;resize:none"></textarea>
+        <button id="setm" style="display:none;position:absolute;top:0;right:0" class="btn btn-success">
+          <i class="fas fa-check"></i>
+        </button>
+      </div>
     </div>
   </div>    
   <div class="card border-success">
@@ -215,7 +220,9 @@ function setMemoHeight() {
     var memo = $('#memo')
     memo.css('overflow', 'hidden')
     memo.css('height', 0)
-    memo.css('height', memo.prop('scrollHeight'))
+    var mh = memo.prop('scrollHeight')
+    if (mh < 36) mh = 36
+    memo.css('height', mh)
 }
 function pick(item, cnt) {
     var name = $(item).text()
@@ -326,8 +333,30 @@ function getBillInfo() {
   })
 }
 $(document).ready(function () {
+  $('#memo').focus(function(e) {
+      $('#memo').attr('old', $('#memo').val().trim())
+  })
   $('#memo').keyup(function(e) {
-      setMemoHeight()
+    setMemoHeight()
+    var old = $('#memo').attr('old')
+    var txt = $('#memo').val().trim()
+    $('#setm').css('display', 'none')
+    if (e.which === 27) {
+      $('#memo').val($('#memo').attr('old'))
+      return
+    }
+    if (old == txt) return
+    $('#setm').css('display', '')
+    $('#setm').css('border-top-left-radius', 0)
+    $('#setm').css('border-bottom-left-radius', 0)
+    var bh = $('#memo').prop('scrollHeight')
+    if (bh > 40) {
+      bh = 36
+      $('#setm').css('border-bottom-right-radius', 0)
+    } else {
+      $('#setm').css('border-bottom-right-radius', "0.25rem")
+    }
+    $('#setm').css('height', bh)
   })
   $('#markup').focus(function(e) {
       $('#markup').attr('old', $('#markup').val())
@@ -350,25 +379,25 @@ $(document).ready(function () {
       $('#fee').attr('old', $('#fee').val())
   })
   $('#fee').keyup(function(e) {
-        var txt = $('#fee').val().trim()
-        if (txt == '') {
-            $('#chgf').remove()
-            return
-        }
-        var func = `revertFee()`
-        var btncls = `danger`
-        var btncap = `times`
-        if (txt.match(/^\d+$/)) {
-            func = `submitFee()`
-            btncls = `success`
-            btncap = `check`
-        }
-        var btn = `<div class="input-group-append" id="chgf"><button onclick="${func}"
-            class="btn btn-outline-${btncls} border-left-0 border"type="button"><i
-            class="fas fa-${btncap}"></i></button></div>`
-        $('#chgf').remove()
-        $('#igfee').append(btn)        
-    })
+    var txt = $('#fee').val().trim()
+    if (txt == '') {
+      $('#chgf').remove()
+      return
+    }
+    var func = `revertFee()`
+    var btncls = `danger`
+    var btncap = `times`
+    if (txt.match(/^\d+$/)) {
+      func = `submitFee()`
+      btncls = `success`
+      btncap = `check`
+    }
+    var btn = `<div class="input-group-append" id="chgf"><button onclick="${func}"
+      class="btn btn-outline-${btncls} border-left-0 border"type="button"><i
+      class="fas fa-${btncap}"></i></button></div>`
+    $('#chgf').remove()
+    $('#igfee').append(btn)
+  })
   setMemoHeight()
   $.each(arg.users, function(_, u) {
       $('#requester').append(`<option value="${u.id}">${u.name}</option>`)

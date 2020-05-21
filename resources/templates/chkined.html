@@ -69,6 +69,10 @@
 	  <p id="chkin" style="display:none;text-align:center;margin-top:2rem">
 		<button onclick="doneCheckIn()" class="btn btn-info">&nbsp;完成入库&nbsp;</button>
 	  </p>
+      <div id='diff' style="display:none">
+        <p><b><u>收货数量差异清单</u></b></p>
+        <p id="dfitems"></p>
+      </div>	  
 	  <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
 	</div>
   </div>  
@@ -99,6 +103,23 @@
 	    </div>
 	  </div>
 	</div>
+  </div>
+</div>
+<div class="modal fade" id="cfmdone" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+  	<div class="modal-content">
+  	  <div class="modal-header">
+  		<h5 class="modal-title">确认入库</h5>
+  		<button type="button" class="close" data-dismiss="modal">&times;</button>
+  	  </div>
+  	  <div class="modal-body">
+  		<p>某些药材的入库数量与订购量不符，如现在确认入库，将列出差异数量与金额。</p>
+  		<div class="modal-footer" style="padding-right:0;padding-bottom:0">
+  		  <button type="button" class="btn btn-secondary" data-dismiss="modal">取 消</button>
+  		  <button type="button" class="btn btn-success" data-dismiss="modal">完 成</button>
+  		</div>
+  	  </div>
+  	</div>
   </div>
 </div>
 <script>
@@ -249,6 +270,18 @@ function getBillInfo() {
   $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
 	if (e.bill.status == 1) {
 		$('#title').text('进货单')
+		var lack = []
+		$.each(e.items, function(_, it) {
+		  var diff = it.request - it.confirm
+		  if (diff != 0) lack.push({"name": it.gname, "diff": diff})
+		})
+		if (lack.length > 0) {
+		  $('#dfitems').empty()
+		  $.each(lack, function(_, l) {
+		  $('#dfitems').append(`<span>${l["name"]} ${l["diff"]}克 &nbsp; </span>`)
+		  })
+		  $('#diff').css('display', '')
+		}
 		ci = 3 //表示订单已经完成，checkin菜单不可再用
 		$('#act').attr("disabled", true)
 		$('#goods').attr("disabled", true)
@@ -341,15 +374,18 @@ function submitMemo() {
   })
   $('#chgm').remove()
 }
-function doneCheckIn() {
-	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
-		toast('未全部入库', '请将所有药材入库，或返回修改订购信息', 'error')
-		return
-	}
+function setCheckInDone() {
 	var bid = $('#bid').val()
 	$.post(`/api/chkin/${bid}`, {status: 1}, function(e) {
 		getBillInfo()
 	})
+}
+function doneCheckIn() {
+	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
+		$('#cfmdone').modal('show')
+		return
+	}
+	setCheckInDone()
 }
 $(document).ready(function () {
   $('#uid').val(arg.user.id)
@@ -415,6 +451,11 @@ $(document).ready(function () {
             }
         })
 	}
+  })
+  $('#cfmdone').on('hide.bs.modal', function(e) {
+    var btn = $(document.activeElement)
+    if (btn.hasClass("btn-success"))
+		setCheckInDone()
   })
 })
 </script>

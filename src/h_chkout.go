@@ -321,3 +321,28 @@ func chkOutSetStat(w http.ResponseWriter, r *http.Request) {
 	stat, _ := strconv.Atoi(r.FormValue("stat"))
 	assert(db.SetInventoryByBill(id, stat))
 }
+
+func chkOutSetMemo(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+		}
+	}()
+	ok, _ := T.Validate(getCookie(r, "token"))
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[13:])
+	assert(r.ParseForm())
+	memo := r.FormValue("memo")
+	b, _, err := db.GetBill(id, -1)
+	assert(err)
+	b.Memo = memo
+	_, err = db.SetBill(b)
+	assert(err)
+}

@@ -50,7 +50,7 @@
       <label for="memo"><b>备注</b></label>
       <div style="position:relative">
         <textarea class="form-control" id="memo" spellcheck="false" style="height:33px;resize:none"></textarea>
-        <button id="setm" style="display:none;position:absolute;top:0;right:0" class="btn btn-success">
+        <button id="setm" onclick="submitMemo()" style="display:none;position:absolute;top:0;right:0" class="btn btn-success">
           <i class="fas fa-check"></i>
         </button>
       </div>
@@ -170,6 +170,7 @@
 </div>
 <script>
 var arg = {{.}}
+var bill //从服务器读取的bill详情
 function doneCheckOut() {
   $('#cfmdone').modal('show')
 }
@@ -285,15 +286,16 @@ function getBillInfo() {
   $('#chkout').css('display', 'none')
   $('#extbuy').css('display', 'none')
   $.get(`/chkout/bill/${bid}?order=${so}`, function(e) {
-    if (e.bill.status == 0) {
+    bill = e.bill
+    if (bill.status == 0) {
       $('#chkout').css('display', '')
-      $('#sets').html(`<a id="sets" onclick="editSets()" href="#">${e.bill.sets}</a>`)
+      $('#sets').html(`<a id="sets" onclick="editSets()" href="#">${bill.sets}</a>`)
     } else {
-      $('#sets').text(e.bill.sets)
+      $('#sets').text(bill.sets)
       var lack = []
       $.each(e.items, function(_, it) {
         var diff = it.request - it.confirm
-        if (diff != 0) lack.push({"name": it.gname, "diff": diff*e.bill.sets})
+        if (diff != 0) lack.push({"name": it.gname, "diff": diff*bill.sets})
       })
       if (lack.length > 0) {
         $('#xbitems').empty()
@@ -303,26 +305,26 @@ function getBillInfo() {
         $('#extbuy').css('display', '')
       }
       $('#act').attr("disabled", true)
-      var upd = new Date(e.bill.updated)
-      var st = (e.bill.status == 1) ? '完成' : '结账'
+      var upd = new Date(bill.updated)
+      var st = (bill.status == 1) ? '完成' : '结账'
       $('#finfo').text(`${st}时间：${upd.toLocaleString()}`)
     }
-    $('#requester').val(e.bill.user)
-    $('#markup').val(e.bill.markup)
-    $('#fee').val(e.bill.fee)
-    $('#itemcount').text(e.bill.count)
-    var markup = (100 + parseInt(e.bill.markup)) / 100
-    var sp = e.bill.cost
-    var charge = (sp * e.bill.sets + e.bill.fee) * markup
+    $('#requester').val(bill.user)
+    $('#markup').val(bill.markup)
+    $('#fee').val(bill.fee)
+    $('#itemcount').text(bill.count)
+    var markup = (100 + parseInt(bill.markup)) / 100
+    var sp = bill.cost
+    var charge = (sp * bill.sets + bill.fee) * markup
     $('#setprice').text(sp.toFixed(2))
     $('#charge').text(charge.toFixed(2))
   
     $('#goods').val('')
-    $('#memo').val(e.bill.memo)
+    $('#memo').val(bill.memo)
     $('#cart').empty()
     if (e.items != null && e.items.length > 0) {
       $.each(e.items, function(_, item) {
-        if (e.bill.status == 0) {
+        if (bill.status == 0) {
           $('#cart').append(`<a href="#" onclick="editItem(${item.gid}, '${item.gname}', ${item.request})"
             >${item.gname} ${item.request}克</a> &nbsp; `)
         } else {
@@ -332,9 +334,15 @@ function getBillInfo() {
     }
   })
 }
+function submitMemo() {
+  var id = $('#bid').val()
+  var memo = $('#memo').val()
+  $.post(`/chkout/memo/${id}`, {memo: memo}, function(e) {})
+  $('#setm').css("display", "none")
+}
 $(document).ready(function () {
   $('#memo').focus(function(e) {
-      $('#memo').attr('old', $('#memo').val().trim())
+      $('#memo').attr('old', bill.memo)
   })
   $('#memo').keyup(function(e) {
     setMemoHeight()
@@ -343,6 +351,7 @@ $(document).ready(function () {
     $('#setm').css('display', 'none')
     if (e.which === 27) {
       $('#memo').val($('#memo').attr('old'))
+      setMemoHeight()
       return
     }
     if (old == txt) return

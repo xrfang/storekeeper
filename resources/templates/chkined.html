@@ -335,10 +335,10 @@ function getBillInfo() {
 }
 function submitMemo() {
   var id = $('#bid').val()
-  console.log('TODO: submit memo for', id)
-  //$.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {
-  //	getBillInfo()
-  //})
+  var memo = $('#memo').val()
+  $.post(`/chkin/memo/${id}`, {memo: memo}, function(e) {
+	$('#memo').attr('old', memo)
+  })
   $('#chgm').remove()
 }
 function doneCheckIn() {
@@ -353,14 +353,12 @@ function doneCheckIn() {
 }
 $(document).ready(function () {
   $('#uid').val(arg.user.id)
-  if (arg.bill == 0) {
+  $('#bid').val(Math.abs(arg.bill))
+  if (arg.bill < 0) {
 	$('#title').text('新建进货单')
-	$('#creator').text(arg.user.name)
-	$('#bid').val(0)
 	$('#creator').val(arg.user.name)
   } else {
 	$('#title').text('编辑进货单')
-	$('#bid').val(arg.bill)
   }
   getBillInfo()
   $('#goods').on('keypress', function (e) {

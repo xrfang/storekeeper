@@ -15,6 +15,7 @@ func setupRoutes() {
 	http.HandleFunc("/otp/", otpShow)
 	http.HandleFunc("/chkin", chkInList)
 	http.HandleFunc("/chkin/", chkInEdit)
+	http.HandleFunc("/chkin/memo/", chkInSetMemo)
 	http.HandleFunc("/chkout", chkOutList)
 	http.HandleFunc("/chkout/", chkOutEdit)
 	http.HandleFunc("/chkout/bill/", chkOutBill)

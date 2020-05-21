@@ -85,11 +85,6 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			assert(db.SetBillItem(item, 1))
 			return
 		}
-		memo := r.FormValue("memo")
-		if len(memo) > 0 { //编辑单据备注
-			//TODO
-			return
-		}
 		item := r.FormValue("item")
 		goods, err := db.SearchGoods(item)
 		assert(err)

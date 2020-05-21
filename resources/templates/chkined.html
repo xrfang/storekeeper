@@ -335,10 +335,10 @@ function getBillInfo() {
 }
 function submitMemo() {
   var id = $('#bid').val()
-  console.log('TODO: submit memo for', id)
-  //$.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {
-  //	getBillInfo()
-  //})
+  var memo = $('#memo').val()
+  $.post(`/chkin/memo/${id}`, {memo: memo}, function(e) {
+	$('#memo').attr('old', memo)
+  })
   $('#chgm').remove()
 }
 function doneCheckIn() {
@@ -353,32 +353,32 @@ function doneCheckIn() {
 }
 $(document).ready(function () {
   $('#uid').val(arg.user.id)
-  if (arg.bill == 0) {
+  $('#bid').val(Math.abs(arg.bill))
+  if (arg.bill < 0) {
 	$('#title').text('新建进货单')
-	$('#creator').text(arg.user.name)
-	$('#bid').val(0)
 	$('#creator').val(arg.user.name)
   } else {
 	$('#title').text('编辑进货单')
-	$('#bid').val(arg.bill)
   }
   getBillInfo()
   $('#goods').on('keypress', function (e) {
     if (e.which === 13) addGoods()
   })
   $('#memo').focus(function(e) {
-      $('#memo').attr('old', $('#memo').val())
+      $('#memo').attr('old', $('#memo').val().trim())
   })
   $('#memo').keyup(function(e) {
+	var old = $('#memo').attr('old')
+	var txt = $('#memo').val().trim()
+	$('#chgm').remove()
 	if (e.which === 27) {
 		$('#memo').val($('#memo').attr('old'))
 		return
 	}
-	var txt = $('#memo').val().trim()
+	if (old == txt) return
 	var btn = `<div class="input-group-append" id="chgm"><button onclick="submitMemo()"
         class="btn btn-outline-success border-left-0 border"type="button"><i
         class="fas fa-check"></i></button></div>`
-    $('#chgm').remove()
     $('#igmm').append(btn)        
   })
   $('#editem').on('show.bs.modal', function(e) {

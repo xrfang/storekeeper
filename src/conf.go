@@ -47,7 +47,7 @@ func loadConfig(cfgFile string) {
 	cf.WebRoot = "../webroot"
 	cf.LogPath = "../log"
 	cf.DBFile = "herbs.db"
-	cf.OrgName = "Herbal Store"
+	cf.OrgName = "Herb Store"
 	cf.cfgPath = path.Dir(os.Args[0])
 	if cfgFile != "" {
 		cf.Load(cfgFile)

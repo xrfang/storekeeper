@@ -70,7 +70,7 @@
 		<button onclick="doneCheckIn()" class="btn btn-info">&nbsp;完成入库&nbsp;</button>
 	  </p>
       <div id='diff' style="display:none">
-        <p><b><u>收货数量差异清单</u></b></p>
+        <p><b><u><span id="dfcnt"></span>种药材收货数量不足，总计差额<span id="dfamt"></span>元</u></b></p>
         <p id="dfitems"></p>
       </div>	  
 	  <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
@@ -271,15 +271,37 @@ function getBillInfo() {
 	if (e.bill.status == 1) {
 		$('#title').text('进货单')
 		var lack = []
+		var dfcnt = 0
+		var dfamt = 0
 		$.each(e.items, function(_, it) {
 		  var diff = it.request - it.confirm
-		  if (diff != 0) lack.push({"name": it.gname, "diff": diff})
+		  if (diff != 0) {
+			  lack.push({"name": it.gname, "diff": diff, "cost": it.cost})
+			  dfcnt++
+			  dfamt += diff * it.cost
+		  }
 		})
 		if (lack.length > 0) {
+		  $('#dfcnt').text(dfcnt)
+		  $('#dfamt').text(dfamt)
 		  $('#dfitems').empty()
-		  $.each(lack, function(_, l) {
-		  $('#dfitems').append(`<span>${l["name"]} ${l["diff"]}克 &nbsp; </span>`)
-		  })
+		  switch(vs) {
+		  case "0":
+            $.each(lack, function(_, l) {
+              $('#dfitems').append(`<span>${l["name"]} 缺${l["diff"]}克 &nbsp; </span>`)
+            })
+			break
+		  case "1":
+		    var tbl = `<table class="table table-sm table-hover">
+	          <thead class="thead-light"><tr><th>品名</th><th class="text-right">缺少</th>
+	          <th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
+			$.each(lack, function(_, l) {
+			  var total = l["diff"] * l["cost"]
+			  tbl += `<tr><td>${l["name"]}</td><td class="text-right">${l["diff"]}</td>
+			    <td class="text-right">${l["cost"]}</td><td class="text-right">${total}</td></tr>`				
+			})
+			$('#dfitems').html(tbl)
+		  }
 		  $('#diff').css('display', '')
 		}
 		ci = 3 //表示订单已经完成，checkin菜单不可再用
@@ -355,10 +377,10 @@ function getBillInfo() {
 			$('#wait').prepend(`<p><b>未入库药材</b></p>`)
 		}
 		if (!$('#wip').is(':empty')) {
-			$('#wip').prepend(`<p><b>正在入库药材</b></p>`)
+			$('#wip').prepend(`<p><b>部分入库药材</b></p>`)
 		}
 		if (!$('#done').is(':empty')) {
-			$('#done').prepend(`<p><b>已入库药材</b></p>`)
+			$('#done').prepend(`<p><b>全部库药材</b></p>`)
 		}
 	  }
 	} else {

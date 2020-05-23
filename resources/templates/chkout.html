@@ -66,7 +66,7 @@ function listBills(status) {
     st = "已付款"
   }
   $('#blist').text("")
-  $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}出货单</p>`)
+  $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}</p>`)
   $.each(bs, function(_, b) {
     var markup = (100 + parseInt(b.markup)) / 100
     var sp = b.cost

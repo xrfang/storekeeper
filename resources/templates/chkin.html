@@ -61,7 +61,7 @@ function listBills(status) {
     st = "已完成"
   }
   $('#blist').text("")
-  $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}进货单</p>`)
+  $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}</p>`)
   $.each(bs, function(_, b) {
     var item = `<div style="margin-top:0.4rem;font-family:'Courier New',Courier,monospace">
       <a href="/chkin/${b.id}">[${b.updated.substring(0, 10)}] ${b.count}种药材`

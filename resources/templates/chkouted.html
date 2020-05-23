@@ -443,12 +443,16 @@ $(document).ready(function () {
   	$('#editem #count').select()
   })
   $('#editem').on('hide.bs.modal', function(e) {
+    var bid = $('#bid').val()
+    var gid = $('#editem #gid').val()
     var btn = $(document.activeElement)
     if (btn.hasClass("btn-success")) {
-  	  var bid = $('#bid').val()
-	    var gid = $('#editem #gid').val()
       var cnt = $('#editem #count').val()  
       $.post(`/chkout/amt/${bid}`, {gid:gid,amt:cnt}, function(e) {
+        getBillInfo()
+      })
+    } else if (btn.hasClass("btn-danger")) {
+      $.post(`/chkout/amt/${bid}`, {gid:gid,amt:0}, function(e) {
         getBillInfo()
       })
     }

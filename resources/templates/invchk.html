@@ -21,7 +21,25 @@
   </div>
 </nav>
 <div class="container" style="padding-top:1em">
-    
+  <p style="margin-top:1rem;font-weight:bold">历史盘点记录</p>
+  <p style="font-family: 'Courier New', Courier, monospace">
+  {{range $stat, $bill := index . "bills" }}
+    {{if eq $stat 0}}
+    未完成：<a href="javascript:listBills('0')">{{len $bill}}张</a> &nbsp;
+    {{else}}
+    已完成：<a href="javascript:listBills('1')">{{len $bill}}张</a> &nbsp;
+    {{end}}  
+  {{end}}
+  </p>
+  <p>
+    {{if gt (len (index . "bills")) 0}}
+    请点击上面的连接获取各状态盘点详情，或
+    {{else}}
+    未完成：0张 &nbsp; 已完成：0张 &nbsp;
+    <br><br>
+    {{end}}<a href="/invchk/">新建盘点</a>
+  </p>
+  <p id="blist"></p>    
 </div>
 <script>
   $(document).ready(function () {

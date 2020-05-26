@@ -29,6 +29,7 @@ func setupRoutes() {
 	http.HandleFunc("/chkout/memo/", chkOutSetMemo)
 	http.HandleFunc("/invchk", invChkList)
 	http.HandleFunc("/invchk/", invChkEdit)
+	http.HandleFunc("/invchk/item/", invChkEditItem)
 	http.HandleFunc("/sku", sku)
 	http.HandleFunc("/sku/", sku)
 	http.HandleFunc("/users", users)

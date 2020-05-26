@@ -236,10 +236,11 @@ func UpdateSKUs(skus []Goods) (err error) {
 
 func GetSKUs(ids ...interface{}) (goods []Goods, err error) {
 	if len(ids) == 0 {
-		return nil, fmt.Errorf("GetSKU: no ID provided")
+		err = db.Select(&goods, `SELECT * FROM goods`)
+	} else {
+		err = db.Select(&goods, `SELECT * FROM goods WHERE id IN (?`+
+			strings.Repeat(`,?`, len(ids)-1)+`)`, ids...)
 	}
-	err = db.Select(&goods, `SELECT * FROM goods WHERE id IN (?`+
-		strings.Repeat(`,?`, len(ids)-1)+`)`, ids...)
 	return
 }
 

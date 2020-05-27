@@ -25,8 +25,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		item, _ := strconv.Atoi(r.URL.Query().Get("item"))
 		if item > 0 { //在弹出框中编辑条目
-			bis, err := db.GetBillItems(id, item)
-			assert(err)
+			bis := db.GetBillItems(id, item)
 			jsonReply(w, bis[0])
 			return
 		}
@@ -36,17 +35,14 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			res   map[string]interface{}
 			bill  db.Bill
 			items []db.BillItem
-			err   error
 		)
 		if id == 0 {
 			bill = db.Bill{User: uid}
 		} else {
-			bill, items, err = db.GetBill(id, so)
-			assert(err)
+			bill, items = db.GetBill(id, so)
 		}
 		res = map[string]interface{}{"bill": bill, "items": items}
-		users, err := db.ListUsers(1)
-		assert(err)
+		users := db.ListUsers(1)
 		for _, u := range users {
 			if u.ID == bill.User {
 				res["user"] = u.Name
@@ -58,17 +54,14 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		assert(r.ParseForm())
 		status, _ := strconv.Atoi(r.FormValue("status"))
 		if status > 0 {
-			b, _, err := db.GetBill(id, -1) //第二参数不是0或1表示不需要获取条目
-			assert(err)
+			b, _ := db.GetBill(id, -1) //第二参数不是0或1表示不需要获取条目
 			b.Status = 1
-			_, err = db.SetBill(b)
-			assert(err)
+			db.SetBill(b)
 			return
 		}
 		gid, _ := strconv.Atoi(r.FormValue("gid"))
 		if gid > 0 { //提交单条目编辑
-			items, err := db.GetBillItems(id, gid)
-			assert(err)
+			items := db.GetBillItems(id, gid)
 			item := items[0]
 			cost, err := strconv.ParseFloat(r.FormValue("cost"), 64)
 			if err == nil {
@@ -82,12 +75,11 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			if err == nil {
 				item.Confirm = cfm
 			}
-			assert(db.SetBillItem(item, 1))
+			db.SetBillItem(item, 1)
 			return
 		}
 		item := r.FormValue("item")
-		goods, err := db.SearchGoods(item)
-		assert(err)
+		goods := db.SearchGoods(item)
 		cfm, _ := strconv.Atoi(r.FormValue("confirm"))
 		if cfm != 0 { //验货入库
 			res := map[string]interface{}{"id": id, "item": []string{}, "count": cfm}
@@ -99,8 +91,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 				jsonReply(w, res)
 				return
 			}
-			bis, err := db.GetBillItems(id, items...)
-			assert(err)
+			bis := db.GetBillItems(id, items...)
 			switch len(bis) {
 			case 0:
 				jsonReply(w, res)
@@ -113,7 +104,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				bis[0].Confirm += cfm
-				assert(db.SetBillItem(bis[0], 1))
+				db.SetBillItem(bis[0], 1)
 				res["count"] = bis[0].Confirm
 				jsonReply(w, res)
 			default:
@@ -134,19 +125,14 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		req, _ := strconv.Atoi(r.FormValue("request"))
 		if req > 0 && len(items) == 1 {
 			if id == 0 {
-				id, err = db.SetBill(db.Bill{ID: id, User: uid, Type: 1})
-				assert(err)
+				id = db.SetBill(db.Bill{ID: id, User: uid, Type: 1})
 			}
-			err = db.SetBillItem(db.BillItem{
+			if db.SetBillItem(db.BillItem{
 				BomID:     id,
 				GoodsID:   goods[0].ID,
 				GoodsName: goods[0].Name,
 				Request:   req,
-			}, 0)
-			if err != nil {
-				if err != db.ErrItemAlreadyExists {
-					panic(err)
-				}
+			}, 0) {
 				req = -req
 			}
 		}
@@ -169,9 +155,9 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if gid == 0 {
-			assert(db.DeleteBill(bid))
+			db.DeleteBill(bid)
 		} else {
-			assert(db.DeleteBillItem(bid, gid))
+			db.DeleteBillItem(bid, gid)
 		}
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

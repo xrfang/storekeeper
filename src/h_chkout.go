@@ -18,15 +18,13 @@ func chkOutList(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	assert(db.RemoveEmptyBills())
-	bills, err := db.ListBills(&db.Bill{Type: 2})
-	assert(err)
+	db.RemoveEmptyBills()
+	bills := db.ListBills(&db.Bill{Type: 2})
 	bm := make(map[byte][]db.Bill)
 	for _, b := range bills {
 		bm[b.Status] = append(bm[b.Status], b)
 	}
-	users, err := db.ListUsers(1)
-	assert(err)
+	users := db.ListUsers(1)
 	renderTemplate(w, "chkout.html", map[string]interface{}{"bills": bm, "users": users})
 }
 
@@ -47,10 +45,8 @@ func chkOutBill(w http.ResponseWriter, r *http.Request) {
 		res   map[string]interface{}
 		bill  db.Bill
 		items []db.BillItem
-		err   error
 	)
-	bill, items, err = db.GetBill(id, so)
-	assert(err)
+	bill, items = db.GetBill(id, so)
 	res = map[string]interface{}{"bill": bill, "items": items}
 	jsonReply(w, res)
 }
@@ -70,24 +66,18 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		var us []db.User
-		var err error
 		if id == 0 {
-			us, err = db.ListUsers(uid)
-			assert(err)
-			id, err = db.SetBill(db.Bill{Type: 2, User: uid, Sets: 1, Markup: 20, Fee: 0})
-			assert(err)
+			us = db.ListUsers(uid)
+			id = db.SetBill(db.Bill{Type: 2, User: uid, Sets: 1, Markup: 20, Fee: 0})
 			id = -id
 		} else {
-			b, _, err := db.GetBill(id, -1)
-			assert(err)
-			u, err := db.GetUser(b.User)
-			assert(err)
+			b, _ := db.GetBill(id, -1)
+			u := db.GetUser(b.User)
 			if u.Client == 0 {
-				us, err = db.ListUsers(u.ID)
+				us = db.ListUsers(u.ID)
 			} else {
-				us, err = db.ListUsers(u.Client)
+				us = db.ListUsers(u.Client)
 			}
-			assert(err)
 		}
 		renderTemplate(w, "chkouted.html", map[string]interface{}{"users": us, "bill": id})
 	default:
@@ -117,11 +107,9 @@ func chkOutSetFee(w http.ResponseWriter, r *http.Request) {
 	assert(r.ParseForm())
 	fee, err := strconv.ParseFloat(r.FormValue("fee"), 64)
 	assert(err)
-	b, _, err := db.GetBill(id, -1)
-	assert(err)
+	b, _ := db.GetBill(id, -1)
 	b.Fee = fee
-	_, err = db.SetBill(b)
-	assert(err)
+	db.SetBill(b)
 }
 
 func chkOutSetMarkup(w http.ResponseWriter, r *http.Request) {
@@ -146,11 +134,9 @@ func chkOutSetMarkup(w http.ResponseWriter, r *http.Request) {
 	assert(r.ParseForm())
 	markup, err := strconv.Atoi(r.FormValue("markup"))
 	assert(err)
-	b, _, err := db.GetBill(id, -1)
-	assert(err)
+	b, _ := db.GetBill(id, -1)
 	b.Markup = markup
-	_, err = db.SetBill(b)
-	assert(err)
+	db.SetBill(b)
 }
 
 func chkOutSetRequester(w http.ResponseWriter, r *http.Request) {
@@ -177,11 +163,9 @@ func chkOutSetRequester(w http.ResponseWriter, r *http.Request) {
 	if req <= 0 {
 		panic(fmt.Errorf("invalid user_id"))
 	}
-	b, _, err := db.GetBill(id, -1)
-	assert(err)
+	b, _ := db.GetBill(id, -1)
 	b.User = req
-	_, err = db.SetBill(b)
-	assert(err)
+	db.SetBill(b)
 }
 
 func chkOutSetSets(w http.ResponseWriter, r *http.Request) {
@@ -208,11 +192,9 @@ func chkOutSetSets(w http.ResponseWriter, r *http.Request) {
 	if sets <= 0 {
 		panic(fmt.Errorf("invalid sets"))
 	}
-	b, _, err := db.GetBill(id, -1)
-	assert(err)
+	b, _ := db.GetBill(id, -1)
 	b.Sets = sets
-	_, err = db.SetBill(b)
-	assert(err)
+	db.SetBill(b)
 }
 
 func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
@@ -231,25 +213,20 @@ func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		assert(r.ParseForm())
 		item := r.FormValue("item")
-		goods, err := db.SearchGoods(item)
-		assert(err)
+		goods := db.SearchGoods(item)
 		items := []string{}
 		for _, g := range goods {
 			items = append(items, g.Name)
 		}
 		req, _ := strconv.Atoi(r.FormValue("request"))
 		if req > 0 && len(items) == 1 {
-			err = db.SetBillItem(db.BillItem{
+			if db.SetBillItem(db.BillItem{
 				BomID:     id,
 				Cost:      goods[0].Cost,
 				GoodsID:   goods[0].ID,
 				GoodsName: goods[0].Name,
 				Request:   req,
-			}, 0)
-			if err != nil {
-				if err != db.ErrItemAlreadyExists {
-					panic(err)
-				}
+			}, 0) {
 				req = -req
 			}
 		}
@@ -281,20 +258,18 @@ func chkOutSetAmount(w http.ResponseWriter, r *http.Request) {
 	assert(r.ParseForm())
 	gid, _ := strconv.Atoi(r.FormValue("gid"))
 	amt, _ := strconv.Atoi(r.FormValue("amt"))
-	_, _, err := db.GetBill(id, -1)
-	assert(err)
+	db.GetBill(id, -1)
 	if amt > 0 {
-		bis, err := db.GetBillItems(id, gid)
-		assert(err)
-		assert(db.SetBillItem(db.BillItem{
+		bis := db.GetBillItems(id, gid)
+		db.SetBillItem(db.BillItem{
 			BomID:     id,
 			Cost:      bis[0].Cost,
 			GoodsName: bis[0].GoodsName,
 			GoodsID:   gid,
 			Request:   amt,
-		}, 1))
+		}, 1)
 	} else {
-		assert(db.DeleteBillItem(id, gid))
+		db.DeleteBillItem(id, gid)
 	}
 }
 
@@ -319,7 +294,7 @@ func chkOutSetStat(w http.ResponseWriter, r *http.Request) {
 	}
 	assert(r.ParseForm())
 	stat, _ := strconv.Atoi(r.FormValue("stat"))
-	assert(db.SetInventoryByBill(id, stat))
+	db.SetInventoryByBill(id, stat)
 }
 
 func chkOutSetMemo(w http.ResponseWriter, r *http.Request) {
@@ -340,9 +315,7 @@ func chkOutSetMemo(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Path[13:])
 	assert(r.ParseForm())
 	memo := r.FormValue("memo")
-	b, _, err := db.GetBill(id, -1)
-	assert(err)
+	b, _ := db.GetBill(id, -1)
 	b.Memo = memo
-	_, err = db.SetBill(b)
-	assert(err)
+	db.SetBill(b)
 }

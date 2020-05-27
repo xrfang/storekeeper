@@ -64,26 +64,17 @@ func users(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var ui UserInfo
-		pu, err := db.GetPrimaryUsers()
-		if err != nil {
-			ui.Error = err.Error()
-			renderTemplate(w, "usered.html", ui)
-			return
-		}
+		pu := db.GetPrimaryUsers()
 		id, _ := strconv.Atoi(ids)
 		if id > 0 {
-			u, err := db.GetUser(id)
-			if err != nil {
-				ui.Error = err.Error()
-			} else {
-				ui = UserInfo{
-					ID:      u.ID,
-					Name:    u.Name,
-					Login:   u.Login,
-					Client:  u.Client,
-					Memo:    u.Memo,
-					Created: u.Created.Format("2006-01-02"),
-				}
+			u := db.GetUser(id)
+			ui = UserInfo{
+				ID:      u.ID,
+				Name:    u.Name,
+				Login:   u.Login,
+				Client:  u.Client,
+				Memo:    u.Memo,
+				Created: u.Created.Format("2006-01-02"),
 			}
 		}
 		if ui.ID == 0 { //新增用户
@@ -118,14 +109,13 @@ func users(w http.ResponseWriter, r *http.Request) {
 		}
 		resp := chkUser(&u)
 		if resp["stat"].(bool) {
-			err := db.UpdateUser(&u)
-			if err == nil {
+			if db.UpdateUser(&u) {
 				if strings.HasPrefix(resp["goto"].(string), "/otp/") {
 					resp["goto"] = resp["goto"].(string) + strconv.Itoa(u.ID)
 				}
 			} else {
 				resp["stat"] = false
-				resp["mesg"] = err.Error()
+				resp["mesg"] = "不能修改该用户的信息"
 			}
 		}
 		jsonReply(w, resp)
@@ -144,13 +134,12 @@ func users(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if uid != 1 {
-			u, err := db.GetUser(id)
-			assert(err)
+			u := db.GetUser(id)
 			if u.Client != uid {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
 		}
-		assert(db.DeleteUser(id))
+		db.DeleteUser(id)
 	}
 }

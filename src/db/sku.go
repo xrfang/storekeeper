@@ -48,10 +48,10 @@ type SkuQueryResult struct {
 	Missing []skuQR `json:"missing"`
 }
 
-func CountSKU() (int, error) {
+func CountSKU() int {
 	var cnt int
-	err := db.Get(&cnt, `SELECT COUNT(id) FROM goods`)
-	return cnt, err
+	assert(db.Get(&cnt, `SELECT COUNT(id) FROM goods`))
+	return cnt
 }
 
 func whereAs(s string) (string, []interface{}) {
@@ -131,12 +131,7 @@ func pinInit(name string) string {
 	return strings.Join(segs, " ")
 }
 
-func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
-		}
-	}()
+func QuerySKU(terms []string) *SkuQueryResult {
 	var goods []Goods
 	if len(terms) == 0 {
 		assert(db.Select(&goods, `SELECT id,name FROM goods ORDER BY pinyin`))
@@ -144,7 +139,7 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 		for _, g := range goods {
 			items = append(items, skuQR{ID: g.ID, Name: []string{g.Name}})
 		}
-		return &SkuQueryResult{Found: items}, nil
+		return &SkuQueryResult{Found: items}
 	}
 	pm := make(map[string]skuQR)
 	var qr SkuQueryResult
@@ -194,15 +189,10 @@ func QuerySKU(terms []string) (r *SkuQueryResult, err error) {
 			qr.Match = append(qr.Match, m)
 		}
 	}
-	return &qr, nil
+	return &qr
 }
 
-func UpdateSKUs(skus []Goods) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
-		}
-	}()
+func UpdateSKUs(skus []Goods) {
 	if len(skus) == 0 {
 		return
 	}
@@ -234,22 +224,17 @@ func UpdateSKUs(skus []Goods) (err error) {
 	return
 }
 
-func GetSKUs(ids ...interface{}) (goods []Goods, err error) {
+func GetSKUs(ids ...interface{}) (goods []Goods) {
 	if len(ids) == 0 {
-		err = db.Select(&goods, `SELECT * FROM goods`)
+		assert(db.Select(&goods, `SELECT * FROM goods`))
 	} else {
-		err = db.Select(&goods, `SELECT * FROM goods WHERE id IN (?`+
-			strings.Repeat(`,?`, len(ids)-1)+`)`, ids...)
+		assert(db.Select(&goods, `SELECT * FROM goods WHERE id IN
+		    (?`+strings.Repeat(`,?`, len(ids)-1)+`)`, ids...))
 	}
 	return
 }
 
-func SearchGoods(term string) (goods []Goods, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
-		}
-	}()
+func SearchGoods(term string) (goods []Goods) {
 	name := strings.ToUpper(strings.TrimSpace(term))
 	term = "%" + name + "%"
 	args := []interface{}{term, term}

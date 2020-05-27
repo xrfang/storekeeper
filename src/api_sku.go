@@ -33,8 +33,7 @@ func apiSkuList(w http.ResponseWriter, r *http.Request) {
 		for t := range tm {
 			terms = append(terms, t)
 		}
-		qr, err := db.QuerySKU(terms)
-		assert(err)
+		qr := db.QuerySKU(terms)
 		jsonReply(w, qr)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -55,8 +54,7 @@ func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		id, _ := strconv.Atoi(r.URL.Path[9:])
-		goods, err := db.GetSKUs(id)
-		assert(err)
+		goods := db.GetSKUs(id)
 		if len(goods) == 0 {
 			http.Error(w, "Not Found", http.StatusNotFound)
 			return
@@ -65,7 +63,7 @@ func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var skus []db.Goods
 		assert(json.NewDecoder(r.Body).Decode(&skus))
-		assert(db.UpdateSKUs(skus))
+		db.UpdateSKUs(skus)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}

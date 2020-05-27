@@ -45,19 +45,14 @@ type BillItem struct {
 	Updated   time.Time `json:"updated"`
 }
 
-func RemoveEmptyBills() error {
+func RemoveEmptyBills() {
 	_, err := db.Exec(`DELETE FROM bom WHERE NOT id IN 
 		(SELECT distinct bom_id FROM bom_item)`)
-	return err
+	assert(err)
 }
 
 //tpl模板可以指定的参数：ID、Type、User、Status
-func ListBills(tpl *Bill) (bills []Bill, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
-		}
-	}()
+func ListBills(tpl *Bill) (bills []Bill) {
 	var cond []string
 	var args []interface{}
 	qry := `SELECT * FROM bom`
@@ -119,12 +114,7 @@ items:
 	return
 }
 
-func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = trace("%v", e)
-		}
-	}()
+func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 	assert(db.Get(&bill, `SELECT * FROM bom WHERE id=?`, id))
 	switch itmOrd {
 	case 0:
@@ -146,34 +136,32 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem, err error) {
 	return
 }
 
-func GetBillItems(bid int, gid ...interface{}) (items []BillItem, err error) {
+func GetBillItems(bid int, gid ...interface{}) (items []BillItem) {
 	if len(gid) == 0 {
-		return nil, errors.New("GetBillItem: no item-id provided")
+		return nil
 	}
 	ids := append([]interface{}{bid}, gid...)
-	err = db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=? AND gid IN (?`+
-		strings.Repeat(`,?`, len(gid)-1)+`)`, ids...)
+	assert(db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=? AND 
+	    gid IN (?`+strings.Repeat(`,?`, len(gid)-1)+`)`, ids...))
 	return
 }
 
-func SetBill(b Bill) (id int, err error) {
+func SetBill(b Bill) (id int) {
 	tx, err := db.Beginx()
-	if err != nil {
-		return 0, err
-	}
+	assert(err)
 	defer func() {
 		if e := recover(); e != nil {
-			err = e.(error)
 			tx.Rollback()
-			return
+			panic(e)
 		}
-		err = tx.Commit()
+		assert(tx.Commit())
 	}()
 	if b.ID == 0 {
 		res := tx.MustExec(`INSERT INTO bom (type,user_id,markup,fee,memo,sets) VALUES
 		    (?,?,?,?,?,?)`, b.Type, b.User, b.Markup, b.Fee, b.Memo, b.Sets)
 		id, err := res.LastInsertId()
-		return int(id), err
+		assert(err)
+		return int(id)
 	}
 	tx.MustExec(`UPDATE bom SET user_id=?,markup=?,fee=?,memo=?,sets=?,status=?
 		WHERE ID=?`, b.User, b.Markup, b.Fee, b.Memo, b.Sets, b.Status, b.ID)
@@ -184,25 +172,19 @@ func SetBill(b Bill) (id int, err error) {
 			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, bi.Confirm, bi.GoodsID)
 		}
 	}
-	return b.ID, nil
+	return b.ID
 }
 
-func SetBillItem(bi BillItem, mode int) (err error) {
-	b, _, err := GetBill(bi.BomID, -1)
-	if err != nil {
-		return err
-	}
+func SetBillItem(bi BillItem, mode int) bool {
+	b, _ := GetBill(bi.BomID, -1)
 	tx, err := db.Beginx()
-	if err != nil {
-		return err
-	}
+	assert(err)
 	defer func() {
 		if e := recover(); e != nil {
-			err = e.(error)
 			tx.Rollback()
-			return
+			panic(e)
 		}
-		err = tx.Commit()
+		assert(tx.Commit())
 	}()
 	if b.Type == 2 { //出库单，数量转化为负值
 		if bi.Request > 0 {
@@ -217,7 +199,7 @@ func SetBillItem(bi BillItem, mode int) (err error) {
 		var cnt int
 		assert(tx.Get(&cnt, `SELECT COUNT(id) FROM bom_item WHERE bom_id=? AND gid=?`, bi.BomID, bi.GoodsID))
 		if cnt > 0 {
-			panic(ErrItemAlreadyExists)
+			return true //该条目原本已经存在
 		}
 	case 1: //update
 		tx.MustExec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bi.BomID, bi.GoodsID)
@@ -227,34 +209,30 @@ func SetBillItem(bi BillItem, mode int) (err error) {
 	if b.Type == 1 { //入库单，用当前价格更新药品单价
 		tx.MustExec(`UPDATE goods SET cost=? WHERE id=?`, bi.Cost, bi.GoodsID)
 	}
-	return
+	return false //该条目原本不存在或被更新
 }
 
-func DeleteBill(bid int) (err error) {
-	_, err = db.Exec(`DELETE FROM bom WHERE id=?`, bid)
-	return
+func DeleteBill(bid int) {
+	_, err := db.Exec(`DELETE FROM bom WHERE id=?`, bid)
+	assert(err)
 }
 
-func DeleteBillItem(bid, gid int) (err error) {
-	_, err = db.Exec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bid, gid)
-	return
+func DeleteBillItem(bid, gid int) {
+	_, err := db.Exec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bid, gid)
+	assert(err)
 }
 
-func SetInventoryByBill(bid, stat int) (err error) {
+func SetInventoryByBill(bid, stat int) {
 	iop.Lock()
 	defer iop.Unlock()
 	tx, err := db.Beginx()
-	if err != nil {
-		return err
-	}
+	assert(err)
 	defer func() {
 		if e := recover(); e != nil {
-			err = e.(error)
-			fmt.Println(trace("%v", err))
 			tx.Rollback()
-			return
+			panic(e)
 		}
-		err = tx.Commit()
+		assert(tx.Commit())
 	}()
 	var b Bill
 	assert(tx.Get(&b, `SELECT * FROM bom WHERE id=?`, bid))
@@ -295,5 +273,8 @@ func SetInventoryByBill(bid, stat int) (err error) {
 				confirm, r.ID, bid)
 		}
 	}
-	return
+}
+
+func CreateInventory(bid int) {
+
 }

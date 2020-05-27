@@ -19,8 +19,7 @@ func sku(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case "GET":
-		cnt, err := db.CountSKU()
-		assert(err)
+		cnt := db.CountSKU()
 		renderTemplate(w, "sku.html", struct{ Total int }{cnt})
 	case "POST":
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

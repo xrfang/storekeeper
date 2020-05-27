@@ -42,15 +42,14 @@ func otpShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id, _ := strconv.Atoi(r.URL.Path[5:])
-	u, err := db.GetUser(id)
-	assert(err)
+	u := db.GetUser(id)
 	if u.Client != 0 {
 		http.Redirect(w, r, "/users", http.StatusTemporaryRedirect)
 		return
 	}
 	key, err := otpGenKey(u.Login)
 	assert(err)
-	assert(db.UpdateOTPKey(u.Login, key.Secret()))
+	db.UpdateOTPKey(u.Login, key.Secret())
 	qrCode, _ := qr.Encode(key.String(), qr.M, qr.Auto)
 	qrCode, _ = barcode.Scale(qrCode, 200, 200)
 	var buf bytes.Buffer

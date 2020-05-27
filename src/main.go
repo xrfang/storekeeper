@@ -37,7 +37,7 @@ func main() {
 		key, err := otpGenKey("admin")
 		assert(err)
 		qrterminal.Generate(key.String(), qrterminal.L, os.Stdout)
-		assert(db.UpdateOTPKey("admin", key.Secret()))
+		db.UpdateOTPKey("admin", key.Secret())
 		return
 	}
 	L = NewLogger(cf.LogPath, 1024*1024, 10)

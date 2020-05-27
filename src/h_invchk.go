@@ -13,16 +13,14 @@ func invChkList(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	assert(db.RemoveEmptyBills())
-	bills, err := db.ListBills(&db.Bill{Type: 3})
-	assert(err)
+	db.RemoveEmptyBills()
+	bills := db.ListBills(&db.Bill{Type: 3})
 	fmt.Printf("invchk: %+v\n", bills)
 	bm := make(map[byte][]db.Bill)
 	for _, b := range bills {
 		bm[b.Status] = append(bm[b.Status], b)
 	}
-	u, err := db.GetUser(uid)
-	assert(err)
+	u := db.GetUser(uid)
 	renderTemplate(w, "invchk.html", map[string]interface{}{"bills": bm, "user": u})
 }
 
@@ -40,21 +38,16 @@ func invChkEdit(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Path[7:])
 	switch r.Method {
 	case "GET":
-		u, err := db.GetUser(uid)
-		assert(err)
+		u := db.GetUser(uid)
 		if id == 0 {
-			bills, err := db.ListBills(&db.Bill{Type: 3, Status: 0})
-			assert(err)
+			bills := db.ListBills(&db.Bill{Type: 3, Status: 0})
 			if len(bills) > 0 {
 				http.Error(w, "只允许一个进行中盘点", http.StatusBadRequest)
 				return
 			}
-			id, err = db.SetBill(db.Bill{Type: 1, User: uid})
-			assert(err)
+			id = db.SetBill(db.Bill{Type: 1, User: uid})
+			db.CreateInventory(id)
 			id = -id
-			gs, err := db.GetSKUs()
-			assert(err)
-
 		}
 		renderTemplate(w, "invchked.html", map[string]interface{}{"user": u, "bill": id})
 	default:
@@ -78,25 +71,20 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		assert(r.ParseForm())
 		item := r.FormValue("item")
-		goods, err := db.SearchGoods(item)
-		assert(err)
+		goods := db.SearchGoods(item)
 		items := []string{}
 		for _, g := range goods {
 			items = append(items, g.Name)
 		}
 		req, _ := strconv.Atoi(r.FormValue("request"))
 		if req > 0 && len(items) == 1 {
-			err = db.SetBillItem(db.BillItem{
+			if db.SetBillItem(db.BillItem{
 				BomID:     id,
 				Cost:      goods[0].Cost,
 				GoodsID:   goods[0].ID,
 				GoodsName: goods[0].Name,
 				Request:   req,
-			}, 0)
-			if err != nil {
-				if err != db.ErrItemAlreadyExists {
-					panic(err)
-				}
+			}, 0) {
 				req = -req
 			}
 		}

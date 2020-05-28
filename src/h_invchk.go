@@ -46,8 +46,10 @@ func invChkEdit(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			id = db.SetBill(db.Bill{Type: 1, User: uid})
-			db.CreateInventory(id)
+			db.UpdateInventory(id)
 			id = -id
+		} else {
+			db.UpdateInventory(id)
 		}
 		renderTemplate(w, "invchked.html", map[string]interface{}{"user": u, "bill": id})
 	default:

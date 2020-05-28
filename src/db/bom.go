@@ -275,6 +275,6 @@ func SetInventoryByBill(bid, stat int) {
 	}
 }
 
-func CreateInventory(bid int) {
+func UpdateInventory(bid int) {
 
 }

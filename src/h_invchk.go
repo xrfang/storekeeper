@@ -35,7 +35,7 @@ func invChkEdit(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	id, _ := strconv.Atoi(r.URL.Path[7:])
+	id, _ := strconv.Atoi(r.URL.Path[8:])
 	switch r.Method {
 	case "GET":
 		u := db.GetUser(uid)
@@ -45,7 +45,7 @@ func invChkEdit(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "只允许一个进行中盘点", http.StatusBadRequest)
 				return
 			}
-			id = db.SetBill(db.Bill{Type: 1, User: uid})
+			id = db.SetBill(db.Bill{Type: 3, User: uid})
 			db.UpdateInventory(id)
 			id = -id
 		} else {

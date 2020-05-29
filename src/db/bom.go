@@ -276,5 +276,28 @@ func SetInventoryByBill(bid, stat int) {
 }
 
 func UpdateInventory(bid int) {
-
+	iop.Lock()
+	defer iop.Unlock()
+	var bis []BillItem
+	bim := make(map[int]bool)
+	assert(db.Select(&bis, `SELECT gid FROM bom_item WHERE bom_id=?`, bid))
+	for _, bi := range bis {
+		bim[bi.GoodsID] = true
+	}
+	var gs []Goods
+	assert(db.Select(&gs, `SELECT id,name,stock FROM goods WHERE stock>0`))
+	tx := db.MustBegin()
+	defer func() {
+		if e := recover(); e != nil {
+			tx.Rollback()
+			panic(e)
+		}
+		assert(tx.Commit())
+	}()
+	for _, g := range gs {
+		if !bim[g.ID] {
+			tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,request,confirm)
+			    VALUES (?,?,?,?,?)`, bid, g.ID, g.Name, g.Stock, 0)
+		}
+	}
 }

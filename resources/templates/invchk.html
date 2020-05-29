@@ -1,4 +1,5 @@
 {{define "body"}} {{template "header"}}
+{{$wip := false}}
 <nav class="navbar navbar-expand navbar-dark bg-dark">
   <a class="navbar-brand" href="#"><img src="/imgs/nav_title.png"></a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMenu">
@@ -25,7 +26,8 @@
   <p style="font-family: 'Courier New', Courier, monospace">
   {{range $stat, $bill := index . "bills" }}
     {{if eq $stat 0}}
-    未完成：<a href="javascript:listBills('0')">{{len $bill}}张</a> &nbsp;
+    {{$wip = true}}
+    有一个盘点正在进行中，<a href="/invchk/{{(index $bill 0).ID}}">点击此处继续</a> &nbsp;
     {{else}}
     已完成：<a href="javascript:listBills('1')">{{len $bill}}张</a> &nbsp;
     {{end}}  
@@ -33,11 +35,12 @@
   </p>
   <p>
     {{if gt (len (index . "bills")) 0}}
-    请点击上面的连接获取各状态盘点详情，或
+    请点击上面的连接获取各状态盘点详情
+    {{if eq $wip false }}，或{{end}}
     {{else}}
     未完成：0张 &nbsp; 已完成：0张 &nbsp;
     <br><br>
-    {{end}}<a href="/invchk/">新建盘点</a>
+    {{end}}{{if eq $wip false}}<a href="/invchk/">新建盘点</a>{{end}}
   </p>
   <p id="blist"></p>    
 </div>

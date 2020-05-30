@@ -236,9 +236,6 @@ func SetInventoryByBill(bid, stat int) {
 	}()
 	var b Bill
 	assert(tx.Get(&b, `SELECT * FROM bom WHERE id=?`, bid))
-	if b.Type != 2 {
-		panic(fmt.Errorf("bill#%d.type=%d; wanted: 2", bid, b.Type))
-	}
 	switch b.Status {
 	case 0:
 		if stat != 1 {
@@ -248,30 +245,45 @@ func SetInventoryByBill(bid, stat int) {
 		if stat != 2 {
 			panic(fmt.Errorf("bill#%d.status=1; stat=%d", bid, stat))
 		}
+		if b.Type != 2 {
+			panic(fmt.Errorf("cannot set stat=2 for bill type %d", b.Type))
+		}
 	default:
 		panic(fmt.Errorf("bill#%d.status=%d; stat=%d", bid, b.Status, stat))
 	}
-	type billReq struct {
-		ID        int
-		Stock     int
-		Requested int
-	}
-	var br []billReq
-	assert(tx.Select(&br, `SELECT g.id,g.stock,ABS(bi.request)*b.sets AS requested
-		FROM goods g,bom_item bi,bom b WHERE b.id=bi.bom_id AND bi.gid=g.id AND
-		b.id=?`, bid))
-	tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
-	for _, r := range br {
-		if r.Requested <= r.Stock {
-			tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, r.Requested, r.ID)
-			tx.MustExec(`UPDATE bom_item SET confirm=request WHERE gid=? AND bom_id=?`,
-				r.ID, bid)
-		} else {
-			confirm := -r.Stock / b.Sets
-			tx.MustExec(`UPDATE goods SET stock=0 WHERE id=?`, r.ID)
-			tx.MustExec(`UPDATE bom_item SET confirm=? WHERE gid=? AND bom_id=?`,
-				confirm, r.ID, bid)
+	switch b.Type {
+	case 2:
+		type billReq struct {
+			ID        int
+			Stock     int
+			Requested int
 		}
+		var br []billReq
+		assert(tx.Select(&br, `SELECT g.id,g.stock,ABS(bi.request)*b.sets AS requested
+			FROM goods g,bom_item bi,bom b WHERE b.id=bi.bom_id AND bi.gid=g.id AND
+			b.id=?`, bid))
+		tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
+		for _, r := range br {
+			if r.Requested <= r.Stock {
+				tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, r.Requested, r.ID)
+				tx.MustExec(`UPDATE bom_item SET confirm=request WHERE gid=? AND bom_id=?`,
+					r.ID, bid)
+			} else {
+				confirm := -r.Stock / b.Sets
+				tx.MustExec(`UPDATE goods SET stock=0 WHERE id=?`, r.ID)
+				tx.MustExec(`UPDATE bom_item SET confirm=? WHERE gid=? AND bom_id=?`,
+					confirm, r.ID, bid)
+			}
+		}
+	case 3:
+		var bis []BillItem
+		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, bid))
+		for _, bi := range bis {
+			tx.MustExec(`UPDATE goods SET stock=? WHERE id=?`, bi.Confirm, bi.GoodsID)
+		}
+		tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
+	default:
+		panic(fmt.Errorf("unsupported bill type %v", b.Type))
 	}
 }
 
@@ -285,7 +297,7 @@ func UpdateInventory(bid int) {
 		bim[bi.GoodsID] = true
 	}
 	var gs []Goods
-	assert(db.Select(&gs, `SELECT id,name,stock FROM goods WHERE stock>0`))
+	assert(db.Select(&gs, `SELECT id,name,stock FROM goods`))
 	tx := db.MustBegin()
 	defer func() {
 		if e := recover(); e != nil {
@@ -298,7 +310,7 @@ func UpdateInventory(bid int) {
 		if bim[g.ID] {
 			tx.MustExec(`UPDATE bom_item SET request=? WHERE bom_id=? AND gid=?`,
 				g.Stock, bid, g.ID)
-		} else {
+		} else if g.Stock > 0 {
 			tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,request,confirm)
 			    VALUES (?,?,?,?,?)`, bid, g.ID, g.Name, g.Stock, 0)
 		}

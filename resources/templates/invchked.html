@@ -59,7 +59,9 @@
 	    </div>
 	  </div>
 	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
-	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
+	  <p id="summary" style="font-weight:bold">
+		共有<span id="skucnt"></span>种药材，其中<span id="dfcnt"></span>种盘点有差异
+	  </p>
 	  <p id="cart"></p>
 	  <p style="text-align:center;margin-top:2rem">
 		<button onclick="doneInvChk()" class="btn btn-success">&nbsp;完成盘点&nbsp;</button>
@@ -72,11 +74,11 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
   	<div class="modal-content">
   	  <div class="modal-header">
-  		<h5 class="modal-title">确认入库</h5>
+  		<h5 class="modal-title">请注意</h5>
   		<button type="button" class="close" data-dismiss="modal">&times;</button>
   	  </div>
   	  <div class="modal-body">
-  		<p>某些药材的入库数量与订购量不符，如现在确认入库，将列出差异数量与金额。</p>
+  		<p>某些药材的库存数量与实际清点不符，如现在确认盘点完成，将修改这些药材的库存。</p>
   		<div class="modal-footer" style="padding-right:0;padding-bottom:0">
   		  <button type="button" class="btn btn-secondary" data-dismiss="modal">取 消</button>
   		  <button type="button" class="btn btn-success" data-dismiss="modal">完 成</button>
@@ -166,6 +168,8 @@ function getBillInfo() {
   $('#cart').empty()
   $('#finfo').text('')
   $.get(`/api/get/${bid}?order=1`, function(e) {
+	$('#skucnt').text(e.items.length)
+    var diff = 0
 	$('#creator').val(e.user)
 	switch(vs) {
 	case "0":
@@ -174,12 +178,14 @@ function getBillInfo() {
 	    var bg =  'white'
         if (hm == '0' && it.request != it.confirm) {
       	  bg = 'lightpink'
+		  diff++
         }
 		var cnt = `${it.request}克`
 		if (it.confirm > 0 && it.confirm != it.request) cnt = `${it.confirm}/${cnt}`
         $('#cart').append(`<span style="background:${bg};font-family:monospace"
 		  >${it.gname} ${cnt}</span> &nbsp; `)
 	  })
+	  $('#dfcnt').text(diff)
 	  break
 	case "1":
 	  var tbl = `<table class="table table-sm table-hover"><thead class="thead-light">
@@ -190,12 +196,14 @@ function getBillInfo() {
 		var bg =  'white'
 		if (hm == '0' && it.request != it.confirm) {
       	  bg = 'lightpink'
+		  diff++
         }
 		tbl += `<tr style="background:${bg}"><td>${it.gname}</td><td class="text-right"
 			>${it.request}</td><td class="text-right">${it.confirm}</td></tr>`
 	  })
 	  tbl += `</tbody></table>`
 	  $('#cart').append(tbl)
+	  $('#dfcnt').text(diff)
 	}
   })
 }
@@ -207,18 +215,19 @@ function submitMemo() {
   })
   $('#chgm').remove()
 }
-function setCheckInDone() {
+function setInvChkDone() {
 	var bid = $('#bid').val()
-	$.post(`/api/chkin/${bid}`, {status: 1}, function(e) {
+	$.post(`/api/set/${bid}`, {key: "stat", val: 1}, function(e) {
 		getBillInfo()
 	})
 }
 function doneInvChk() {
-	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
-		$('#cfmdone').modal('show')
-		return
-	}
-	setCheckInDone()
+  var diff = $('#dfcnt').text()
+  if (diff != '0') {
+    $('#cfmdone').modal('show')
+    return
+  }
+  setInvChkDone()
 }
 $(document).ready(function () {
   $('#uid').val(arg.user.id)
@@ -253,7 +262,7 @@ $(document).ready(function () {
   $('#cfmdone').on('hide.bs.modal', function(e) {
     var btn = $(document.activeElement)
     if (btn.hasClass("btn-success"))
-		setCheckInDone()
+		setInvChkDone()
   })
 })
 </script>

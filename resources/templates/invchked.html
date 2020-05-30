@@ -132,16 +132,12 @@ function addGoods() {
   $('#choice').empty()
   var memo = $('#memo').val()
   var id = $('#bid').val()
-  console.log("TOCHK:", id)
   $.post(`/invchk/item/${id}`, {item:item,confirm:cnt}, function(e) {
-	console.log(e)
     switch (e.item.length) {
   	case 0:
   	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
   	  break
   	case 1:
-      if (e.count < 0) 
-        $('#choice').append(`<p><span style='color:red'>${e.item[0]}</span> 入库数量多了${-e.count}克</p>`)
       break
   	default:
   	  var choice = `<p><span style="color:red">${item}</span> 是指`
@@ -163,6 +159,7 @@ function addGoods() {
 function getBillInfo() {
   var bid = $('#bid').val()
   var vs = $('#viewstyle').attr('value')
+  var hm = $('#hidematch').attr('value')
   $('#act').attr("disabled", false)
   $('#goods').attr("disabled", false)
   $('#memo').attr("disabled", false)
@@ -173,107 +170,33 @@ function getBillInfo() {
 	switch(vs) {
 	case "0":
 	  $.each(e.items, function(_, it) {
+		if (hm == '1' && it.request == it.confirm) return
 	    var bg =  'white'
-        if (it.request != it.confirm) {
+        if (hm == '0' && it.request != it.confirm) {
       	  bg = 'lightpink'
         }
+		var cnt = `${it.request}克`
+		if (it.confirm > 0 && it.confirm != it.request) cnt = `${it.confirm}/${cnt}`
         $('#cart').append(`<span style="background:${bg};font-family:monospace"
-		  >${it.gname} ${it.confirm}/${it.request}克</span> &nbsp; `)
+		  >${it.gname} ${cnt}</span> &nbsp; `)
 	  })
 	  break
 	case "1":
-	console.log("TODO: change to table view")
+	  var tbl = `<table class="table table-sm table-hover"><thead class="thead-light">
+	    <tr><th>品名</th><th class="text-right">记录库存</th><th class="text-right">实际库存</th>
+		</tr></thead><tbody>`
+	  $.each(e.items, function(_, it) {
+		if (hm == '1' && it.request == it.confirm) return
+		var bg =  'white'
+		if (hm == '0' && it.request != it.confirm) {
+      	  bg = 'lightpink'
+        }
+		tbl += `<tr style="background:${bg}"><td>${it.gname}</td><td class="text-right"
+			>${it.request}</td><td class="text-right">${it.confirm}</td></tr>`
+	  })
+	  tbl += `</tbody></table>`
+	  $('#cart').append(tbl)
 	}
-	/*
-	if (e.bill.status == 1) {
-		$('#title').text('盘点单')
-		var lack = []
-		var dfcnt = 0
-		var dfamt = 0
-		$.each(e.items, function(_, it) {
-		  var diff = it.request - it.confirm
-		  if (diff != 0) {
-			  lack.push({"name": it.gname, "diff": diff, "cost": it.cost})
-			  dfcnt++
-			  dfamt += diff * it.cost
-		  }
-		})
-		if (lack.length > 0) {
-		  $('#dfcnt').text(dfcnt)
-		  $('#dfamt').text(dfamt)
-		  $('#dfitems').empty()
-		  switch(vs) {
-		  case "0":
-            $.each(lack, function(_, l) {
-              $('#dfitems').append(`<span>${l["name"]} 缺${l["diff"]}克 &nbsp; </span>`)
-            })
-			break
-		  case "1":
-		    var tbl = `<table class="table table-sm table-hover">
-	          <thead class="thead-light"><tr><th>品名</th><th class="text-right">缺少</th>
-	          <th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
-			$.each(lack, function(_, l) {
-			  var total = l["diff"] * l["cost"]
-			  tbl += `<tr><td>${l["name"]}</td><td class="text-right">${l["diff"]}</td>
-			    <td class="text-right">${l["cost"]}</td><td class="text-right">${total}</td></tr>`				
-			})
-			$('#dfitems').html(tbl)
-		  }
-		  $('#diff').css('display', '')
-		}
-		$('#act').attr("disabled", true)
-		$('#goods').attr("disabled", true)
-		$('#memo').attr("disabled", true)
-		var upd = new Date(e.bill.updated)
-		$('#finfo').text(`完成时间：${upd.toLocaleString()}`)
-	}
-	$('#goods').val('')
-	$('#creator').val(e.user)
-	$('#memo').val(e.bill.memo)
-	$('#cart').empty()
-	$('#summary').text('')
-	if (e.items != null && e.items.length > 0) {
-	  $('#summary').text(`${e.bill.count}种药材，总价${e.bill.cost}元`)
-	  switch (vs) {
-	    case "0":
-	      $.each(e.items, function(_, item) {
-			if (e.bill.status == 0) {
-			  var bg =  'white'
-              if (item.cost == 0) {
-            	  bg = 'lightpink'
-            	  ci = '2'
-              }
-              $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
-                >${item.gname} ${item.request}克</a> &nbsp; `)
-			} else {
-			  $('#cart').append(`${item.gname} ${item.request}克 &nbsp; `)  
-			}
-	      })
-	      break
-	    case "1":
-	      var tbl = `<table class="table table-sm table-hover">
-	    	<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
-	    	<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
-	      $.each(e.items, function(_, item) {
-	        var total = item.cost * item.request
-			var bg =  'white'
-			var name = item.gname
-			if (e.bill.status == 0) {
-	          if (item.cost == 0) {
-	            bg = 'lightpink'
-	            ci = '2'
-	          }
-			  name = `<a href="#" onclick="editItem(${item.gid})">${name}</a>`
-			}
-	        tbl += `<tr style="background:${bg}"><td>${name}</td><td class="text-right"
-			  >${item.request}</td><td class="text-right">${item.cost}</td><td class="text-right"
-			  >${total}</td></tr>`
-	      })
-	      tbl += `</tbody></table>`
-	      $('#cart').append(tbl)
-	    }
-	}
-	*/
   })
 }
 function submitMemo() {

@@ -78,22 +78,30 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 		for _, g := range goods {
 			items = append(items, g.Name)
 		}
-		req, _ := strconv.Atoi(r.FormValue("request"))
-		if req > 0 && len(items) == 1 {
-			if db.SetBillItem(db.BillItem{
-				BomID:     id,
-				Cost:      goods[0].Cost,
-				GoodsID:   goods[0].ID,
-				GoodsName: goods[0].Name,
-				Request:   req,
-			}, 0) {
-				req = -req
+		req := 0
+		cfm, _ := strconv.Atoi(r.FormValue("confirm"))
+		if cfm > 0 && len(items) == 1 {
+			bis := db.GetBillItems(id, goods[0].ID)
+			if len(bis) == 0 {
+				bi := db.BillItem{
+					BomID:     id,
+					GoodsID:   goods[0].ID,
+					GoodsName: goods[0].Name,
+					Request:   0,
+					Confirm:   cfm,
+				}
+				db.SetBillItem(bi, 0)
+			} else {
+				req = bis[0].Request
+				bis[0].Confirm = cfm
+				db.SetBillItem(bis[0], 1)
 			}
 		}
 		jsonReply(w, map[string]interface{}{
-			"id":    id,
-			"item":  items,
-			"count": req,
+			"id":   id,
+			"item": items,
+			"req":  req,
+			"cfm":  cfm,
 		})
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

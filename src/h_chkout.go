@@ -18,8 +18,8 @@ func chkOutList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	db.RemoveEmptyBills()
-	bills := db.ListBills(&db.Bill{Type: 2})
-	bm := make(map[byte][]db.Bill)
+	bills := db.ListBills(&db.Bill{Type: 2, Status: -1})
+	bm := make(map[int][]db.Bill)
 	for _, b := range bills {
 		bm[b.Status] = append(bm[b.Status], b)
 	}

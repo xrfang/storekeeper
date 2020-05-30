@@ -45,8 +45,28 @@
   <p id="blist"></p>    
 </div>
 <script>
-  $(document).ready(function () {
-    //TODO
+var data = {{.}}
+function listBills(status) {
+  var bs = data.bills[status]
+  var us = data.users
+  var st = ""
+  switch(status) {
+  case '0':
+    st = "未完成"
+    break
+  default:
+    st = "已完成"
+  }
+  $('#blist').text("")
+  $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}</p>`)
+  $.each(bs, function(_, b) {
+    var item = `<div style="margin-top:0.4rem;font-family:'Courier New',Courier,monospace">
+      <a href="/invchk/${b.id}">[${b.updated.substring(0, 10)}] ${b.count}种药材`
+    if (typeof(b.cost) != 'undefined' && b.cost > 0) item += `，总价${b.cost}元`
+    if (typeof(b.memo) != 'undefined' && b.memo.length > 0) item+= ` (${b.memo})`
+    item += `</a></div>`
+    $('#blist').append(item)
   })
+}
 </script>
 {{template "footer"}} {{end}}

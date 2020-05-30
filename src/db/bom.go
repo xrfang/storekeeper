@@ -28,7 +28,7 @@ type Bill struct {
 	Cost    float64   `json:"cost"`  //非数据库条目，实时计算，表示单剂药的成本
 	Count   int       `json:"count"` //非数据库条目，实时计算
 	Memo    string    `json:"memo"`
-	Status  byte      `json:"status"`
+	Status  int       `json:"status"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }
@@ -72,7 +72,7 @@ func ListBills(tpl *Bill) (bills []Bill) {
 		cond = append(cond, `user_id=?`)
 		args = append(args, tpl.User)
 	}
-	if tpl.Status > 0 {
+	if tpl.Status >= 0 {
 		cond = append(cond, `status=?`)
 		args = append(args, tpl.Status)
 	}
@@ -253,6 +253,10 @@ func SetInventoryByBill(bid, stat int) {
 	}
 	switch b.Type {
 	case 2:
+		tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
+		if stat != 1 {
+			return
+		}
 		type billReq struct {
 			ID        int
 			Stock     int
@@ -262,7 +266,6 @@ func SetInventoryByBill(bid, stat int) {
 		assert(tx.Select(&br, `SELECT g.id,g.stock,ABS(bi.request)*b.sets AS requested
 			FROM goods g,bom_item bi,bom b WHERE b.id=bi.bom_id AND bi.gid=g.id AND
 			b.id=?`, bid))
-		tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
 		for _, r := range br {
 			if r.Requested <= r.Stock {
 				tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, r.Requested, r.ID)
@@ -276,12 +279,15 @@ func SetInventoryByBill(bid, stat int) {
 			}
 		}
 	case 3:
+		tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
+		if stat != 1 {
+			return
+		}
 		var bis []BillItem
 		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, bid))
 		for _, bi := range bis {
 			tx.MustExec(`UPDATE goods SET stock=? WHERE id=?`, bi.Confirm, bi.GoodsID)
 		}
-		tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
 	default:
 		panic(fmt.Errorf("unsupported bill type %v", b.Type))
 	}
@@ -290,6 +296,10 @@ func SetInventoryByBill(bid, stat int) {
 func UpdateInventory(bid int) {
 	iop.Lock()
 	defer iop.Unlock()
+	bill, _ := GetBill(bid, -1)
+	if bill.Status != 0 {
+		return
+	}
 	var bis []BillItem
 	bim := make(map[int]bool)
 	assert(db.Select(&bis, `SELECT gid FROM bom_item WHERE bom_id=?`, bid))

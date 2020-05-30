@@ -66,7 +66,7 @@ func CheckLogin(login, code string) (int, error) {
 	return u.ID, nil
 }
 
-func GetUser(id int) *User {
+func GetUser(id interface{}) *User {
 	var u User
 	assert(db.Get(&u, `SELECT * FROM user WHERE id=?`, id))
 	u.OTPKey = ""

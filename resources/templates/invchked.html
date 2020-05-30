@@ -29,7 +29,7 @@
 	  <input type="text" readonly class="form-control" id="creator" />
 	</div>
 	<div class="col col-9">
-	  <label for="fee"><b>备注</b></label>
+	  <label for="memo"><b>备注</b></label>
 	  <div class="input-group" id="igmm">
 		<input type="text" class="form-control" id="memo" value="0" />
 	  </div>
@@ -43,9 +43,7 @@
 		  <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
 		  <div class="dropdown-menu dropdown-menu-right">
 			<a class="dropdown-item" href="#" id="viewstyle" value="0" onclick="switchVS()">切换为表格显示</a>
-			<a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为拼音排序</a>
-			<div class="dropdown-divider"></div>
-			<a class="dropdown-item" href="#" id="docheckin" value="0" onclick="switchCI()">到货入库</a>
+			<a class="dropdown-item" href="#" id="hidematch" value="0" onclick="switchHM()">仅显示盘有差异药材</a>
 		  </div>
 		</div>  
 	  </div>
@@ -57,53 +55,18 @@
 	      <small class="form-text text-muted">可以输入品名或其拼音索引</small>
 	    </div>
 	    <div class="col col-3" style="padding-left:0">
-          <input style="width:100%" type=button id="act" onclick="addGoods()" class="btn btn-success" value="添  加" />
+          <input style="width:100%" type=button id="act" onclick="addGoods()" class="btn btn-success" value="盘  点" />
 	    </div>
 	  </div>
 	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
 	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
 	  <p id="cart"></p>
-	  <p id="wait"></p>
-	  <p id="wip"></p>
-	  <p id="done"></p>
-	  <p id="chkin" style="display:none;text-align:center;margin-top:2rem">
-		<button onclick="doneCheckIn()" class="btn btn-info">&nbsp;完成入库&nbsp;</button>
-	  </p>
-      <div id='diff' style="display:none">
-        <p><b><u><span id="dfcnt"></span>种药材收货数量不足，总计差额<span id="dfamt"></span>元</u></b></p>
-        <p id="dfitems"></p>
-      </div>	  
+	  <p style="text-align:center;margin-top:2rem">
+		<button onclick="doneInvChk()" class="btn btn-success">&nbsp;完成盘点&nbsp;</button>
+	  </p>	  
 	  <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
 	</div>
   </div>  
-</div>
-<div class="modal fade" id="editem" tabindex="-1" role="dialog">
-  <input type=hidden id="gid" />
-  <div class="modal-dialog modal-dialog-centered" role="document">
-	<div class="modal-content">
-	  <div class="modal-header">
-		<h5 class="modal-title">编辑条目</h5>
-		<button type="button" class="close" data-dismiss="modal">&times;</button>
-	  </div>
-	  <div class="modal-body">
-	    <div class="form-group"><h4 id="gname"></h4></div>
-	    <div class="form-group row">
-		<div class="col">
-		  <input type="text" class="form-control" id="count" />
-		  <small class="form-text text-muted">数量（克）</small>
-		</div>
-		<div class="col">
-		  <input type="text" class="form-control" id="price" />
-		  <small class="form-text text-muted">价格（元/克）</small>
-		</div>
-	    </div>
-	    <div class="modal-footer" style="padding-right:0;padding-bottom:0">
-		<button type="button" class="btn btn-danger" data-dismiss="modal">删 除</button>
-		<button type="button" class="btn btn-success" data-dismiss="modal">保 存</button>
-	    </div>
-	  </div>
-	</div>
-  </div>
 </div>
 <div class="modal fade" id="cfmdone" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-dialog-centered" role="document">
@@ -139,103 +102,91 @@ function switchVS() {
 	}
 	getBillInfo()
 }
-function switchSO() {
-	if($('#sortorder').attr('value') == "0") {
-	  $('#sortorder').attr('value', '1')
-	  $('#sortorder').text('切换为后录在前')
+function switchHM() {
+	if($('#hidematch').attr('value') == "0") {
+	  $('#hidematch').attr('value', '1')
+	  $('#hidematch').text('显示所有药材')
 	} else {
-	  $('#sortorder').attr('value', '0')
-      $('#sortorder').text('切换为拼音排序')
-	}
-	getBillInfo()
-}
-function switchCI() {
-	switch($('#docheckin').attr('value')) {
-	case "0":
-      $('#docheckin').attr('value', '1')
-	  $('#docheckin').text('暂停入库')
-	  $('#act').val("入  库")
-	  $('#act').removeClass('btn-success')
-	  $('#act').addClass('btn-info')
-	  break
-	case "1":
-	  $('#docheckin').attr('value', '0')
-      $('#docheckin').text('到货入库')
-	  $('#act').val('添  加')
-	  $('#act').removeClass('btn-info')
-	  $('#act').addClass('btn-success')
-	  break
-	case "2":
-	  toast("错误", "尚有药材未设置价格，无法执行入库操作", "error")
-	  return
-	case "3":
-      toast("错误", "该订单已经完成入库", "error")
-	  return
-	case "":
-	  toast("错误", "没有添加药材，无法执行入库操作", "error")
-	  return
+	  $('#hidematch').attr('value', '0')
+      $('#hidematch').text('仅显盘点有差异药材')
 	}
 	getBillInfo()
 }
 function pick(item, cnt) {
-	var name = $(item).text()
-	$('#goods').val(`${name} ${cnt}`)
-	addGoods()
+  var name = $(item).text()
+  $('#goods').val(`${name} ${cnt}`)
+  addGoods()
 }
 function addGoods() {
-	var spec = $('#goods').val().trim().split(/\s+/)
-	if (spec.length != 2) {
-		toast("输入错误", "示例: “甘草 500”表示“500克甘草”", "warning")
-		return
-	}
-	var item = spec[0]
-	var cnt = parseInt(spec[1])
-	if (isNaN(cnt) || cnt <= 0) {
-		toast("输入错误", "数量必须是正整数", "warning")
-		return
-	}
-	$('#choice').empty()
-	var memo = $('#memo').val()
-	var id = $('#bid').val()
-	$.post(`/invchk/item/${id}`, {item:item,confirm:cnt}, function(e) {
-	  switch (e.item.length) {
-		  case 0:
-    	    $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
-		    break
-		  case 1:
-            if (e.count < 0) 
-              $('#choice').append(`<p><span style='color:red'>${e.item[0]}</span> 入库数量多了${-e.count}克</p>`)
-            break
-		  default:
-			var choice = `<p><span style="color:red">${item}</span> 是指`
-			$.each(e.item, function(i, it) {
-			  choice += ` &nbsp;<a onclick="pick(this, ${cnt})" href="#">${it}</a>&nbsp; `
-			  if(i < e.item.length-1) choice += '还是'
-			})
-			choice += '?'
-			$('#choice').append(choice)			  
-		  }
-	  getBillInfo()
-	  if ($('#choice').is(':empty')) {
-		    $('#choice').css('display', 'none')
-		  } else { 
-	    $('#choice').css('display', '')
-	  }			  
-	})
+  var spec = $('#goods').val().trim().split(/\s+/)
+  if (spec.length != 2) {
+  	toast("输入错误", "示例: “甘草 500”表示“500克甘草”", "warning")
+  	return
+  }
+  var item = spec[0]
+  var cnt = parseInt(spec[1])
+  if (isNaN(cnt) || cnt <= 0) {
+  	toast("输入错误", "数量必须是正整数", "warning")
+  	return
+  }
+  $('#choice').empty()
+  var memo = $('#memo').val()
+  var id = $('#bid').val()
+  console.log("TOCHK:", id)
+  $.post(`/invchk/item/${id}`, {item:item,confirm:cnt}, function(e) {
+	console.log(e)
+    switch (e.item.length) {
+  	case 0:
+  	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
+  	  break
+  	case 1:
+      if (e.count < 0) 
+        $('#choice').append(`<p><span style='color:red'>${e.item[0]}</span> 入库数量多了${-e.count}克</p>`)
+      break
+  	default:
+  	  var choice = `<p><span style="color:red">${item}</span> 是指`
+  	  $.each(e.item, function(i, it) {
+  	    choice += ` &nbsp;<a onclick="pick(this, ${cnt})" href="#">${it}</a>&nbsp; `
+  	    if(i < e.item.length-1) choice += '还是'
+  	  })
+  	  choice += '?'
+  	  $('#choice').append(choice)			  
+    }
+    getBillInfo()
+    if ($('#choice').is(':empty')) {
+      $('#choice').css('display', 'none')
+    } else { 
+      $('#choice').css('display', '')
+    }			  
+  })
 }
 function getBillInfo() {
   var bid = $('#bid').val()
-  var so = $('#sortorder').attr('value')
   var vs = $('#viewstyle').attr('value')
-  var ci = $('#docheckin').attr('value')
-  $('#chkin').css('display', 'none')
   $('#act').attr("disabled", false)
   $('#goods').attr("disabled", false)
   $('#memo').attr("disabled", false)
+  $('#cart').empty()
   $('#finfo').text('')
-  $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
+  $.get(`/api/get/${bid}?order=1`, function(e) {
+	$('#creator').val(e.user)
+	switch(vs) {
+	case "0":
+	  $.each(e.items, function(_, it) {
+	    var bg =  'white'
+        if (it.request != it.confirm) {
+      	  bg = 'lightpink'
+        }
+        $('#cart').append(`<span style="background:${bg};font-family:monospace"
+		  >${it.gname} ${it.confirm}/${it.request}克</span> &nbsp; `)
+	  })
+	  break
+	case "1":
+	console.log("TODO: change to table view")
+	}
+	/*
 	if (e.bill.status == 1) {
-		$('#title').text('进货单')
+		$('#title').text('盘点单')
 		var lack = []
 		var dfcnt = 0
 		var dfamt = 0
@@ -270,7 +221,6 @@ function getBillInfo() {
 		  }
 		  $('#diff').css('display', '')
 		}
-		ci = 3 //表示订单已经完成，checkin菜单不可再用
 		$('#act').attr("disabled", true)
 		$('#goods').attr("disabled", true)
 		$('#memo').attr("disabled", true)
@@ -281,15 +231,10 @@ function getBillInfo() {
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)
 	$('#cart').empty()
-	$('#wait').empty()
-	$('#wip').empty()
-	$('#done').empty()
 	$('#summary').text('')
 	if (e.items != null && e.items.length > 0) {
-	  if (ci != "1") {
-		if (ci != 3) ci = "0"
-		$('#summary').text(`${e.bill.count}种药材，总价${e.bill.cost}元`)
-		switch (vs) {
+	  $('#summary').text(`${e.bill.count}种药材，总价${e.bill.cost}元`)
+	  switch (vs) {
 	    case "0":
 	      $.each(e.items, function(_, item) {
 			if (e.bill.status == 0) {
@@ -327,31 +272,8 @@ function getBillInfo() {
 	      tbl += `</tbody></table>`
 	      $('#cart').append(tbl)
 	    }
-	    $('#docheckin').attr('value', ci)
-	  } else {
-		$('#chkin').css('display', '')
-		$.each(e.items, function(i, it) {
-			if (it.confirm == 0) {
-				$('#wait').append(`${it.gname} ${it.request}克 &nbsp; `)
-			} else if (it.confirm == it.request) {
-				$('#done').append(`${it.gname} ${it.request}克 &nbsp; `)
-			} else {
-				$('#wip').append(`${it.gname} ${it.request}克（入库${it.confirm}克） &nbsp; `)
-			}
-		})
-		if (!$('#wait').is(':empty')) {
-			$('#wait').prepend(`<p><b>未入库药材</b></p>`)
-		}
-		if (!$('#wip').is(':empty')) {
-			$('#wip').prepend(`<p><b>部分入库药材</b></p>`)
-		}
-		if (!$('#done').is(':empty')) {
-			$('#done').prepend(`<p><b>全部入库药材</b></p>`)
-		}
-	  }
-	} else {
-	  $('#docheckin').attr('value', "")	
 	}
+	*/
   })
 }
 function submitMemo() {
@@ -368,7 +290,7 @@ function setCheckInDone() {
 		getBillInfo()
 	})
 }
-function doneCheckIn() {
+function doneInvChk() {
 	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
 		$('#cfmdone').modal('show')
 		return
@@ -404,41 +326,6 @@ $(document).ready(function () {
         class="btn btn-outline-success border-left-0 border"type="button"><i
         class="fas fa-check"></i></button></div>`
     $('#igmm').append(btn)        
-  })
-  $('#editem').on('show.bs.modal', function(e) {
-	var bid = $('#bid').val()
-	var gid = $('#editem #gid').val()
-	$.get(`/api/chkin/${bid}?item=${gid}`, function(e) {
-		$('#editem #gname').text(e.gname)
-		$('#editem #count').val(e.request)
-		$('#editem #price').val(e.cost)
-	})
-  })
-  $('#editem').on('hide.bs.modal', function (e) {
-	var btn = $(document.activeElement)
-	var bid = $('#bid').val()
-	var gid = $('#editem #gid').val()
-	var cnt = $('#editem #count').val()
-	var price = $('#editem #price').val()
-    if (btn.hasClass("btn-success")) {
-      $.post(`/api/chkin/${bid}`, {gid:gid,cost:price,request:cnt}, function(e) {
-		getBillInfo()
-	  })
-	}
-	if (btn.hasClass("btn-danger")) {
-		var bid = $('#bid').val()
-		var gid = $('#editem #gid').val()
-		$.ajax({
-            url: `/api/chkin/${bid}/${gid}`,
-            type: 'DELETE',
-            complete: function(xhr) {
-              if (xhr.status != 200)
-                toast("操作失败", xhr.responseText, 'error')
-			  else
-			    getBillInfo() 
-            }
-        })
-	}
   })
   $('#cfmdone').on('hide.bs.modal', function(e) {
     var btn = $(document.activeElement)

@@ -201,7 +201,7 @@ function revertFee() {
 }
 function submitFee() {
   var id = $('#bid').val()
-  $.post(`/chkout/fee/${id}`, {fee: $('#fee').val()}, function(e) {
+  $.post(`/api/set/${id}`, {key: "fee", val: $('#fee').val()}, function(e) {
 		getBillInfo()
 	})
   $('#chgf').remove()
@@ -211,19 +211,19 @@ function revertMarkup() {
     $('#chgm').html(`<div class="input-group-text">%</div>`)
 }
 function submitMarkup() {
-    var id = $('#bid').val()
-    $.post(`/chkout/mark/${id}`, {markup: $('#markup').val()}, function(e) {
+  var id = $('#bid').val()
+  $.post(`/api/set/${id}`, {key: "markup", val: $('#markup').val()}, function(e) {
 		getBillInfo()
 	})
-    $('#chgm').html(`<div class="input-group-text">%</div>`)
+  $('#chgm').html(`<div class="input-group-text">%</div>`)
 }
 function setMemoHeight() {
-    var memo = $('#memo')
-    memo.css('overflow', 'hidden')
-    memo.css('height', 0)
-    var mh = memo.prop('scrollHeight')
-    if (mh < 36) mh = 36
-    memo.css('height', mh)
+  var memo = $('#memo')
+  memo.css('overflow', 'hidden')
+  memo.css('height', 0)
+  var mh = memo.prop('scrollHeight')
+  if (mh < 36) mh = 36
+  memo.css('height', mh)
 }
 function pick(item, cnt) {
     var name = $(item).text()
@@ -285,7 +285,7 @@ function getBillInfo() {
   $('#finfo').text('')
   $('#chkout').css('display', 'none')
   $('#extbuy').css('display', 'none')
-  $.get(`/chkout/bill/${bid}?order=${so}`, function(e) {
+  $.get(`/api/get/${bid}?order=${so}`, function(e) {
     bill = e.bill
     if (bill.status == 0) {
       $('#chkout').css('display', '')
@@ -337,7 +337,7 @@ function getBillInfo() {
 function submitMemo() {
   var id = $('#bid').val()
   var memo = $('#memo').val()
-  $.post(`/chkout/memo/${id}`, {memo: memo}, function(e) {})
+  $.post(`/api/set/${id}`, {key: "memo", val: memo}, function(e) {})
   $('#setm').css("display", "none")
 }
 $(document).ready(function () {
@@ -413,7 +413,7 @@ $(document).ready(function () {
   })
   $('#requester').change(function(e) {
       var id = $('#bid').val()
-      $.post(`/chkout/req/${id}`, {user: $('#requester').val()}, function(e) {})
+      $.post(`/api/set/${id}`, {key: "user", val: $('#requester').val()}, function(e) {})
   })
   $('#bid').val(Math.abs(arg.bill))
   if (arg.bill < 0) {
@@ -433,7 +433,7 @@ $(document).ready(function () {
     if (btn.hasClass("btn-success")) {
   	  var bid = $('#bid').val()
       var sets = $('#edsets #sets').val()
-      $.post(`/chkout/sets/${bid}`, {sets:sets}, function(e) {
+      $.post(`/api/set/${bid}`, {key: "sets", val: sets}, function(e) {
         getBillInfo()
       })
     }
@@ -448,11 +448,11 @@ $(document).ready(function () {
     var btn = $(document.activeElement)
     if (btn.hasClass("btn-success")) {
       var cnt = $('#editem #count').val()  
-      $.post(`/chkout/amt/${bid}`, {gid:gid,amt:cnt}, function(e) {
+      $.post(`/api/set/${bid}`, {key: "amount", val: `${gid},${cnt}`}, function(e) {
         getBillInfo()
       })
     } else if (btn.hasClass("btn-danger")) {
-      $.post(`/chkout/amt/${bid}`, {gid:gid,amt:0}, function(e) {
+      $.post(`/api/set/${bid}`, {key: "amount", val: `${gid},0`}, function(e) {
         getBillInfo()
       })
     }
@@ -461,7 +461,7 @@ $(document).ready(function () {
     var btn = $(document.activeElement)
     if (btn.hasClass("btn-success")) {
         var bid = $('#bid').val()
-        $.post(`/chkout/stat/${bid}`, {stat:1}, function(e) {
+        $.post(`/api/set/${bid}`, {key: "stat", val: 1}, function(e) {
           getBillInfo()
         })
     }

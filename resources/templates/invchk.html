@@ -27,7 +27,7 @@
   {{range $stat, $bill := index . "bills" }}
     {{if eq $stat 0}}
     {{$wip = true}}
-    有一个盘点正在进行中，<a href="/invchk/{{(index $bill 0).ID}}">点击此处继续</a> &nbsp;
+    盘点正在进行中，<a href="/invchk/{{(index $bill 0).ID}}">点击此处继续</a> &nbsp;
     {{else}}
     已完成：<a href="javascript:listBills('1')">{{len $bill}}张</a> &nbsp;
     {{end}}  

@@ -295,7 +295,10 @@ func UpdateInventory(bid int) {
 		assert(tx.Commit())
 	}()
 	for _, g := range gs {
-		if !bim[g.ID] {
+		if bim[g.ID] {
+			tx.MustExec(`UPDATE bom_item SET request=? WHERE bom_id=? AND gid=?`,
+				g.Stock, bid, g.ID)
+		} else {
 			tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,request,confirm)
 			    VALUES (?,?,?,?,?)`, bid, g.ID, g.Name, g.Stock, 0)
 		}

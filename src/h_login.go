@@ -20,7 +20,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	if user != "" && pass != "" {
 		id, err := db.CheckLogin(user, pass)
 		if err == nil {
-			setCookie(w, "token", T.SignIn(id), 0)
+			setCookie(w, "token", T.SignIn(id), 86400*30) //有效期限30天
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}

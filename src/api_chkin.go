@@ -97,12 +97,6 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 				jsonReply(w, res)
 			case 1:
 				res["item"] = []string{bis[0].GoodsName}
-				diff := bis[0].Request - bis[0].Confirm
-				if cfm > diff {
-					res["count"] = diff - cfm
-					jsonReply(w, res)
-					return
-				}
 				bis[0].Confirm += cfm
 				db.SetBillItem(bis[0], 1)
 				res["count"] = bis[0].Confirm

@@ -70,8 +70,9 @@
 		<button onclick="doneCheckIn()" class="btn btn-info">&nbsp;完成入库&nbsp;</button>
 	  </p>
       <div id='diff' style="display:none">
-        <p><b><u><span id="dfcnt"></span>种药材收货数量不足，总计差额<span id="dfamt"></span>元</u></b></p>
-        <p id="dfitems"></p>
+        <p><b><u><span id="dfcnt"></span>种药材收货数量有差异，总计差额 <span id="dfamt"></span> 元</u></b></p>
+		<p id="dfitems"></p>
+		<p style="font-size:small"><i class="fas fa-info-circle"></i> 差额为正表示需要向供货方要求退款，为负表示应向供货方额外支付</p>
       </div>	  
 	  <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
 	</div>
@@ -205,8 +206,6 @@ function addGoods() {
     	    $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
 		    break
 		  case 1:
-            if (e.count < 0) 
-              $('#choice').append(`<p><span style='color:red'>${e.item[0]}</span> 入库数量多了${-e.count}克</p>`)
             break
 		  default:
 			var choice = `<p><span style="color:red">${item}</span> 是指`
@@ -288,7 +287,8 @@ function getBillInfo() {
 		  switch(vs) {
 		  case "0":
             $.each(lack, function(_, l) {
-              $('#dfitems').append(`<span>${l["name"]} 缺${l["diff"]}克 &nbsp; </span>`)
+			  var diff = (l["diff"] > 0) ? `缺${l["diff"]}` : `多${-l["diff"]}`
+              $('#dfitems').append(`<span>${l["name"]} ${diff}克 &nbsp; </span>`)
             })
 			break
 		  case "1":

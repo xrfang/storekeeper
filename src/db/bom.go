@@ -307,7 +307,7 @@ func UpdateInventory(bid int) {
 		bim[bi.GoodsID] = true
 	}
 	var gs []Goods
-	assert(db.Select(&gs, `SELECT id,name,stock FROM goods`))
+	assert(db.Select(&gs, `SELECT id,name,stock,cost FROM goods`))
 	tx := db.MustBegin()
 	defer func() {
 		if e := recover(); e != nil {
@@ -318,11 +318,11 @@ func UpdateInventory(bid int) {
 	}()
 	for _, g := range gs {
 		if bim[g.ID] {
-			tx.MustExec(`UPDATE bom_item SET request=? WHERE bom_id=? AND gid=?`,
-				g.Stock, bid, g.ID)
+			tx.MustExec(`UPDATE bom_item SET request=?,cost=? WHERE bom_id=? AND gid=?`,
+				g.Stock, g.Cost, bid, g.ID)
 		} else if g.Stock > 0 {
-			tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,request,confirm)
-			    VALUES (?,?,?,?,?)`, bid, g.ID, g.Name, g.Stock, 0)
+			tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,request,cost,confirm)
+			    VALUES (?,?,?,?,?,?)`, bid, g.ID, g.Name, g.Stock, g.Cost, 0)
 		}
 	}
 }

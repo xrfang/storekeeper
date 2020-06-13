@@ -396,7 +396,7 @@ $(document).ready(function () {
     var func = `revertFee()`
     var btncls = `danger`
     var btncap = `times`
-    if (txt.match(/^\d+$/)) {
+    if (txt.match(/^\d+\.?\d*$/)) {
       func = `submitFee()`
       btncls = `success`
       btncap = `check`

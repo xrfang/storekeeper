@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -43,6 +44,15 @@ type BillItem struct {
 	Confirm   int       `json:"confirm"`
 	Created   time.Time `json:"created"`
 	Updated   time.Time `json:"updated"`
+	inStock   int       //实际库存量（即无需外购，最大值为Request）
+}
+
+func (bi BillItem) MarshalJSON() ([]byte, error) {
+	type billitem BillItem
+	return json.Marshal(struct {
+		InStock int `json:"in_stock"`
+		billitem
+	}{bi.inStock, billitem(bi)})
 }
 
 func RemoveEmptyBills() {
@@ -87,29 +97,32 @@ items:
 	if len(bills) == 0 {
 		return
 	}
+	bm := make(map[int]Bill)
 	var ids []interface{}
 	for _, b := range bills {
+		bm[b.ID] = b
 		ids = append(ids, b.ID)
 	}
-	qry = `SELECT bom_id,COUNT(id),SUM(ABS(cost)*ABS(request)) FROM bom_item WHERE 
-	    bom_id IN (?` + strings.Repeat(`,?`, len(ids)-1) + `) GROUP BY bom_id`
-	rows, err := db.Query(qry, ids...)
-	assert(err)
-	defer rows.Close()
-	type summary struct {
-		cnt int
-		sum float64
+	var bis []BillItem
+	assert(db.Select(&bis, `SELECT * FROM bom_item WHERE bom_id IN (?`+
+		strings.Repeat(`,?`, len(ids)-1)+`)`, ids...))
+	for _, bi := range bis {
+		b := bm[bi.BomID]
+		b.Count++
+		if b.Type == 3 { //盘点单
+			//TODO: 计算盘点单成本
+		} else { //非盘点单
+			if b.Status == 0 {
+				b.Cost += math.Abs(bi.Cost * float64(bi.Request))
+			} else {
+				b.Cost += math.Abs(bi.Cost * float64(bi.Confirm))
+			}
+		}
+		bm[bi.BomID] = b
 	}
-	cm := make(map[int]summary)
-	for rows.Next() {
-		var bid int
-		var s summary
-		assert(rows.Scan(&bid, &s.cnt, &s.sum))
-		cm[bid] = s
-	}
-	for i, b := range bills {
-		bills[i].Count = cm[b.ID].cnt
-		bills[i].Cost = cm[b.ID].sum
+	bills = nil
+	for _, b := range bm {
+		bills = append(bills, b)
 	}
 	return
 }
@@ -125,13 +138,45 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 	default: //除以上两种itmOrd外，不返回items
 		return
 	}
+	var gs []Goods
+	assert(db.Select(&gs, `SELECT id,stock FROM goods WHERE id IN (
+		SELECT gid FROM bom_item WHERE bom_id=?)`, id))
 	bill.Count = len(items)
 	for i, it := range items {
-		if bill.Type == 2 {
-			items[i].Request = -items[i].Request
-			items[i].Confirm = -items[i].Confirm
+		switch bill.Type {
+		case 1: //入库单
+			if bill.Status == 0 {
+				bill.Cost += math.Abs(it.Cost * float64(it.Request))
+			} else {
+				bill.Cost += math.Abs(it.Cost * float64(it.Confirm))
+			}
+		case 2: //出库单
+			it.Request = -it.Request
+			it.Confirm = -it.Confirm
+			it.inStock = func() int {
+				var stock int
+				for _, g := range gs {
+					if it.GoodsID == g.ID {
+						stock = g.Stock
+						break
+					}
+				}
+				stock /= bill.Sets
+				if stock > it.Request {
+					return it.Request
+				}
+				return stock
+			}()
+			items[i] = it
+			if bill.Status == 0 {
+				bill.Cost += math.Abs(it.Cost * float64(it.inStock))
+			} else {
+				bill.Cost += math.Abs(it.Cost * float64(it.Confirm))
+			}
+		case 3: //盘点单
+			//TODO：计算盘点单的cost
+			bill.Cost += math.Abs(it.Cost * float64(it.Request))
 		}
-		bill.Cost += math.Abs(it.Cost * float64(it.Request))
 	}
 	return
 }

@@ -156,6 +156,9 @@ func SetBill(b Bill) (id int) {
 		}
 		assert(tx.Commit())
 	}()
+	if b.Sets == 0 {
+		b.Sets = 1
+	}
 	if b.ID == 0 {
 		res := tx.MustExec(`INSERT INTO bom (type,user_id,markup,fee,memo,sets) VALUES
 		    (?,?,?,?,?,?)`, b.Type, b.User, b.Markup, b.Fee, b.Memo, b.Sets)

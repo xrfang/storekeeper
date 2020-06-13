@@ -125,6 +125,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 				BomID:     id,
 				GoodsID:   goods[0].ID,
 				GoodsName: goods[0].Name,
+				Cost:      goods[0].Cost,
 				Request:   req,
 			}, 0) {
 				req = -req

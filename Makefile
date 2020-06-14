@@ -2,22 +2,11 @@ GOMOD=storekeeper
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 HASH=$(shell git log -n1 --pretty=format:%h)
 REVS=$(shell git log --oneline|wc -l)
-native: release
-arm: export GOOS=linux
-arm: export GOARCH=arm
-arm: export GOARM=7
-arm: release
-win: export GOOS=windows
-win: export GOARCH=amd64
-win: conv release
-	#restore charset encoding after compiling
-	git checkout resources/*
-conv:
-	#change line-ending and charset encoding for Windows
-	find resources/init/ -type f |grep -v gfwlist|xargs -L1 -I% unix2dos -n % %
-	find resources/init/ -type f |grep -v gfwlist|xargs -L1 -I% iconv -futf-8 -tgb18030 -o% %
+build: release
+upx:
+	upx -9 bin/storekeeper
 debug: setver geneh compdbg pack
-release: setver geneh comprel pack
+release: setver geneh comprel upx pack
 geneh: #generate error handler
 	@for tpl in `find . -type f |grep errors.tpl`; do \
 	    target=`echo $$tpl|sed 's/\.tpl/\.go/'`; \

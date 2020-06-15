@@ -54,18 +54,17 @@ func (ts *tokenStore) load() {
 	}
 	defer f.Close()
 	lines := bufio.NewScanner(f)
-	store := make(map[string]*token)
 	for lines.Scan() {
 		kv := strings.Split(strings.TrimSpace(lines.Text()), "=")
 		if len(kv) != 2 {
 			continue
 		}
 		id, _ := strconv.Atoi(kv[1])
+		fmt.Printf("id=%v\n", id)
 		if id > 0 && len(kv[0]) > 0 {
 			ts.store[kv[0]] = &token{t: kv[0], id: id, upd: time.Now()}
 		}
 	}
-	ts.store = store
 }
 
 func (ts *tokenStore) save() {

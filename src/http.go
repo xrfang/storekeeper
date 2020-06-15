@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 func getCookie(r *http.Request, name string) string {
@@ -17,12 +18,14 @@ func getCookie(r *http.Request, name string) string {
 }
 
 func setCookie(w http.ResponseWriter, name, value string, age int) {
+	exp := time.Now().Add(time.Duration(age) * time.Second)
 	http.SetCookie(w, &http.Cookie{
-		Name:   name,
-		Value:  value,
-		Path:   "/",
-		MaxAge: age,
-		Secure: false,
+		Name:    name,
+		Value:   value,
+		Path:    "/",
+		MaxAge:  age,
+		Expires: exp,
+		Secure:  false,
 	})
 }
 

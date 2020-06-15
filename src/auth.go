@@ -60,7 +60,6 @@ func (ts *tokenStore) load() {
 			continue
 		}
 		id, _ := strconv.Atoi(kv[1])
-		fmt.Printf("id=%v\n", id)
 		if id > 0 && len(kv[0]) > 0 {
 			ts.store[kv[0]] = &token{t: kv[0], id: id, upd: time.Now()}
 		}

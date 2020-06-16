@@ -29,4 +29,3 @@ pack:
 	cd utils && go build . && ./pack && rm pack
 clean:
 	rm -fr bin src/version.go src/*/errors.go
-	git checkout resources/*

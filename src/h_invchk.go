@@ -38,8 +38,7 @@ func invChkEdit(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		u := db.GetUser(uid)
 		if id == 0 {
-			bills := db.ListBills(&db.Bill{Type: 3, Status: 0})
-			if len(bills) > 0 {
+			if db.InventoryWIP() {
 				http.Error(w, "只允许一个进行中盘点", http.StatusBadRequest)
 				return
 			}

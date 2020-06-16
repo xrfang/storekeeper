@@ -61,6 +61,12 @@ func RemoveEmptyBills() {
 	assert(err)
 }
 
+func InventoryWIP() bool {
+	var ids []int
+	assert(db.Select(&ids, `SELECT id FROM bom WHERE type=3 AND status=0`))
+	return len(ids) > 0
+}
+
 //tpl模板可以指定的参数：ID、Type、User、Status
 func ListBills(tpl *Bill) (bills []Bill) {
 	var cond []string

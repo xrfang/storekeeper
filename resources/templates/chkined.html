@@ -313,7 +313,7 @@ function getBillInfo() {
 	if (e.items != null && e.items.length > 0) {
 	  if (ci != "1") {
 		if (ci != 3) ci = "0"
-		$('#summary').text(`${e.bill.count}种药材，总价${e.bill.cost}元`)
+		$('#summary').text(`${e.bill.count}种药材，总价${e.bill.cost.toFixed(2)}元`)
 		switch (vs) {
 	    case "0":
 	      $.each(e.items, function(_, item) {

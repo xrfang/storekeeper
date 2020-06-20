@@ -19,13 +19,7 @@ func chkInList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	db.RemoveEmptyBills()
-	bills := db.ListBills(&db.Bill{Type: 1, Status: -1})
-	bm := make(map[int][]db.Bill)
-	for _, b := range bills {
-		bm[b.Status] = append(bm[b.Status], b)
-	}
-	users := db.ListUsers(1)
-	renderTemplate(w, "chkin.html", map[string]interface{}{"bills": bm, "users": users})
+	renderTemplate(w, "chkin.html", nil)
 }
 
 func chkInEdit(w http.ResponseWriter, r *http.Request) {

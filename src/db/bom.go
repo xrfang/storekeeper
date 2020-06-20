@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -32,6 +33,11 @@ type Bill struct {
 	Status  int       `json:"status"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
+}
+
+type BillSummary struct {
+	Month string `json:"month"`
+	Count int    `json:"count"`
 }
 
 type BillItem struct {
@@ -67,39 +73,19 @@ func InventoryWIP() bool {
 	return len(ids) > 0
 }
 
-//tpl模板可以指定的参数：ID、Type、User、Status
-func ListBills(tpl *Bill) (bills []Bill) {
-	var cond []string
-	var args []interface{}
-	qry := `SELECT * FROM bom`
-	if tpl == nil {
-		assert(db.Select(&bills, qry))
-		goto items
-	}
-	if tpl.ID > 0 {
-		assert(db.Select(&bills, qry+` WHERE id=?`, tpl.ID))
-		goto items
-	}
-	if tpl.Type > 0 {
-		cond = append(cond, `type=?`)
-		args = append(args, tpl.Type)
-	}
-	if tpl.User > 0 {
-		cond = append(cond, `user_id=?`)
-		args = append(args, tpl.User)
-	}
-	if tpl.Status >= 0 {
-		cond = append(cond, `status=?`)
-		args = append(args, tpl.Status)
-	}
-	if len(cond) == 0 {
-		qry += ` ORDER BY updated`
-		assert(db.Select(&bills, qry))
-	}
-	qry += ` WHERE ` + strings.Join(cond, ` AND `)
-	qry += ` ORDER BY updated`
-	assert(db.Select(&bills, qry, args...))
-items:
+func ListBillSummary(billType int) []BillSummary {
+	qry := fmt.Sprintf(`SELECT COUNT(id) AS count,strftime('%%Y-%%m', updated) AS
+	    month FROM bom WHERE type=%d GROUP BY month ORDER BY month DESC`, billType)
+	var bs []BillSummary
+	assert(db.Select(&bs, qry))
+	return bs
+}
+
+func ListBills(billType int, month string) (bills []Bill) {
+	firstDay := month + "-01" //month格式为yyyy-mm
+	lastDay := month + "-31"  //为简单起见，最后一天总是设置为31日不会出错
+	qry := `SELECT * FROM bom WHERE type=? AND updated>=? AND updated<=?`
+	assert(db.Select(&bills, qry, billType, firstDay, lastDay))
 	if len(bills) == 0 {
 		return
 	}
@@ -130,6 +116,18 @@ items:
 	for _, b := range bm {
 		bills = append(bills, b)
 	}
+	sort.Slice(bills, func(i, j int) (res bool) {
+		bi := bills[i]
+		bj := bills[j]
+		diff := bi.Updated.Unix() - bj.Updated.Unix()
+		if diff > 0 {
+			return true
+		}
+		if diff < 0 {
+			return false
+		}
+		return bi.ID > bj.ID
+	})
 	return
 }
 

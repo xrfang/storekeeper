@@ -28,60 +28,83 @@
   </div>
 </nav>
 <div class="container" style="padding-top:1em">
-  <p style="margin-top:1rem;font-weight:bold">当前出货单概况</p>
-  <p style="font-family: 'Courier New', Courier, monospace">
-  {{range $stat, $bill := index . "bills" }}
-    {{if eq $stat 0}}
-    未出货：<a href="javascript:listBills('0')">{{len $bill}}张</a> &nbsp;
-    {{else if eq $stat 1}}
-    已出货：<a href="javascript:listBills('1')">{{len $bill}}张</a> &nbsp;
-    {{else}}
-    已收款：<a href="javascript:listBills('2')">{{len $bill}}张</a> &nbsp;
-    {{end}}  
-  {{end}}
-  </p>
-  <p>
-    {{if gt (len (index . "bills")) 0}}
-    请点击上面的连接获取各状态出货单详情，或
-    {{else}}
-    未出货：0张 &nbsp; 已出货：0张 &nbsp; 已收款：0张
-    <br><br>
-    {{end}}<a href="/chkout/">新建出货单</a>
-  </p>
-  <p id="blist"></p>    
+  <div class="accordion" id="monthlyBills">
+  </div>    
 </div>
 <script>
-var data = {{.}}
-function un(id) {
-  for (i = 0; i < data.users.length; i++) {
-    if (data.users[i].id == id) return data.users[i].name
-  }
-  return `user#${id}`
+function openBill(id) {
+  window.location.href = `/chkout/${id}`
 }
-function listBills(status) {
-  var bs = data.bills[status]
-  var us = data.users
-  var st = ""
-  switch(status) {
-  case '0':
-    st = "未出货"
-    break
-  case '1':
-    st = "已出货"
-    break
-  default:
-    st = "已付款"
-  }
-  $('#blist').text("")
-  $('#blist').append(`<p style="margin-top:1rem;margin-bottom:0.6rem;font-weight:bold">${bs.length}张${st}</p>`)
-  $.each(bs, function(_, b) {
-    var markup = (100 + parseInt(b.markup)) / 100
-    var sp = b.cost
-    var charge = (sp * b.sets + b.fee) * markup
-    var item = `<div style="margin-top:0.4rem;font-family:'Courier New',Courier,monospace">
-      <a href="/chkout/${b.id}">[${b.updated.substring(0, 10)}] 给${un(b.user)}，总价${charge.toFixed(2)}元</a></div>`
-    $('#blist').append(item)
+function listBills(data) {
+  $('#monthlyBills').empty()
+  $.each(data.summary, function(i, s) {
+    var ym = s.month.split('-')
+    var show = (s.month == data.month) ? "show" : ""
+    var card = `
+    <div class="card">
+      <div class="card-header" style="padding-left:0" id="h${i}">
+        <h2 class="mb-0">
+          <button class="btn btn-link text-left" type="button" onclick="fetchBillSummary('${s.month}')">
+            ${ym[0]}年${ym[1]}月 &nbsp; ${s.count}单
+          </button>
+          <button class="btn btn-success" type="button" onclick="openBill('')" 
+            style="_NEWBILL_">新建出库单</button>
+        </h2>
+      </div>
+      <div id="c${i}" class="collapse ${show}" data-parent="#monthlyBills">
+        <div class="card-body" style="padding:0">_BILLLIST_</div>
+      </div>
+    </div>`
+    var newb = "display:none"
+    if (i == 0) {
+      newb = "float:right"
+    }
+    card = card.replace(/_NEWBILL_/, newb)
+    var list = ""
+    if (show && data.list.length > 0) {
+      list = `
+      <table class="table table-striped table-hover">
+        <thead class="thead-light"><tr>
+          <th>日期</th>
+          <th>用户</th>
+          <th>概况</th>
+        </tr></thead><tbody>`
+      $.each(data.list, function(_, b) {
+        var t = new Date(b.updated)
+        var when = `${t.getMonth()+1}月${t.getDate()}日`
+        var summary = ""
+        switch(b.status) {
+        case 0:
+          summary = `${count}种药材`
+          break
+        case 1:
+          var amount= b.sets*b.cost*(1+b.markup/100)+b.fee
+          summary = `欠${amount.toFixed(2)}元`
+          break
+        case 2:
+          var amount = '??'
+          summary = `收${amount}元`
+        }
+        list += `
+          <tr style="cursor:pointer" onclick="openBill(${b.id})">
+            <td>${when}</td>
+            <td>${data.users[b.user]}</td>
+            <td>${summary}</td>
+          </tr>`
+      })
+      list += "</tbody></table>"
+    }
+    card = card.replace(/_BILLLIST_/, list)
+    $('#monthlyBills').append(card)
   })
 }
+function fetchBillSummary(month) {
+  $.get(`/api/chkout?month=${month}`, function(e) {
+    listBills(e)
+  })
+}
+$(document).ready(function () {
+  fetchBillSummary("")
+})
 </script>
 {{template "footer"}} {{end}}

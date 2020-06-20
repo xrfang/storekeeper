@@ -57,8 +57,9 @@ function listBills(data) {
       $.each(data.list, function(_, b) {
         var t = new Date(b.updated)
         var when = `${t.getMonth()+1}月${t.getDate()}日`
+        var clr = (b.status == 0) ? "red" : "black"
         list += `
-          <tr style="cursor:pointer" onclick="openBill(${b.id})">
+          <tr style="color:${clr};cursor:pointer" onclick="openBill(${b.id})">
             <td>${when}</td>
             <td>${b.count}种</td>
             <td>${b.cost.toFixed(2)}元</td>

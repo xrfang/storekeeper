@@ -75,18 +75,21 @@ function listBills(data) {
         var summary = ""
         switch(b.status) {
         case 0:
+          clr = "red"
           summary = `${count}种药材`
           break
         case 1:
+          var clr = "black"
           var amount= b.sets*b.cost*(1+b.markup/100)+b.fee
           summary = `欠${amount.toFixed(2)}元`
           break
         case 2:
+          clr = "darkgray"  
           var amount = '??'
           summary = `收${amount}元`
         }
         list += `
-          <tr style="cursor:pointer" onclick="openBill(${b.id})">
+          <tr style="color:${clr};cursor:pointer" onclick="openBill(${b.id})">
             <td>${when}</td>
             <td>${data.users[b.user]}</td>
             <td>${summary}</td>

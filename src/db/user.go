@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pquerna/otp"
@@ -11,14 +12,14 @@ import (
 )
 
 type User struct {
-	ID      int       `json:"id"`
-	Name    string    `json:"name"`
-	Login   string    `json:"login"`
-	OTPKey  string    `json:"-"`
-	Client  int       `json:"client"`
-	Memo    string    `json:"memo"`
-	Created time.Time `json:"created"`
-	Updated time.Time `json:"updated"`
+	ID      int        `json:"id"`
+	Name    string     `json:"name,omitempty"`
+	Login   string     `json:"login,omitempty"`
+	OTPKey  string     `json:"-"`
+	Client  int        `json:"client,omitempty"`
+	Memo    string     `json:"memo,omitempty"`
+	Created *time.Time `json:"created,omitempty"`
+	Updated *time.Time `json:"updated,omitempty"`
 }
 
 var ErrInvalidOTP = errors.New("invalid otp password")
@@ -73,8 +74,14 @@ func GetUser(id interface{}) *User {
 	return &u
 }
 
-func ListUsers(account int) (users []User) {
-	qry := `SELECT * FROM user`
+func ListUsers(account int, props ...string) (users []User) {
+	qry := `SELECT %s FROM user`
+	if len(props) == 0 {
+		qry = fmt.Sprintf(qry, "*")
+	} else {
+		fields := strings.Join(props, ",")
+		qry = fmt.Sprintf(qry, fields)
+	}
 	if account != 1 {
 		qry += fmt.Sprintf(` WHERE client=%d OR id=%d`, account, account)
 	}

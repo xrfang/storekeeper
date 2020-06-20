@@ -11,6 +11,7 @@ func setupRoutes() {
 	http.HandleFunc("/api/chkin", apiChkInList)
 	http.HandleFunc("/api/chkin/", apiChkIn)
 	http.HandleFunc("/api/chkout", apiChkOutList)
+	http.HandleFunc("/api/invchk", apiInvChkList)
 	http.HandleFunc("/api/sku", apiSkuList)
 	http.HandleFunc("/api/sku/", apiSkuEdit)
 	http.HandleFunc("/api/users", apiUsers)

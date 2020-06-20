@@ -67,10 +67,13 @@ func RemoveEmptyBills() {
 	assert(err)
 }
 
-func InventoryWIP() bool {
+func InventoryWIP() int {
 	var ids []int
 	assert(db.Select(&ids, `SELECT id FROM bom WHERE type=3 AND status=0`))
-	return len(ids) > 0
+	if len(ids) == 0 {
+		return 0
+	}
+	return ids[0]
 }
 
 func ListBillSummary(billType int) []BillSummary {

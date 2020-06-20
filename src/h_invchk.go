@@ -7,19 +7,13 @@ import (
 )
 
 func invChkList(w http.ResponseWriter, r *http.Request) {
-	ok, uid := T.Validate(getCookie(r, "token"))
+	ok, _ := T.Validate(getCookie(r, "token"))
 	if !ok {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
 	db.RemoveEmptyBills()
-	bills := db.ListBills(&db.Bill{Type: 3, Status: -1})
-	bm := make(map[int][]db.Bill)
-	for _, b := range bills {
-		bm[b.Status] = append(bm[b.Status], b)
-	}
-	u := db.GetUser(uid)
-	renderTemplate(w, "invchk.html", map[string]interface{}{"bills": bm, "user": u})
+	renderTemplate(w, "invchk.html", nil)
 }
 
 func invChkEdit(w http.ResponseWriter, r *http.Request) {
@@ -38,11 +32,10 @@ func invChkEdit(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		u := db.GetUser(uid)
 		if id == 0 {
-			if db.InventoryWIP() {
-				http.Error(w, "只允许一个进行中盘点", http.StatusBadRequest)
-				return
+			id = db.InventoryWIP()
+			if id == 0 {
+				id = db.SetBill(db.Bill{Type: 3, User: uid})
 			}
-			id = db.SetBill(db.Bill{Type: 3, User: uid})
 			db.UpdateInventory(id)
 			id = -id
 		} else {

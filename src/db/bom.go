@@ -31,6 +31,7 @@ type Bill struct {
 	Count   int       `json:"count"` //非数据库条目，实时计算
 	Memo    string    `json:"memo"`
 	Status  int       `json:"status"`
+	Paid    float64   `json:"paid"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }

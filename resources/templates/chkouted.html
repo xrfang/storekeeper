@@ -83,6 +83,9 @@
         <p><b><u>需外购药材清单</u></b></p>
         <p id="xbitems"></p>
       </div>
+      <div id="paybtn" style="text-align:center;padding:1rem">
+        <button class="btn btn-success"> 结 &nbsp; 帐 </button>
+      </div>
       <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
     </div>
   </div>
@@ -297,8 +300,13 @@ function getBillInfo() {
       }
       $('#act').attr("disabled", true)
       var upd = new Date(bill.updated)
-      var st = (bill.status == 1) ? '完成' : '结账'
-      $('#finfo').text(`${st}时间：${upd.toLocaleString()}`)
+      if (bill.status == 1) {
+        $('#paybtn').css("display", "")
+        $('#finfo').text(``)
+      } else {
+        $('#paybtn').css("display", "none")
+        $('#finfo').text(`结账时间：${upd.toLocaleString()}`)
+      }      
     }
     $('#requester').val(bill.user)
     $('#markup').val(bill.markup)

@@ -84,9 +84,8 @@ function listBills(data) {
           summary = `欠${amount.toFixed(2)}元`
           break
         case 2:
-          clr = "darkgray"  
-          var amount = '??'
-          summary = `收${amount}元`
+          clr = "darkgray"
+          summary = `收${b.paid.toFixed(2)}元`
         }
         list += `
           <tr style="color:${clr};cursor:pointer" onclick="openBill(${b.id})">

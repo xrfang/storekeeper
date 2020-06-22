@@ -80,5 +80,14 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 		b, _ := db.GetBill(id, -1)
 		b.Sets = sets
 		db.SetBill(b)
+	case "paid":
+		pay, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			panic(err)
+		}
+		b, _ := db.GetBill(id, -1)
+		b.Paid = pay
+		b.Status = 2
+		db.SetBill(b)
 	}
 }

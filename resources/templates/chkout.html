@@ -32,6 +32,7 @@
   </div>    
 </div>
 <script>
+var billym={{.}}
 function openBill(id) {
   window.location.href = `/chkout/${id}`
 }
@@ -106,7 +107,7 @@ function fetchBillSummary(month) {
   })
 }
 $(document).ready(function () {
-  fetchBillSummary("")
+  fetchBillSummary(billym)
 })
 </script>
 {{template "footer"}} {{end}}

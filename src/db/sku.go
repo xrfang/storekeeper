@@ -259,3 +259,18 @@ func SearchGoods(term string) (goods []Goods) {
 	}
 	return
 }
+
+func FindSKU(idx string) (gs []Goods) {
+	py := ""
+	for _, x := range strings.ToUpper(idx) {
+		if x >= 'A' || x <= 'Z' {
+			py += string(x)
+		}
+	}
+	if py == "" {
+		return
+	}
+	py = "%" + py + "%"
+	assert(db.Select(&gs, `SELECT * FROM goods WHERE pinyin LIKE ?`, py))
+	return
+}

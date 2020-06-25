@@ -9,7 +9,7 @@ import (
 	"storekeeper/db"
 )
 
-func apiSkuList(w http.ResponseWriter, r *http.Request) {
+func apiSkuSearch(w http.ResponseWriter, r *http.Request) {
 	ok, _ := T.Validate(getCookie(r, "token"))
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)

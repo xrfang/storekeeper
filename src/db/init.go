@@ -16,6 +16,7 @@ func setupSchema() {
         "login"   TEXT NOT NULL UNIQUE,                        -- 登录标识（如email、手机号或用户名）
         "otpkey"  TEXT NOT NULL DEFAULT "",                    -- OTP密钥（只有主账户有密钥，可以登录）
         "client"  INTEGER NOT NULL DEFAULT 0,                  -- 0表示主账户，非0表示那个主账户的客户
+        "session" TEXT NOT NULL DEFAULT "",                    -- 有效访问令牌
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注，可用于保存地址等信息     
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP  -- 最后更新时间戳

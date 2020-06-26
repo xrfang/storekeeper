@@ -18,6 +18,7 @@ type User struct {
 	OTPKey  string     `json:"-"`
 	Client  int        `json:"client,omitempty"`
 	Memo    string     `json:"memo,omitempty"`
+	Session string     `json:"-"`
 	Created *time.Time `json:"created,omitempty"`
 	Updated *time.Time `json:"updated,omitempty"`
 }
@@ -86,9 +87,6 @@ func ListUsers(account int, props ...string) (users []User) {
 		qry += fmt.Sprintf(` WHERE client=%d OR id=%d`, account, account)
 	}
 	assert(db.Select(&users, qry))
-	for i := range users {
-		users[i].OTPKey = ""
-	}
 	return
 }
 
@@ -124,4 +122,11 @@ func DeleteUser(id int) {
 	//TODO: 添加外部制约，凡是有交易记录的不可删除
 	_, err := db.Exec(`DELETE FROM user WHERE id=?`, id)
 	assert(err)
+}
+
+func SetAccessToken(uid int, tok string, upd time.Time) {
+	if tok != "" {
+		tok = fmt.Sprintf("%d,%s", upd.Unix(), tok)
+	}
+	db.MustExec(`UPDATE user SET session=? WHERE id=?`, tok, uid)
 }

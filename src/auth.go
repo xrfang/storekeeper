@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"math/rand"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"storekeeper/db"
 )
 
 func uuid(L int) string {
@@ -28,7 +29,7 @@ type token struct {
 	upd time.Time
 }
 
-func (t *token) Expired() bool {
+func (t *token) expired() bool {
 	return time.Since(t.upd).Hours() > 168 //最长7天未使用则失效
 }
 
@@ -42,27 +43,17 @@ type tokenStore struct {
 func (ts *tokenStore) load() {
 	defer func() {
 		if e := recover(); e != nil {
-			fmt.Fprintln(os.Stderr, "tokenStore.load:", e)
+			fmt.Fprintln(os.Stderr, trace("tokenStore.load: %v", e))
 		}
 	}()
-	f, err := os.Open(ts.persist)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			panic(err)
-		}
-		return
-	}
-	defer f.Close()
-	lines := bufio.NewScanner(f)
-	for lines.Scan() {
-		kv := strings.Split(strings.TrimSpace(lines.Text()), "=")
-		if len(kv) != 2 {
+	for _, u := range db.ListUsers(1, "id", "session") {
+		kv := strings.SplitN(u.Session, ",", 2)
+		if len(kv) < 2 {
 			continue
 		}
-		id, _ := strconv.Atoi(kv[1])
-		if id > 0 && len(kv[0]) > 0 {
-			ts.store[kv[0]] = &token{t: kv[0], id: id, upd: time.Now()}
-		}
+		up, _ := strconv.Atoi(kv[0])
+		ut := time.Unix(int64(up), 0)
+		ts.store[kv[1]] = &token{t: kv[1], id: u.ID, upd: ut}
 	}
 }
 
@@ -72,11 +63,8 @@ func (ts *tokenStore) save() {
 			fmt.Fprintln(os.Stderr, "tokenStore.save:", e)
 		}
 	}()
-	f, err := os.Create(ts.persist)
-	assert(err)
-	defer func() { assert(f.Close()) }()
-	for k, v := range ts.store {
-		fmt.Fprintf(f, "%s=%d\n", k, v.id)
+	for _, t := range ts.store {
+		db.SetAccessToken(t.id, t.t, t.upd)
 	}
 }
 
@@ -90,9 +78,9 @@ func (ts *tokenStore) Init() {
 		for {
 			time.Sleep(time.Minute)
 			ts.Lock()
-			for s, t := range ts.store {
-				if t.Expired() {
-					delete(ts.store, s)
+			for _, t := range ts.store {
+				if t.expired() {
+					t.t = ""
 					ts.changed = true
 				}
 			}
@@ -133,7 +121,3 @@ func (ts *tokenStore) Validate(token string) (ok bool, id int) {
 }
 
 var T tokenStore
-
-func init() {
-	T.Init()
-}

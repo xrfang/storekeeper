@@ -51,7 +51,7 @@ func (sl *StdLogger) SetDebug(mode bool) {
 	sl.dbgMode = mode
 }
 
-func (sl StdLogger) fmt(format string, args ...interface{}) []string {
+func (sl *StdLogger) fmt(format string, args ...interface{}) []string {
 	ts := time.Now().Format("2006-01-02 15:04:05 ")
 	pad := strings.Repeat(" ", len(ts))
 	var msg []string
@@ -69,7 +69,7 @@ func (sl StdLogger) fmt(format string, args ...interface{}) []string {
 	return msg
 }
 
-func (sl StdLogger) split(fn string) {
+func (sl *StdLogger) split(fn string) {
 	defer func() {
 		if e := recover(); e != nil {
 			err := trace("[ERROR]StdLogger.split: %v", e)

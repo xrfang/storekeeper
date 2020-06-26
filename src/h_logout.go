@@ -1,8 +1,15 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+	"storekeeper/db"
+)
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	T.SignOut(getCookie(r, "token"))
+	err := db.Logout(getCookie(r, "token"))
+	if err != nil {
+		http.Error(w, "Logout: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 	http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 }

@@ -12,8 +12,8 @@ func apiChkOutList(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
 		}
 	}()
-	ok, _ := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

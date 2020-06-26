@@ -1,6 +1,7 @@
 package db
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -11,6 +12,16 @@ import (
 	"github.com/pquerna/otp/totp"
 )
 
+func uuid(L int) string {
+	cs := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	buf := make([]byte, L)
+	rand.Read(buf)
+	for i := 0; i < L; i++ {
+		buf[i] = cs[buf[i]%62]
+	}
+	return string(buf)
+}
+
 type User struct {
 	ID      int        `json:"id"`
 	Name    string     `json:"name,omitempty"`
@@ -18,7 +29,6 @@ type User struct {
 	OTPKey  string     `json:"-"`
 	Client  int        `json:"client,omitempty"`
 	Memo    string     `json:"memo,omitempty"`
-	Session string     `json:"-"`
 	Created *time.Time `json:"created,omitempty"`
 	Updated *time.Time `json:"updated,omitempty"`
 }
@@ -45,13 +55,13 @@ func UpdateOTPKey(login, key string) {
 	}
 }
 
-func CheckLogin(login, code string) (int, error) {
+func Login(login, code string) (string, error) {
 	u, err := findUser(login)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = ErrInvalidOTP
 		}
-		return 0, err
+		return "", err
 	}
 	ok, err := totp.ValidateCustom(code, u.OTPKey, time.Now(), totp.ValidateOpts{
 		Period:    30,
@@ -63,9 +73,34 @@ func CheckLogin(login, code string) (int, error) {
 		if err == nil {
 			err = ErrInvalidOTP
 		}
-		return 0, err
+		return "", err
 	}
-	return u.ID, nil
+	tok := uuid(16)
+	_, err = db.Exec(`INSERT INTO access (tok,uid,upd) VALUES (?,?,?)`,
+		tok, u.ID, time.Now())
+	return tok, err
+}
+
+func Logout(token string) error {
+	_, err := db.Exec(`DELETE FROM access WHERE tok=?`, token)
+	return err
+}
+
+func CheckToken(token string) int {
+	var uid int
+	var upd time.Time
+	r := db.QueryRow(`SELECT uid,upd FROM access WHERE tok=?`, token)
+	err := r.Scan(&uid, &upd)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0
+		}
+		panic(err)
+	}
+	if time.Since(upd).Hours() > 168 { //超过7天没有使用
+		return 0
+	}
+	return uid
 }
 
 func GetUser(id interface{}) *User {

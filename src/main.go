@@ -40,7 +40,6 @@ func main() {
 		db.UpdateOTPKey("admin", key.Secret())
 		return
 	}
-	T.Init()
 	L = NewLogger(cf.LogPath, 1024*1024, 10)
 	L.SetDebug(cf.DbgMode)
 	policy := res.Verbatim

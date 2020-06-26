@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"path"
+	"storekeeper/db"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -11,8 +12,8 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uri := "/chkout"
-	ok, _ := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		uri = "/login"
 	}
 	http.Redirect(w, r, uri, http.StatusTemporaryRedirect)

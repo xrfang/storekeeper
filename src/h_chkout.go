@@ -12,8 +12,8 @@ func chkOutList(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
 		}
 	}()
-	ok, _ := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
@@ -28,8 +28,8 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
 		}
 	}()
-	ok, uid := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
@@ -62,8 +62,8 @@ func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
 		}
 	}()
-	ok, _ := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

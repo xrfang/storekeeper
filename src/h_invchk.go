@@ -7,8 +7,8 @@ import (
 )
 
 func invChkList(w http.ResponseWriter, r *http.Request) {
-	ok, _ := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
@@ -22,8 +22,8 @@ func invChkEdit(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
 		}
 	}()
-	ok, uid := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
@@ -53,8 +53,8 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
 		}
 	}()
-	ok, _ := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}

@@ -10,8 +10,8 @@ import (
 )
 
 func apiSkuFind(w http.ResponseWriter, r *http.Request) {
-	ok, _ := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -24,8 +24,8 @@ func apiSkuFind(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiSkuSearch(w http.ResponseWriter, r *http.Request) {
-	ok, _ := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -55,8 +55,8 @@ func apiSkuSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
-	ok, _ := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

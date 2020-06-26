@@ -16,14 +16,18 @@ func setupSchema() {
         "login"   TEXT NOT NULL UNIQUE,                        -- 登录标识（如email、手机号或用户名）
         "otpkey"  TEXT NOT NULL DEFAULT "",                    -- OTP密钥（只有主账户有密钥，可以登录）
         "client"  INTEGER NOT NULL DEFAULT 0,                  -- 0表示主账户，非0表示那个主账户的客户
-        "session" TEXT NOT NULL DEFAULT "",                    -- 有效访问令牌
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注，可用于保存地址等信息     
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP  -- 最后更新时间戳
     )`)
-	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS updated AFTER UPDATE ON "user"
+	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS usrupd AFTER UPDATE ON "user"
         FOR EACH ROW BEGIN UPDATE "user" SET updated=CURRENT_TIMESTAMP WHERE
         id=OLD.id; END`)
+	tx.MustExec(`CREATE TABLE IF NOT EXISTS "access" ( -- 访问控制表
+        "tok"     TEXT PRIMARY KEY,                    -- 令牌
+        "uid"     INTEGER NOT NULL,                    -- 用户ID
+        "upd"     DATETIME NOT NULL                    -- 创建时间戳
+    )`)
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS "goods" ( -- 药材表
         "id"     INTEGER PRIMARY KEY AUTOINCREMENT,
         "name"   TEXT NOT NULL UNIQUE,               -- 品名
@@ -45,7 +49,7 @@ func setupSchema() {
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最后更新时间戳
         FOREIGN KEY(user_id) REFERENCES user(id)
     )`)
-	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS updated AFTER UPDATE ON "bom"
+	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS bomupd AFTER UPDATE ON "bom"
         FOR EACH ROW BEGIN UPDATE "bom" SET updated=CURRENT_TIMESTAMP WHERE
         id=OLD.id; END`)
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS "bom_item" (       -- 单据条目表
@@ -61,7 +65,7 @@ func setupSchema() {
         FOREIGN KEY(bom_id) REFERENCES bom(id),
         FOREIGN KEY(gid) REFERENCES goods(id)
     )`)
-	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS updated AFTER UPDATE ON "bom_item"
+	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS bisupd AFTER UPDATE ON "bom_item"
         FOR EACH ROW BEGIN UPDATE "bom_item" SET updated=CURRENT_TIMESTAMP WHERE
         id=OLD.id; END`)
 	//添加管理员

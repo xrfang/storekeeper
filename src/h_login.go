@@ -18,9 +18,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 	var mesg string
 
 	if user != "" && pass != "" {
-		id, err := db.CheckLogin(user, pass)
+		tok, err := db.Login(user, pass)
 		if err == nil {
-			setCookie(w, "token", T.SignIn(id), 86400*30) //有效期限30天
+			setCookie(w, "token", tok, 86400*30) //有效期限30天
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}

@@ -14,8 +14,8 @@ func apiGetBill(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
 		}
 	}()
-	ok, uid := T.Validate(getCookie(r, "token"))
-	if !ok {
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

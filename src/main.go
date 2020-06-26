@@ -21,7 +21,7 @@ func main() {
 	ver := flag.Bool("version", false, "show version info")
 	init := flag.Bool("init", false, "initialize configuration")
 	flag.Usage = func() {
-		fmt.Printf("WebServer - Go WebServer Template %s\n", verinfo())
+		fmt.Printf("StoreKeeper %s\n", verinfo())
 		fmt.Printf("\nUSAGE: %s OPTIONS\n", filepath.Base(os.Args[0]))
 		fmt.Println("\nOPTIONS")
 		flag.PrintDefaults()

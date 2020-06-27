@@ -49,6 +49,8 @@ type BillItem struct {
 	Cost      float64   `json:"cost"`
 	Request   int       `json:"request"`
 	Confirm   int       `json:"confirm"`
+	Flag      int       `json:"flag"`
+	Memo      string    `json:"memo"`
 	Created   time.Time `json:"created"`
 	Updated   time.Time `json:"updated"`
 	inStock   int       //实际库存量（即无需外购，最大值为Request）

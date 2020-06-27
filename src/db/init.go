@@ -59,7 +59,9 @@ func setupSchema() {
         "gname"   TEXT NOT NULL,                               -- 药材名称
         "cost"    NUMERIC NOT NULL DEFAULT 0,                  -- 单位成本
         "request" INTEGER NOT NULL,                            -- 需求数量
-        "confirm" INTEGER NOT NULL,                            -- 确认数量
+		"confirm" INTEGER NOT NULL,                            -- 确认数量
+		"flag"    INTEGER NOT NULL DEFAULT 0,                  -- 标志位（非0表示特殊含义）
+		"memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最后更新时间戳
         FOREIGN KEY(bom_id) REFERENCES bom(id),

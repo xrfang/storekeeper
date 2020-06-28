@@ -32,9 +32,10 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 	val := r.FormValue("val")
 	switch key {
 	case "amount":
-		v := strings.SplitN(val, ",", 2)
+		v := strings.SplitN(val, ",", 3)
 		gid, _ := strconv.Atoi(v[0])
 		amt, _ := strconv.Atoi(v[1])
+		ext, _ := strconv.Atoi(v[2])
 		db.GetBill(id, -1)
 		if amt > 0 {
 			bis := db.GetBillItems(id, gid)
@@ -44,6 +45,7 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 				GoodsName: bis[0].GoodsName,
 				GoodsID:   gid,
 				Request:   amt,
+				Flag:      ext,
 			}, 1)
 		} else {
 			db.DeleteBillItem(id, gid)

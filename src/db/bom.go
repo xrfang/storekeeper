@@ -264,8 +264,9 @@ func SetBillItem(bi BillItem, mode int) bool {
 	case 1: //update
 		tx.MustExec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bi.BomID, bi.GoodsID)
 	}
-	tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm) VALUES (?,?,?,?,?,?)`,
-		bi.BomID, bi.GoodsID, bi.GoodsName, bi.Cost, bi.Request, bi.Confirm)
+	tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm,flag,memo) VALUES 
+		(?,?,?,?,?,?,?,?)`, bi.BomID, bi.GoodsID, bi.GoodsName, bi.Cost, bi.Request, bi.Confirm,
+		bi.Flag, bi.Memo)
 	if b.Type == 1 { //入库单，用当前价格更新药品单价
 		tx.MustExec(`UPDATE goods SET cost=? WHERE id=?`, bi.Cost, bi.GoodsID)
 	}

@@ -497,7 +497,7 @@ $(document).ready(function () {
         getBillInfo()
       })
     } else if (btn.hasClass("btn-danger")) {
-      $.post(`/api/set/${bid}`, {key: "amount", val: `${gid},0`}, function(e) {
+      $.post(`/api/set/${bid}`, {key: "amount", val: `${gid},0,0`}, function(e) {
         getBillInfo()
       })
     }

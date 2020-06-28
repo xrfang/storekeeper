@@ -203,12 +203,13 @@ function doneCheckOut() {
 function payBill() {
   $('#paybill').modal('show')
 }
-function editItem(gid, gname, count) {
+function editItem(gid, gname, count, extra) {
 	$('#choice').css('display', 'none')
 	$('#editem #gid').val(gid)
 	$('#editem #gname').text(gname)
 	$('#editem #count').val(count)
-    $('#editem').modal('show')
+  $('#editem #extra').prop('checked', extra)
+  $('#editem').modal('show')
 }
 function editSets() {
     $('#edsets #sets').val($('#sets').text())
@@ -361,16 +362,18 @@ function getBillInfo() {
       $.each(e.items, function(_, it) {
         var item = `${it.gname} ${it.request}克`
         var bg = "white"
+        var extra = false
         if (it.flag != 0) {
           item += `（自备）`
+          extra = true
         } else if (it.request != it.in_stock) {
           item = `${it.gname} ${it.in_stock}/${it.request}克`
           bg = "lightpink"
         }
         if (bill.status == 0) {
           $('#cart').append(`<a href="#" style="font-family:monospace;font-size:large;
-            background:${bg}" onclick="editItem(${it.gid}, '${it.gname}', ${it.request})"
-            >${item}</a> &nbsp; `)
+            background:${bg}" onclick="editItem(${it.gid}, '${it.gname}', ${it.request},
+            ${extra})">${item}</a> &nbsp; `)
         } else {
           $('#cart').append(`${item} &nbsp; `)  
         }

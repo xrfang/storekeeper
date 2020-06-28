@@ -327,7 +327,7 @@ function getBillInfo() {
       var lack = []
       $.each(e.items, function(_, it) {
         var diff = it.request - it.confirm
-        if (diff != 0) lack.push({"name": it.gname, "diff": diff*bill.sets})
+        if (it.flag == 0 && diff != 0) lack.push({"name": it.gname, "diff": diff*bill.sets})
       })
       if (lack.length > 0) {
         $('#xbitems').empty()
@@ -372,7 +372,7 @@ function getBillInfo() {
             background:${bg}" onclick="editItem(${it.gid}, '${it.gname}', ${it.request})"
             >${item}</a> &nbsp; `)
         } else {
-          $('#cart').append(`${it.gname} ${it.request}克 &nbsp; `)  
+          $('#cart').append(`${item} &nbsp; `)  
         }
       })
     }

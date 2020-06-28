@@ -322,13 +322,17 @@ func SetInventoryByBill(bid, stat int) {
 			ID        int
 			Stock     int
 			Requested int
+			Flag      int
 		}
 		var br []billReq
-		assert(tx.Select(&br, `SELECT g.id,g.stock,ABS(bi.request)*b.sets AS requested
-			FROM goods g,bom_item bi,bom b WHERE b.id=bi.bom_id AND bi.gid=g.id AND
-			b.id=?`, bid))
+		assert(tx.Select(&br, `SELECT g.id,g.stock,bi.flag,ABS(bi.request)*b.sets AS
+			requested FROM goods g,bom_item bi,bom b WHERE b.id=bi.bom_id AND bi.gid=g.id
+			AND	b.id=?`, bid))
 		for _, r := range br {
-			if r.Requested <= r.Stock {
+			if r.Flag != 0 { //自备药材
+				tx.MustExec(`UPDATE bom_item SET confirm=0 WHERE gid=? AND bom_id=?`, r.ID,
+					bid)
+			} else if r.Requested <= r.Stock {
 				tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, r.Requested, r.ID)
 				tx.MustExec(`UPDATE bom_item SET confirm=request WHERE gid=? AND bom_id=?`,
 					r.ID, bid)

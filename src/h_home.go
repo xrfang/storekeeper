@@ -7,6 +7,11 @@ import (
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
+		}
+	}()
 	if r.URL.Path != "/" {
 		http.ServeFile(w, r, path.Join(cf.WebRoot, r.URL.Path))
 		return

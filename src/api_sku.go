@@ -10,30 +10,30 @@ import (
 )
 
 func apiSkuFind(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
+		}
+	}()
 	uid := db.CheckToken(getCookie(r, "token"))
 	if uid == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	defer func() {
-		if e := recover(); e != nil {
-			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
-		}
-	}()
 	jsonReply(w, db.FindSKU(r.URL.Query().Get("py")))
 }
 
 func apiSkuSearch(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
+		}
+	}()
 	uid := db.CheckToken(getCookie(r, "token"))
 	if uid == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	defer func() {
-		if e := recover(); e != nil {
-			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
-		}
-	}()
 	switch r.Method {
 	case "GET":
 		tm := make(map[string]bool)
@@ -55,16 +55,16 @@ func apiSkuSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiSkuEdit(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
+		}
+	}()
 	uid := db.CheckToken(getCookie(r, "token"))
 	if uid == 0 {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	defer func() {
-		if e := recover(); e != nil {
-			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
-		}
-	}()
 	switch r.Method {
 	case "GET":
 		id, _ := strconv.Atoi(r.URL.Path[9:])

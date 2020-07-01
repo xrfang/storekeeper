@@ -45,7 +45,7 @@ func chkUser(u *db.User) map[string]interface{} {
 func users(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
-			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
 		}
 	}()
 	uid := db.CheckToken(getCookie(r, "token"))

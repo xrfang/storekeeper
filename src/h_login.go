@@ -9,7 +9,7 @@ import (
 func login(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
-			http.Error(w, e.(error).Error(), http.StatusInternalServerError)
+			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
 		}
 	}()
 	assert(r.ParseForm())

@@ -6,6 +6,11 @@ import (
 )
 
 func logout(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
+		}
+	}()
 	err := db.Logout(getCookie(r, "token"))
 	if err != nil {
 		http.Error(w, "Logout: "+err.Error(), http.StatusInternalServerError)

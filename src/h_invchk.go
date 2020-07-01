@@ -9,7 +9,7 @@ import (
 func invChkList(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
-			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
+			httpError(w, e)
 		}
 	}()
 	uid := db.CheckToken(getCookie(r, "token"))
@@ -24,7 +24,7 @@ func invChkList(w http.ResponseWriter, r *http.Request) {
 func invChkEdit(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
-			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
+			httpError(w, e)
 		}
 	}()
 	uid := db.CheckToken(getCookie(r, "token"))
@@ -55,7 +55,7 @@ func invChkEdit(w http.ResponseWriter, r *http.Request) {
 func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
-			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
+			httpError(w, e)
 		}
 	}()
 	uid := db.CheckToken(getCookie(r, "token"))

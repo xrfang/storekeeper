@@ -8,7 +8,7 @@ import (
 func logout(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
-			http.Error(w, trace("%v", e).Error(), http.StatusInternalServerError)
+			httpError(w, e)
 		}
 	}()
 	err := db.Logout(getCookie(r, "token"))

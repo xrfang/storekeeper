@@ -164,7 +164,7 @@ func (sl *StdLogger) Dbg(format string, args ...interface{}) {
 	}
 }
 
-func (sl *StdLogger) Err(format string, args ...interface{}) {
+func (sl *StdLogger) Err(format string, args ...interface{}) error {
 	sl.Lock()
 	defer sl.Unlock()
 	var exp bool
@@ -192,6 +192,7 @@ func (sl *StdLogger) Err(format string, args ...interface{}) {
 			break
 		}
 	}
+	return err
 }
 
 func (sl *StdLogger) Log(format string, args ...interface{}) {

@@ -59,3 +59,8 @@ func jsonReply(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	assert(json.NewEncoder(w).Encode(data))
 }
+
+func httpError(w http.ResponseWriter, e interface{}) {
+	err := L.Err("%v", e)
+	http.Error(w, err.Error(), http.StatusInternalServerError)
+}

@@ -79,7 +79,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			bill, items = db.GetBill(id, so)
 		}
 		res = map[string]interface{}{"bill": bill, "items": items}
-		users := db.ListUsers(1)
+		users := db.ListUsers(1, "id", "name")
 		for _, u := range users {
 			if u.ID == bill.User {
 				res["user"] = u.Name

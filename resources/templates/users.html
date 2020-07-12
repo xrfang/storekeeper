@@ -15,8 +15,8 @@
   <table id="tbl" class="table table-hover">
     <thead class="thead-light">
       <tr>
-        <th>姓名</th>
-        <th>登录标识</th>
+        <th>用户</th>
+        <th>挂账</th>
         <th class="op dropdown" style="vertical-align:middle">
           <i class="fas fa-cog" data-toggle="dropdown"></i>
           <div class="dropdown-menu dropdown-menu-right">
@@ -55,8 +55,12 @@
     $.get("/api/users", function (e) {
       $('#list').empty()
       $.each(e, function (_, u) {
-        var clr = (u.id == {{.ID}}) ? "red" : ((u.client) ? "gray" : "green")
-        $('#list').append(`<tr style="color:${clr}"><td>${u.name}</td><td>${u.login}</td>
+        var ss = (u.id == {{.ID}}) ? "font-weight:bold;" : ""
+        var name = (u.client > 0) ? u.name : `${u.name} (${u.login})`
+        var balance = u.due.toFixed(2)
+        if (u.due > 0) ss += "color:red" 
+        $('#list').append(`<tr style="${ss}">
+           <td>${name}</td><td style="vertical-align:bottom">${balance}</td>
            <td class="op dropdown" style="vertical-align:middle" id="${u.id}"></td></tr>`)
       })
       $('#tbl tr').hover(function () {

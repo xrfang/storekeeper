@@ -29,6 +29,8 @@ type User struct {
 	OTPKey  string     `json:"-"`
 	Client  int        `json:"client,omitempty"`
 	Memo    string     `json:"memo,omitempty"`
+	Paid    float64    `json:"paid"`
+	Due     float64    `json:"due"`
 	Created *time.Time `json:"created,omitempty"`
 	Updated *time.Time `json:"updated,omitempty"`
 }
@@ -112,7 +114,8 @@ func GetUser(id interface{}) *User {
 
 func ListUsers(account int, props ...string) (users []User) {
 	qry := `SELECT %s FROM user`
-	if len(props) == 0 {
+	acc := len(props) == 0
+	if acc {
 		qry = fmt.Sprintf(qry, "*")
 	} else {
 		fields := strings.Join(props, ",")
@@ -122,6 +125,46 @@ func ListUsers(account int, props ...string) (users []User) {
 		qry += fmt.Sprintf(` WHERE client=%d OR id=%d`, account, account)
 	}
 	assert(db.Select(&users, qry))
+	if !acc {
+		for _, p := range props {
+			acc = p == "paid" || p == "due"
+			if acc {
+				break
+			}
+		}
+	}
+	if acc {
+		var account []struct {
+			UserID int     `db:"user_id"`
+			Status int     `db:"status"`
+			Total  float64 `db:"total"`
+		}
+		type balance struct {
+			paid float64
+			due  float64
+		}
+		ab := make(map[int]balance)
+		db.Select(&account, `SELECT user_id,status,sum(total) AS total FROM
+			(SELECT user_id,bom_id,-sum(cost*confirm)*sets*(1+markup*1.0/100)+fee
+			AS total,status FROM bom_item JOIN bom ON bom.id=bom_id WHERE bom_id
+			IN (SELECT id FROM bom WHERE type=2 AND status>0) GROUP BY bom_id) 
+			GROUP BY user_id,status ORDER BY user_id`)
+		for _, a := range account {
+			b := ab[a.UserID]
+			switch a.Status {
+			case 1:
+				b.due = a.Total
+			case 2:
+				b.paid = a.Total
+			}
+			ab[a.UserID] = b
+		}
+		for i, u := range users {
+			b := ab[u.ID]
+			users[i].Paid = b.paid
+			users[i].Due = b.due
+		}
+	}
 	return
 }
 

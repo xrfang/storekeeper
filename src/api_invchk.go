@@ -26,11 +26,11 @@ func apiInvChkList(w http.ResponseWriter, r *http.Request) {
 	if month == "" {
 		month = thisMonth
 	}
-	summary := db.ListBillSummary(3)
+	summary := db.ListBillSummary(3, 0)
 	if len(summary) == 0 || summary[0].Month != thisMonth {
 		summary = append([]db.BillSummary{db.BillSummary{Month: thisMonth}}, summary...)
 	}
-	list := db.ListBills(3, month)
+	list := db.ListBills(3, 0, month)
 	if list == nil {
 		list = []db.Bill{}
 	}

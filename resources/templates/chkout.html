@@ -7,7 +7,7 @@
   <div class="collapse navbar-collapse" id="navbarMenu">
     <ul class="navbar-nav">
       <li class="nav-item active">
-        <a class="nav-link" href="#">出库</a>
+        <a class="nav-link" href="/chkout">出库</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="/chkin">入库</a>
@@ -32,7 +32,8 @@
   </div>    
 </div>
 <script>
-var billym={{.}}
+var billym={{.Month}}
+var billuser={{.User}}
 function openBill(id) {
   window.location.href = `/chkout/${id}`
 }
@@ -45,7 +46,7 @@ function listBills(data) {
     <div class="card">
       <div class="card-header" style="padding-left:0" id="h${i}">
         <h2 class="mb-0">
-          <button class="btn btn-link text-left" type="button" onclick="fetchBillSummary('${s.month}')">
+          <button class="btn btn-link text-left" type="button" onclick="fetchBillSummary('${s.month}', ${billuser})">
             ${ym[0]}年${ym[1]}月 &nbsp; ${s.count}单
           </button>
           <button class="btn btn-success" type="button" onclick="openBill('')" 
@@ -101,13 +102,13 @@ function listBills(data) {
     $('#monthlyBills').append(card)
   })
 }
-function fetchBillSummary(month) {
-  $.get(`/api/chkout?month=${month}`, function(e) {
+function fetchBillSummary(month, user) {
+  $.get(`/api/chkout?month=${month}&user=${user}`, function(e) {
     listBills(e)
   })
 }
 $(document).ready(function () {
-  fetchBillSummary(billym)
+  fetchBillSummary(billym, billuser)
 })
 </script>
 {{template "footer"}} {{end}}

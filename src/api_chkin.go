@@ -30,11 +30,11 @@ func apiChkInList(w http.ResponseWriter, r *http.Request) {
 	if month == "" {
 		month = thisMonth
 	}
-	summary := db.ListBillSummary(1)
+	summary := db.ListBillSummary(1, 0)
 	if len(summary) == 0 || summary[0].Month != thisMonth {
 		summary = append([]db.BillSummary{db.BillSummary{Month: thisMonth}}, summary...)
 	}
-	list := db.ListBills(1, month)
+	list := db.ListBills(1, 0, month)
 	if list == nil {
 		list = []db.Bill{}
 	}

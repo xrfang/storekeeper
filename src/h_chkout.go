@@ -19,7 +19,11 @@ func chkOutList(w http.ResponseWriter, r *http.Request) {
 	}
 	db.RemoveEmptyBills()
 	month := r.URL.Query().Get("month")
-	renderTemplate(w, "chkout.html", month)
+	user := r.URL.Query().Get("user")
+	renderTemplate(w, "chkout.html", struct {
+		Month string
+		User  string
+	}{month, user})
 }
 
 func chkOutEdit(w http.ResponseWriter, r *http.Request) {

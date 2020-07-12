@@ -79,18 +79,28 @@ func InventoryWIP() int {
 	return ids[0]
 }
 
-func ListBillSummary(billType int) []BillSummary {
+func ListBillSummary(billType, uid int) []BillSummary {
+	user := " "
+	if uid > 0 {
+		user = fmt.Sprintf(` AND user_id=%d`, uid)
+	}
 	qry := fmt.Sprintf(`SELECT COUNT(id) AS count,strftime('%%Y-%%m', updated) AS
-	    month FROM bom WHERE type=%d GROUP BY month ORDER BY month DESC`, billType)
+		month FROM bom WHERE type=%d%s GROUP BY month ORDER BY month DESC`, billType,
+		user)
 	var bs []BillSummary
 	assert(db.Select(&bs, qry))
 	return bs
 }
 
-func ListBills(billType int, month string) (bills []Bill) {
+func ListBills(billType, uid int, month string) (bills []Bill) {
 	firstDay := month + "-01" //month格式为yyyy-mm
 	lastDay := month + "-31"  //为简单起见，最后一天总是设置为31日不会出错
-	qry := `SELECT * FROM bom WHERE type=? AND updated>=? AND updated<=?`
+	user := ""
+	if uid > 0 {
+		user = fmt.Sprintf(` AND user_id=%d`, uid)
+	}
+	qry := fmt.Sprintf(`SELECT * FROM bom WHERE type=?%s AND updated>=? 
+	    AND updated<=?`, user)
 	assert(db.Select(&bills, qry, billType, firstDay, lastDay))
 	if len(bills) == 0 {
 		return

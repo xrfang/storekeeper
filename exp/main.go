@@ -30,5 +30,8 @@ func main() {
 		ps := GetPSItems(text)
 		fmt.Printf("got %d items\n", len(ps))
 		je.Encode(ps)
+		rx := GetPrevRx(ps)
+		fmt.Printf("got %d prescriptions\n", len(rx))
+		je.Encode(rx)
 	}
 }

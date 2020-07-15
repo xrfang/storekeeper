@@ -174,6 +174,9 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 			it.Request = -it.Request
 			it.Confirm = -it.Confirm
 			it.inStock = func() int {
+				if bill.Status > 0 { //已经出库，不再计算库存变化
+					return it.Confirm
+				}
 				var stock int
 				for _, g := range gs {
 					if it.GoodsID == g.ID {

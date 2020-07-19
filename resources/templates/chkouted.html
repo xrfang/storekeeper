@@ -29,7 +29,7 @@
     <div class="col">
       <label for="markup"><b>溢价率</b></label>
       <div class="input-group">
-        <input type="text" class="form-control border-right-0" id="markup" placeholder="30">
+        <input type="text" class="form-control border-right-0" id="markup">
         <div class="input-group-append" id="chgm">
           <div class="input-group-text">%</div>
         </div>
@@ -460,7 +460,9 @@ $(document).ready(function () {
   })
   $('#requester').change(function(e) {
       var id = $('#bid').val()
-      $.post(`/api/set/${id}`, {key: "user", val: $('#requester').val()}, function(e) {})
+      $.post(`/api/set/${id}`, {key: "user", val: $('#requester').val()}, function(e) {
+          getBillInfo()
+      })
   })
   $('#bid').val(Math.abs(arg.bill))
   if (arg.bill < 0) {

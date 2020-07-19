@@ -68,7 +68,10 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 		assert(err)
 		b, _ := db.GetBill(id, -1)
 		b.Markup = markup
+		u := db.GetUser(b.User)
+		u.Markup = markup
 		db.SetBill(b)
+		db.UpdateUser(u)
 	case "user":
 		u := db.GetUser(val)
 		b, _ := db.GetBill(id, -1)

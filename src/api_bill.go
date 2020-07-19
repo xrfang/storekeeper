@@ -29,7 +29,6 @@ func apiGetBill(w http.ResponseWriter, r *http.Request) {
 	}
 	so, _ := strconv.Atoi(r.URL.Query().Get("order"))
 	var (
-		res   map[string]interface{}
 		bill  db.Bill
 		items []db.BillItem
 	)
@@ -38,13 +37,20 @@ func apiGetBill(w http.ResponseWriter, r *http.Request) {
 	} else {
 		bill, items = db.GetBill(id, so)
 	}
-	res = map[string]interface{}{"bill": bill, "items": items}
+	res := make(map[string]interface{})
 	users := db.ListUsers(1)
 	for _, u := range users {
 		if u.ID == bill.User {
+			if u.Markup < 0 {
+				bill.Markup = 30 //系统默认
+			} else {
+				bill.Markup = u.Markup
+			}
 			res["user"] = u.Name
 			break
 		}
 	}
+	res["bill"] = bill
+	res["items"] = items
 	jsonReply(w, res)
 }

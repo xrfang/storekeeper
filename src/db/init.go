@@ -14,6 +14,7 @@ func setupSchema() {
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
         "name"    TEXT NOT NULL,                               -- 姓名
         "login"   TEXT NOT NULL UNIQUE,                        -- 登录标识（如email、手机号或用户名）
+        "markup"  INTEGER NOT NULL DEFAULT -1,                 -- 溢价率（-1表示使用系统默认）
         "otpkey"  TEXT NOT NULL DEFAULT "",                    -- OTP密钥（只有主账户有密钥，可以登录）
         "client"  INTEGER NOT NULL DEFAULT 0,                  -- 0表示主账户，非0表示那个主账户的客户
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注，可用于保存地址等信息     

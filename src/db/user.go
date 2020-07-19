@@ -26,6 +26,7 @@ type User struct {
 	ID      int        `json:"id"`
 	Name    string     `json:"name,omitempty"`
 	Login   string     `json:"login,omitempty"`
+	Markup  int        `json:"markup"`
 	OTPKey  string     `json:"-"`
 	Client  int        `json:"client,omitempty"`
 	Memo    string     `json:"memo,omitempty"`
@@ -178,17 +179,18 @@ func GetPrimaryUsers() []User {
 }
 
 func UpdateUser(u *User) bool {
-	if u.ID == 1 {
-		return false //不允许更改1号用户（admin）的信息
-	}
 	if u.ID == 0 {
 		res := db.MustExec(`INSERT INTO user (name,login,client,memo) VALUES
 			(?,?,?,?)`, u.Name, u.Login, u.Client, u.Memo)
 		id, _ := res.LastInsertId()
 		u.ID = int(id)
 	} else {
-		cmd := `UPDATE user SET name=?,login=?,memo=?`
-		args := []interface{}{u.Name, u.Login, u.Memo}
+		if u.ID == 1 {
+			u.Name = "管理员"
+			u.Login = "admin"
+		}
+		cmd := `UPDATE user SET name=?,login=?,markup=?,memo=?`
+		args := []interface{}{u.Name, u.Login, u.Markup, u.Memo}
 		cmd += ` WHERE id=?`
 		args = append(args, u.ID)
 		db.MustExec(cmd, args...)

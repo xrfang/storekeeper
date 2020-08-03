@@ -94,13 +94,15 @@ func ListBillSummary(billType, uid int) []BillSummary {
 
 func ListBills(billType, uid int, month string) (bills []Bill) {
 	firstDay := month + "-01" //month格式为yyyy-mm
-	lastDay := month + "-31"  //为简单起见，最后一天总是设置为31日不会出错
+	start, _ := time.Parse("2006-01-02", firstDay)
+	until := time.Date(start.Year(), start.Month()+1, start.Day(), 0, 0, 0, 0, time.Local)
+	lastDay := until.Format("2006-01-02")
 	user := ""
 	if uid > 0 {
 		user = fmt.Sprintf(` AND user_id=%d`, uid)
 	}
 	qry := fmt.Sprintf(`SELECT * FROM bom WHERE type=?%s AND updated>=? 
-	    AND updated<=?`, user)
+		AND updated<=?`, user)
 	assert(db.Select(&bills, qry, billType, firstDay, lastDay))
 	if len(bills) == 0 {
 		return

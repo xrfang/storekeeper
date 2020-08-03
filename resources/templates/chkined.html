@@ -347,8 +347,8 @@ function getBillInfo() {
 			  name = `<a href="#" onclick="editItem(${item.gid})">${name}</a>`
 			}
 	        tbl += `<tr style="background:${bg}"><td>${name}</td><td class="text-right"
-			  >${item.request}</td><td class="text-right">${item.cost}</td><td class="text-right"
-			  >${total}</td></tr>`
+			  >${item.request}</td><td class="text-right">${item.cost.toFixed(2)}</td>
+			  <td class="text-right">${total.toFixed(2)}</td></tr>`
 	      })
 	      tbl += `</tbody></table>`
 	      $('#cart').append(tbl)

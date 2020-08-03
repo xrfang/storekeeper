@@ -289,7 +289,8 @@ function getBillInfo() {
 			$.each(lack, function(_, l) {
 			  var total = l["diff"] * l["cost"]
 			  tbl += `<tr><td>${l["name"]}</td><td class="text-right">${l["diff"]}</td>
-			    <td class="text-right">${l["cost"]}</td><td class="text-right">${total}</td></tr>`				
+				<td class="text-right">${l["cost"].toFixed(2)}</td>
+				<td class="text-right">${total.toFixed(2)}</td></tr>`				
 			})
 			$('#dfitems').html(tbl)
 		  }

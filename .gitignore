@@ -6,4 +6,4 @@ utils/pack
 webroot/*
 conf/*
 pkg/*
-.vscode/*
+.vscode

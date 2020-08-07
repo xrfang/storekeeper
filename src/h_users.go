@@ -78,7 +78,9 @@ func users(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if ui.ID == 0 { //新增用户
-			if uid != 1 {
+			if uid == 1 {
+				ui.AccList = pu
+			} else {
 				ui.Client = uid
 				for _, p := range pu {
 					if p.ID == uid {

@@ -48,7 +48,9 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 		} else {
 			b, _ := db.GetBill(id, -1)
 			u := db.GetUser(b.User)
-			if u.Client == 0 {
+			if uid == 1 {
+				us = db.ListUsers(1)
+			} else if u.Client == 0 {
 				us = db.ListUsers(u.ID)
 			} else {
 				us = db.ListUsers(u.Client)

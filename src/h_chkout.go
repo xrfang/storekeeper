@@ -77,29 +77,28 @@ func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		assert(r.ParseForm())
-		item := r.FormValue("item")
-		goods := db.SearchGoods(item)
-		items := []string{}
-		for _, g := range goods {
-			items = append(items, g.Name)
+		rx := r.FormValue("rx")
+		res := make(map[string]interface{})
+		ps := db.GetPSItems(rx)
+		if db.IsBillEmpty(id) && len(ps) > 1 {
+			res["reference"] = db.GetPrevRx(ps)
 		}
-		req, _ := strconv.Atoi(r.FormValue("request"))
-		if req > 0 && len(items) == 1 {
-			if db.SetBillItem(db.BillItem{
-				BomID:     id,
-				Cost:      goods[0].Cost,
-				GoodsID:   goods[0].ID,
-				GoodsName: goods[0].Name,
-				Request:   req,
-			}, 0) {
-				req = -req
+		for i, p := range ps {
+			if len(p.Items) == 1 && p.Weight > 0 {
+				if db.SetBillItem(db.BillItem{
+					BomID:     id,
+					Cost:      p.Items[0].Cost,
+					GoodsID:   p.Items[0].ID,
+					GoodsName: p.Items[0].Name,
+					Memo:      p.Memo,
+					Request:   p.Weight,
+				}, 0) {
+					ps[i].Weight = -p.Weight
+				}
 			}
 		}
-		jsonReply(w, map[string]interface{}{
-			"id":    id,
-			"item":  items,
-			"count": req,
-		})
+		res["rx_items"] = ps
+		jsonReply(w, res)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}

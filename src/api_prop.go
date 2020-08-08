@@ -46,6 +46,7 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 				GoodsID:   gid,
 				Request:   amt,
 				Flag:      ext,
+				Memo:      bis[0].Memo,
 			}, 1)
 		} else {
 			db.DeleteBillItem(id, gid)

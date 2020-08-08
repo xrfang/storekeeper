@@ -79,6 +79,12 @@ func InventoryWIP() int {
 	return ids[0]
 }
 
+func IsBillEmpty(bid int) bool {
+	var cnt int
+	assert(db.Get(&cnt, `SELECT COUNT(id) FROM bom_item where bom_id=?`, bid))
+	return cnt == 0
+}
+
 func ListBillSummary(billType, uid int) []BillSummary {
 	user := " "
 	if uid > 0 {

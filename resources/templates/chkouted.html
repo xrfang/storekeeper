@@ -24,7 +24,7 @@
       <div class="input-group" id="igfee">
         <input type="text" class="form-control" id="fee" placeholder="0" />
       </div>
-      <small class="form-text text-muted">如运费、外配等</small>
+      <small class="form-text text-muted">运费、外配等</small>
     </div>    
     <div class="col">
       <label for="markup"><b>溢价率</b></label>
@@ -62,7 +62,7 @@
     <div class="card-body">
       <div class="row" style="margin-bottom: 1rem">
         <div class="col col-9">
-          <input type="text" class="form-control" id="goods" placeholder="格式：品名 数量" />
+          <input type="text" class="form-control" id="goods" placeholder="例：薄荷 12（后下）..." />
           <small class="form-text text-muted">可以输入品名或其拼音索引</small>
         </div>
         <div class="col col-3" style="padding-left:0">
@@ -261,25 +261,13 @@ function pick(item, cnt) {
     addGoods()
 }
 function addGoods() {
-    var spec = $('#goods').val().trim().split(/\s+/)
-    if (spec.length != 2) {
-        toast("输入错误", "示例: “甘草 500”表示“500克甘草”", "warning")
-        return
-    }
-    var item = spec[0]
-    var cnt = parseInt(spec[1])
-    if (isNaN(cnt)) {
-        toast("输入错误", "数量必须是整数", "warning")
-        return
-    }
+    var rx = $('#goods').val().trim()
     $('#choice').empty()
     var memo = $('#memo').val()
     var id = $('#bid').val()
-    if (cnt <= 0) {
-      toast("输入错误", "数量必须大于0", "warning")
-      return
-    }
-    $.post(`/chkout/item/${id}`, {item:item,request:cnt}, function(e) {
+    $.post(`/chkout/item/${id}`, {rx: rx}, function(e) {
+      console.log(e)
+      /*
         switch (e.item.length) {
         case 0:
           $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
@@ -303,7 +291,8 @@ function addGoods() {
             $('#choice').css('display', 'none')
         } else { 
             $('#choice').css('display', '')
-        }        
+        }
+      */        
     })
 }
 function getBillInfo() {
@@ -361,10 +350,13 @@ function getBillInfo() {
     if (e.items != null && e.items.length > 0) {
       $.each(e.items, function(_, it) {
         var item = `${it.gname} ${it.request}克`
+        if (it.memo != "") {
+          item += `（${it.memo}）`
+        }
         var bg = "white"
         var extra = false
         if (it.flag != 0) {
-          item += `（自备）`
+          item = `[自备]` + item
           extra = true
         } else if (it.request != it.in_stock) {
           item = `${it.gname} ${it.in_stock}/${it.request}克`

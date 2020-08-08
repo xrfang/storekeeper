@@ -104,12 +104,25 @@
           <div class="col">
 			      <div class="input-group mb-2">
               <div class="input-group-prepend">
-                <div class="input-group-text">数量（克）</div>
+                <div class="input-group-text">数量</div>
               </div>
               <input type="text" class="form-control" id="count">
+              <div class="input-group-append">
+                <div class="input-group-text">克</div>
+              </div>              
             </div>
           </div>
         </div>
+        <div class="form-group row">
+          <div class="col">
+			      <div class="input-group mb-2">
+              <div class="input-group-prepend">
+                <div class="input-group-text">备注</div>
+              </div>
+              <input type="text" class="form-control" id="memo" placeholder="如：包煎、后下">
+            </div>
+          </div>
+        </div>                
         <div class="modal-footer" style="padding-left:0;padding-right:0">
           <div class="form-check" style="flex:auto">
             <input class="form-check-input" type="checkbox" id="extra">
@@ -203,11 +216,12 @@ function doneCheckOut() {
 function payBill() {
   $('#paybill').modal('show')
 }
-function editItem(gid, gname, count, extra) {
+function editItem(gid, gname, count, memo, extra) {
 	$('#choice').css('display', 'none')
 	$('#editem #gid').val(gid)
 	$('#editem #gname').text(gname)
-	$('#editem #count').val(count)
+  $('#editem #count').val(count)
+  $('#editem #memo').val(memo)
   $('#editem #extra').prop('checked', extra)
   $('#editem').modal('show')
 }
@@ -365,7 +379,7 @@ function getBillInfo() {
         if (bill.status == 0) {
           $('#cart').append(`<a href="#" style="font-family:monospace;font-size:large;
             background:${bg}" onclick="editItem(${it.gid}, '${it.gname}', ${it.request},
-            ${extra})">${item}</a> &nbsp; `)
+            '${it.memo}', ${extra})">${item}</a> &nbsp; `)
         } else {
           $('#cart').append(`${item} &nbsp; `)  
         }
@@ -489,9 +503,12 @@ $(document).ready(function () {
     var btn = $(document.activeElement)
     if (btn.hasClass("btn-success")) {
       var cnt = $('#editem #count').val()
+      var memo = $('#editem #memo').val()
       var ext = $('#editem #extra').is(':checked') ? 1 : 0
       $.post(`/api/set/${bid}`, {key: "amount", val: `${gid},${cnt},${ext}`}, function(e) {
-        getBillInfo()
+        $.post(`/api/set/${bid}`, {key: "itememo", val: `${gid},${memo}`}, function(e) {
+          getBillInfo()
+        })
       })
     } else if (btn.hasClass("btn-danger")) {
       $.post(`/api/set/${bid}`, {key: "amount", val: `${gid},0,0`}, function(e) {

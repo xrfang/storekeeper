@@ -51,6 +51,21 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 		} else {
 			db.DeleteBillItem(id, gid)
 		}
+	case "itememo":
+		v := strings.SplitN(val, ",", 2)
+		gid, _ := strconv.Atoi(v[0])
+		memo := v[1]
+		db.GetBill(id, -1)
+		bis := db.GetBillItems(id, gid)
+		db.SetBillItem(db.BillItem{
+			BomID:     id,
+			Cost:      bis[0].Cost,
+			GoodsName: bis[0].GoodsName,
+			GoodsID:   gid,
+			Request:   bis[0].Request,
+			Flag:      bis[0].Flag,
+			Memo:      memo,
+		}, 1)
 	case "stat":
 		stat, _ := strconv.Atoi(val)
 		db.SetInventoryByBill(id, stat)

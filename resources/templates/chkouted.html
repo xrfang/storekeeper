@@ -280,33 +280,32 @@ function addGoods() {
     var memo = $('#memo').val()
     var id = $('#bid').val()
     $.post(`/chkout/item/${id}`, {rx: rx}, function(e) {
-      console.log(e)
-      /*
-        switch (e.item.length) {
+      $.each(e.rx_items, function(_, rx) {
+        switch(rx.items.length) {
         case 0:
-          $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
+          $('#choice').append(`<p><span style='color:red'>${rx.term}</span> 没有找到</p>`)
           break
         case 1:
-          $('#bid').val(e.id)
-          if (e.count < 0) 
-            $('#choice').append(`<p><span style='color:red'>${e.item[0]}</span> 已经添加了</p>`)
+          if (rx.weight<0) {
+            $('#choice').append(`<p><span style='color:red'>${rx.items[0].name}</span> 已经添加了</p>`)
+          }
           break
         default:
-          var choice = `<p><span style="color:red">${item}</span> 是指`
-          $.each(e.item, function(i, it) {
-              choice += ` &nbsp;<a onclick="pick(this, ${cnt})" href="#">${it}</a>&nbsp; `
-              if(i < e.item.length-1) choice += '还是'
+          var choice = `<p><span style="color:red">${rx.term}</span> 是指`
+          $.each(rx.items, function(i, it) {
+              choice += ` &nbsp;<a onclick="pick(this, ${rx.weight})" href="#">${it.name}</a>&nbsp; `
+              if(i < rx.items.length-1) choice += '还是'
           })
           choice += '?'
-          $('#choice').append(choice)    
+          $('#choice').append(choice)
         }
-        getBillInfo()
-        if ($('#choice').is(':empty')) {
-            $('#choice').css('display', 'none')
-        } else { 
-            $('#choice').css('display', '')
-        }
-      */        
+      })
+      getBillInfo()
+      if ($('#choice').is(':empty')) {
+        $('#choice').css('display', 'none')
+      } else { 
+        $('#choice').css('display', '')
+      }
     })
 }
 function getBillInfo() {

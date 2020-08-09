@@ -256,6 +256,24 @@ func SetBill(b Bill) (id int) {
 	return b.ID
 }
 
+func CloneBillItems(b Bill, ref int) {
+	_, items := GetBill(ref, 0)
+	tx, err := db.Beginx()
+	assert(err)
+	defer func() {
+		if e := recover(); e != nil {
+			tx.Rollback()
+			panic(e)
+		}
+		assert(tx.Commit())
+	}()
+	tx.MustExec(`DELETE FROM bom_item WHERE bom_id=?`, b.ID)
+	for _, it := range items {
+		tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm,memo) VALUES
+	        (?,?,?,?,?,?,?)`, b.ID, it.GoodsID, it.GoodsName, it.Cost, -it.Request, 0, it.Memo)
+	}
+}
+
 func SetBillItem(bi BillItem, mode int) bool {
 	b, _ := GetBill(bi.BomID, -1)
 	tx, err := db.Beginx()

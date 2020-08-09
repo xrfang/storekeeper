@@ -47,6 +47,10 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			id = -id
 		} else {
 			b, _ := db.GetBill(id, -1)
+			ref, _ := strconv.Atoi(r.URL.Query().Get("ref"))
+			if ref > 0 {
+				db.CloneBillItems(b, ref)
+			}
 			u := db.GetUser(b.User)
 			if uid == 1 {
 				us = db.ListUsers(1)

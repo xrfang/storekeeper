@@ -76,6 +76,9 @@
         <span id="charge"></span> 元<span id="payamt"></span>
       </p>
       <p id="cart"></p>
+      <div id="rxref" style="display:none">
+         <p style="font-weight:bold">可直接选择下列方剂进行修改：</p>
+      </div>
       <p id="chkout" style="text-align:center;margin-top:2rem">
         <button onclick="doneCheckOut()" class="btn btn-success">&nbsp;完成出库&nbsp;</button>
       </p>
@@ -276,6 +279,7 @@ function pick(item, cnt) {
 }
 function addGoods() {
     var rx = $('#goods').val().trim()
+    $('#rxref').css("display", "none")
     $('#choice').empty()
     var memo = $('#memo').val()
     var id = $('#bid').val()
@@ -300,6 +304,12 @@ function addGoods() {
           $('#choice').append(choice)
         }
       })
+      if (typeof(e.reference) != 'undefined' && e.reference.length > 0) {
+        $.each(e.reference, function(_, r) {
+          $('#rxref').append(`<p><a href='/chkout/${id}?ref=${r.id}'>${r.name}</a>&nbsp; &nbsp;${r.items.join('、')}</p>`)
+        })
+        $('#rxref').css("display", "")
+      }
       getBillInfo()
       if ($('#choice').is(':empty')) {
         $('#choice').css('display', 'none')

@@ -199,10 +199,12 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 				return stock
 			}()
 			items[i] = it
-			if bill.Status == 0 {
-				bill.Cost += math.Abs(it.Cost * float64(it.inStock))
-			} else {
-				bill.Cost += math.Abs(it.Cost * float64(it.Confirm))
+			if it.Flag == 0 {
+				if bill.Status == 0 {
+					bill.Cost += math.Abs(it.Cost * float64(it.inStock))
+				} else {
+					bill.Cost += math.Abs(it.Cost * float64(it.Confirm))
+				}
 			}
 		case 3: //盘点单
 			//TODO：计算盘点单的cost

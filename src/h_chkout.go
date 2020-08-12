@@ -43,7 +43,12 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 		var us []db.User
 		if id == 0 {
 			us = db.ListUsers(uid)
-			id = db.SetBill(db.Bill{Type: 2, User: uid, Sets: 1, Markup: 30, Fee: 0})
+			u := db.GetUser(uid)
+			m := cf.Markup
+			if u.Markup >= 0 {
+				m = u.Markup
+			}
+			id = db.SetBill(db.Bill{Type: 2, User: uid, Sets: 1, Markup: m, Fee: 0})
 			id = -id
 		} else {
 			b, _ := db.GetBill(id, -1)

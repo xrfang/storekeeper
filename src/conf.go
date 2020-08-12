@@ -11,6 +11,7 @@ import (
 type Configuration struct {
 	LogPath string `yaml:"log_path"`
 	DbgMode bool   `yaml:"dbg_mode"`
+	Markup  int    `yaml:"markup"`
 	Port    string `yaml:"port"`
 	WebRoot string `yaml:"web_root"`
 	DBFile  string `yaml:"db_file"`
@@ -47,6 +48,7 @@ func loadConfig(cfgFile string) {
 	cf.WebRoot = "../webroot"
 	cf.LogPath = "../log"
 	cf.DBFile = "herbs.db"
+	cf.Markup = 30 //系统默认溢价率
 	cf.OrgName = "Herb Store"
 	cf.cfgPath = path.Dir(os.Args[0])
 	if cfgFile != "" {

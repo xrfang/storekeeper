@@ -42,7 +42,7 @@ func apiGetBill(w http.ResponseWriter, r *http.Request) {
 	for _, u := range users {
 		if u.ID == bill.User {
 			if u.Markup < 0 {
-				bill.Markup = 30 //系统默认
+				bill.Markup = cf.Markup //系统默认
 			} else {
 				bill.Markup = u.Markup
 			}

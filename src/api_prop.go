@@ -92,6 +92,11 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 		u := db.GetUser(val)
 		b, _ := db.GetBill(id, -1)
 		b.User = u.ID
+		if u.Markup < 0 {
+			b.Markup = cf.Markup
+		} else {
+			b.Markup = u.Markup
+		}
 		db.SetBill(b)
 	case "sets":
 		sets, _ := strconv.Atoi(val)

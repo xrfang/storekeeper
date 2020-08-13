@@ -285,7 +285,9 @@ function addGoods() {
     var id = $('#bid').val()
     $.post(`/chkout/item/${id}`, {rx: rx}, function(e) {
       $.each(e.rx_items, function(_, rx) {
-        switch(rx.items.length) {
+        var len = 0
+        if (rx.items) len = rx.items.length
+        switch(len) {
         case 0:
           $('#choice').append(`<p><span style='color:red'>${rx.term}</span> 没有找到</p>`)
           break

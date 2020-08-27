@@ -67,6 +67,22 @@
         </div>
       </div>
     </div>
+    <div class="card">
+      <div class="card-header" style="padding-left:0" id="hinv">
+        <h2 class="mb-0">
+          <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#cinv">
+            进货规划
+          </button>
+        </h2>
+      </div>
+      <div id="cinv" class="collapse" data-parent="#goodsMgmt">
+        <div class="card-body">
+          <div id="plan">
+            <p style="margin-top:1rem;color:#555555">TODO：库存分析</p> 
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div class="modal fade" id="edsku" tabindex="-1" role="dialog">
@@ -241,6 +257,9 @@ $(document).ready(function () {
   $('#cchk').on('shown.bs.collapse', function() {
     $('#pinyins').focus()
     $('#pinyins').select()
+  })
+  $('#cinv').on('shown.bs.collapse', function() {
+    console.log("TODO: show inventory trends")
   })
   $('#terms').focus()
 })

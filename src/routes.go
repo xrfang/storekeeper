@@ -6,6 +6,7 @@ import (
 
 func setupRoutes() {
 	http.HandleFunc("/", home)
+	http.HandleFunc("/favicon.ico", favicon)
 	http.HandleFunc("/api/set/", apiSetProp)
 	http.HandleFunc("/api/get/", apiGetBill)
 	http.HandleFunc("/api/chkin", apiChkInList)

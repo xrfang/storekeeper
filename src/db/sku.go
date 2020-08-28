@@ -1,8 +1,11 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/xrfang/pindex"
 )
@@ -277,4 +280,29 @@ func FindSKU(idx string) (gs []Goods) {
 	qry := `SELECT * FROM goods WHERE ` + strings.Join(cond, " OR ")
 	assert(db.Select(&gs, qry, args...))
 	return
+}
+
+func AnalyzeGoodsUsage() {
+	usage := make(map[string][]map[string]interface{})
+	qry := `SELECT b.updated,bi.gname,ABS(bi.request*b.sets) AS amount
+		FROM bom_item bi,bom b WHERE bi.bom_id=b.id AND b.status>0 AND
+		b.type=2 ORDER BY b.updated`
+	rows, err := db.Queryx(qry)
+	assert(err)
+	defer rows.Close()
+	for rows.Next() {
+		r := make(map[string]interface{})
+		assert(rows.MapScan(r))
+		u := r["updated"].(time.Time)
+		gu := usage[r["gname"].(string)]
+		gu = append(gu, map[string]interface{}{
+			"amount": r["amount"],
+			"date":   u.Format("2006-01-02"),
+		})
+		usage[r["gname"].(string)] = gu
+	}
+	assert(rows.Err())
+	je := json.NewEncoder(os.Stdout)
+	je.SetIndent("", "    ")
+	je.Encode(usage)
 }

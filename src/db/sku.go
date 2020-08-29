@@ -1,9 +1,8 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -282,27 +281,135 @@ func FindSKU(idx string) (gs []Goods) {
 	return
 }
 
-func AnalyzeGoodsUsage() {
-	usage := make(map[string][]map[string]interface{})
-	qry := `SELECT b.updated,bi.gname,ABS(bi.request*b.sets) AS amount
-		FROM bom_item bi,bom b WHERE bi.bom_id=b.id AND b.status>0 AND
-		b.type=2 ORDER BY b.updated`
-	rows, err := db.Queryx(qry)
+type UsageInfo struct {
+	Name   string `json:"name"`
+	Amount int    `json:"amount"`
+}
+
+/*
+AnalyzeGoodsUsage 分析库存需求。算法如下：
+
+1. 计算需求等级分
+
+首先，获取最近3个月的出库数据（例如今天为8月29日，起算日期就是5月29日）。按照药材与月份进行聚合。
+以黄连为例，获得如下数据（用量、使用日期）：
+
+    9 	2020-06-08
+    21	2020-06-08
+    70	2020-06-09
+    15	2020-06-15
+    20	2020-06-20
+    15	2020-06-21
+    84	2020-07-19
+    15	2020-08-11
+    84	2020-08-15
+    42	2020-08-16
+    70	2020-08-24
+
+将这些用量加总再乘以使用次数，即获得黄连的“等级分”为4895分。基本逻辑是，药材使用次数越多，
+未来被再次用到的概率越大。也就是说更看重使用的次数，其次才是每次的使用量。
+
+2. 计算补货需求量
+
+注意：补货数量算法假设平均一个月采购一次，每味药材的补货单位为500克的倍数。
+
+将药材3个月的最大使用量乘以月均使用次数，即得预测用量。例如黄连的预测用量为84*11/3=308克。
+在计算最大使用量时有一个特殊逻辑：如果某药材的单剂使用量大于99克则认为是药材代购（例如某人
+要求代购500克白参），不计入最大使用量。
+
+检查库存，如果小于预测用量则不用补货。否则，补充其差值。另外，在计算补货量的时候增加10克误
+差量。意思是说，差值小于11克时不补货，在11～510克之间时采购500克，在511～1010克之间时采
+购1000克，依次类推。例如，黄连的库存为80克，差值为228克，在10～509之间，输出建议采购量为
+500克。
+
+3. 输出方式
+
+本函数输出两个信息：
+
+- 按照等级分由高到低排序的需要补货的药材及其建议补货量
+- 三个月内没有任何出货的药材及其库存（滤除库存为0的药材）
+
+*/
+func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
+	n := time.Now()
+	since := time.Date(n.Year(), n.Month()-3, n.Day(), 0, 0, 0, 0, time.Local)
+	usage := make(map[string][]map[string]int64)
+	qry := `SELECT b.sets,bi.gname,ABS(bi.request*b.sets) AS amount
+		FROM bom_item bi,bom b WHERE bi.bom_id=b.id AND b.status>0 
+		AND	b.type=2 AND b.updated>=?`
+	rows, err := db.Queryx(qry, since.Format("2006-01-02"))
 	assert(err)
+	active := make(map[string]bool)
 	defer rows.Close()
 	for rows.Next() {
 		r := make(map[string]interface{})
 		assert(rows.MapScan(r))
-		u := r["updated"].(time.Time)
-		gu := usage[r["gname"].(string)]
-		gu = append(gu, map[string]interface{}{
-			"amount": r["amount"],
-			"date":   u.Format("2006-01-02"),
+		gname := r["gname"].(string)
+		active[gname] = true
+		gu := usage[gname]
+		gu = append(gu, map[string]int64{
+			"amount": r["amount"].(int64),
+			"sets":   r["sets"].(int64),
 		})
-		usage[r["gname"].(string)] = gu
+		usage[gname] = gu
 	}
 	assert(rows.Err())
-	je := json.NewEncoder(os.Stdout)
-	je.SetIndent("", "    ")
-	je.Encode(usage)
+	used := make(map[string]UsageInfo)
+	var inuse, unuse []UsageInfo
+	var gs []Goods
+	assert(db.Select(&gs, `SELECT * FROM goods`))
+	for _, g := range gs {
+		if active[g.Name] {
+			used[g.Name] = UsageInfo{g.Name, g.Stock}
+		} else if g.Stock > 0 {
+			unuse = append(unuse, UsageInfo{g.Name, g.Stock})
+		}
+	}
+	type survey struct {
+		Score int
+		Usage int
+	}
+	sm := make(map[string]survey)
+	for g, u := range usage {
+		var total, max int
+		for _, c := range u {
+			amt := int(c["amount"])
+			total += amt
+			if amt > max {
+				if amt/int(c["sets"]) < 100 {
+					max = amt
+				}
+			}
+		}
+		s := survey{
+			Score: total * len(u),
+			Usage: max * len(u) / 3,
+		}
+		k := used[g] //药材的当前库存信息
+		diff := s.Usage - k.Amount - 10
+		if diff > 0 {
+			buy := diff / 500
+			if diff%500 > 0 {
+				buy++
+			}
+			inuse = append(inuse, UsageInfo{g, buy * 500})
+		}
+		sm[g] = s
+	}
+	sort.Slice(inuse, func(i, j int) bool {
+		si := sm[inuse[i].Name]
+		sj := sm[inuse[j].Name]
+		return si.Score > sj.Score
+	})
+	fmt.Println("建议采购：")
+	for _, g := range inuse {
+		fmt.Printf("%s %v克 ", g.Name, g.Amount)
+	}
+	fmt.Println()
+	fmt.Println("===")
+	fmt.Println("三个月未使用的药材及其当前库存:")
+	for _, g := range unuse {
+		fmt.Printf("%s %v克 ", g.Name, g.Amount)
+	}
+	return inuse, unuse
 }

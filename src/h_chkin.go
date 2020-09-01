@@ -69,3 +69,7 @@ func chkInSetMemo(w http.ResponseWriter, r *http.Request) {
 	b.Memo = memo
 	db.SetBill(b)
 }
+
+func chkInEditItem(w http.ResponseWriter, r *http.Request) {
+
+}

@@ -174,6 +174,7 @@ function pick(item, cnt) {
 	$('#goods').val(`${name} ${cnt}`)
 	addGoods()
 }
+/*
 function addGoods() {
 	var spec = $('#goods').val().trim().split(/\s+/)
 	if (spec.length != 2) {
@@ -246,6 +247,43 @@ function addGoods() {
 		    $('#choice').css('display', '')
 		}		
 	})
+}
+*/
+function addGoods() {
+    var rx = $('#goods').val().trim()
+    $('#choice').empty()
+    var memo = $('#memo').val()
+    var id = $('#bid').val()
+    $.post(`/chkin/item/${id}`, {rx: rx}, function(e) {
+      $.each(e.rx_items, function(_, rx) {
+        var len = 0
+        if (rx.items) len = rx.items.length
+        switch(len) {
+        case 0:
+          $('#choice').append(`<p><span style='color:red'>${rx.term}</span> 没有找到</p>`)
+          break
+        case 1:
+          if (rx.weight<0) {
+            $('#choice').append(`<p><span style='color:red'>${rx.items[0].name}</span> 已经添加了</p>`)
+          }
+          break
+        default:
+          var choice = `<p><span style="color:red">${rx.term}</span> 是指`
+          $.each(rx.items, function(i, it) {
+              choice += ` &nbsp;<a onclick="pick(this, ${rx.weight})" href="#">${it.name}</a>&nbsp; `
+              if(i < rx.items.length-1) choice += '还是'
+          })
+          choice += '?'
+          $('#choice').append(choice)
+        }
+      })
+      getBillInfo()
+      if ($('#choice').is(':empty')) {
+        $('#choice').css('display', 'none')
+      } else { 
+        $('#choice').css('display', '')
+      }
+    })
 }
 function getBillInfo() {
   var bid = $('#bid').val()

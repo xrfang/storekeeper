@@ -24,6 +24,7 @@ func setupRoutes() {
 	http.HandleFunc("/chkin", chkInList)
 	http.HandleFunc("/chkin/", chkInEdit)
 	http.HandleFunc("/chkin/memo/", chkInSetMemo)
+	http.HandleFunc("/chkin/item/", chkInEditItem)
 	http.HandleFunc("/chkout", chkOutList)
 	http.HandleFunc("/chkout/", chkOutEdit)
 	http.HandleFunc("/chkout/item/", chkOutEditItem)

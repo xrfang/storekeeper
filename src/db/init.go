@@ -34,7 +34,8 @@ func setupSchema() {
         "name"   TEXT NOT NULL UNIQUE,               -- 品名
         "pinyin" TEXT NOT NULL DEFAULT "",           -- 拼音首字母索引
         "stock"  INTEGER NOT NULL DEFAULT 0,         -- 存货数量
-        "cost"   NUMERIC NOT NULL DEFAULT 0          -- 平均成本单价
+		"cost"   NUMERIC NOT NULL DEFAULT 0,         -- 平均成本单价
+		"batch"  NUMERIC NOT NULL DEFAULT 500        -- 默认采购批量（克）
     )`)
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS "bom" (            -- 单据表
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,

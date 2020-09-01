@@ -371,7 +371,7 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 	}
 	sm := make(map[string]survey)
 	for g, u := range usage {
-		if len(u) < 2 {
+		if len(u) < 2 { //仅使用1次的药材不考虑采购
 			continue
 		}
 		var total, max int

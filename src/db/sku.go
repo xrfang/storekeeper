@@ -15,6 +15,7 @@ type Goods struct {
 	Pinyin string  `json:"pinyin"`
 	Stock  int     `json:"stock"`
 	Cost   float64 `json:"cost"`
+	Batch  int     `json:"batch"`
 }
 
 type skuQR struct {
@@ -284,6 +285,7 @@ func FindSKU(idx string) (gs []Goods) {
 type UsageInfo struct {
 	Name   string `json:"name"`
 	Amount int    `json:"amount"`
+	Batch  int    `json:"batch"`
 }
 
 /*
@@ -311,16 +313,16 @@ AnalyzeGoodsUsage 分析库存需求。算法如下：
 
 2. 计算补货需求量
 
-注意：补货数量算法假设平均一个月采购一次，每味药材的补货单位为500克的倍数。
+注意：补货数量算法假设平均一个月采购一次，每味药材的采购量为补货单位的倍数。
 
 将药材3个月的最大使用量乘以月均使用次数，即得预测用量。例如黄连的预测用量为84*11/3=308克。
 在计算最大使用量时有一个特殊逻辑：如果某药材的单剂使用量大于99克则认为是药材代购（例如某人
-要求代购500克白参），不计入最大使用量。
+要求代购1000克白参），不计入最大使用量。
 
 检查库存，如果小于预测用量则不用补货。否则，补充其差值。另外，在计算补货量的时候增加10克误
-差量。意思是说，差值小于11克时不补货，在11～510克之间时采购500克，在511～1010克之间时采
-购1000克，依次类推。例如，黄连的库存为80克，差值为228克，在10～509之间，输出建议采购量为
-500克。
+差量。意思是说，差值小于10克时不补货，在10～B+10克之间时采购B克，在B+10～2B+10克之间时采
+购2B克，依次类推。例如，黄连的库存为80克，差值为228克，在10～509之间（采购单位B为500克），
+输出建议采购量为500克。
 
 3. 输出方式
 
@@ -360,9 +362,9 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 	assert(db.Select(&gs, `SELECT * FROM goods`))
 	for _, g := range gs {
 		if active[g.Name] {
-			used[g.Name] = UsageInfo{g.Name, g.Stock}
+			used[g.Name] = UsageInfo{g.Name, g.Stock, g.Batch}
 		} else if g.Stock > 0 {
-			unuse = append(unuse, UsageInfo{g.Name, g.Stock})
+			unuse = append(unuse, UsageInfo{g.Name, g.Stock, g.Batch})
 		}
 	}
 	type survey struct {
@@ -372,6 +374,10 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 	sm := make(map[string]survey)
 	for g, u := range usage {
 		if len(u) < 2 { //仅使用1次的药材不考虑采购
+			continue
+		}
+		k := used[g]      //药材的当前库存信息
+		if k.Batch <= 0 { //该药材被设置为不建议采购
 			continue
 		}
 		var total, max int
@@ -388,14 +394,13 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 			Score: total * len(u),
 			Usage: max * len(u) / 3,
 		}
-		k := used[g] //药材的当前库存信息
-		diff := s.Usage - k.Amount - 10
+		diff := s.Usage - k.Amount - 9
 		if diff > 0 {
-			buy := diff / 500
-			if diff%500 > 0 {
+			buy := diff / k.Batch
+			if diff%k.Batch > 0 {
 				buy++
 			}
-			inuse = append(inuse, UsageInfo{g, buy * 500})
+			inuse = append(inuse, UsageInfo{g, buy * k.Batch, 1})
 		}
 		sm[g] = s
 	}
@@ -404,15 +409,5 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 		sj := sm[inuse[j].Name]
 		return si.Score > sj.Score
 	})
-	fmt.Println("建议采购：")
-	for _, g := range inuse {
-		fmt.Printf("%s %v克 ", g.Name, g.Amount)
-	}
-	fmt.Println()
-	fmt.Println("===")
-	fmt.Println("三个月未使用的药材及其当前库存:")
-	for _, g := range unuse {
-		fmt.Printf("%s %v克 ", g.Name, g.Amount)
-	}
 	return inuse, unuse
 }

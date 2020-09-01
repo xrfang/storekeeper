@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"storekeeper/db"
 )
@@ -17,5 +18,16 @@ func apiInvStat(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	db.AnalyzeGoodsUsage()
+	inuse, unuse := db.AnalyzeGoodsUsage()
+	fmt.Fprintln(w, "建议采购：")
+	for _, g := range inuse {
+		fmt.Fprintf(w, "%s %v克 ", g.Name, g.Amount)
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "===")
+	fmt.Fprintln(w, "三个月未使用的药材及其当前库存:")
+	for _, g := range unuse {
+		fmt.Fprintf(w, "%s %v克 ", g.Name, g.Amount)
+	}
+	fmt.Fprintln(w)
 }

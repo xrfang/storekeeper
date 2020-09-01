@@ -371,6 +371,9 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 	}
 	sm := make(map[string]survey)
 	for g, u := range usage {
+		if len(u) < 2 {
+			continue
+		}
 		var total, max int
 		for _, c := range u {
 			amt := int(c["amount"])

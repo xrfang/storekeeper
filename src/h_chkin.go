@@ -71,5 +71,38 @@ func chkInSetMemo(w http.ResponseWriter, r *http.Request) {
 }
 
 func chkInEditItem(w http.ResponseWriter, r *http.Request) {
-
+	defer func() {
+		if e := recover(); e != nil {
+			httpError(w, e)
+		}
+	}()
+	uid := db.CheckToken(getCookie(r, "token"))
+	if uid == 0 {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	id, _ := strconv.Atoi(r.URL.Path[12:])
+	switch r.Method {
+	case "POST":
+		assert(r.ParseForm())
+		rx := r.FormValue("rx")
+		res := make(map[string]interface{})
+		ps := db.GetPSItems(rx)
+		for _, p := range ps {
+			if len(p.Items) == 1 && p.Weight > 0 {
+				db.SetBillItem(db.BillItem{
+					BomID:     id,
+					Cost:      p.Items[0].Cost,
+					GoodsID:   p.Items[0].ID,
+					GoodsName: p.Items[0].Name,
+					Memo:      p.Memo,
+					Request:   p.Weight,
+				}, 0)
+			}
+		}
+		res["rx_items"] = ps
+		jsonReply(w, res)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
 }

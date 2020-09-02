@@ -78,9 +78,13 @@ func GetPSItems(text string) PSItems {
 			if p != nil {
 				ps = append(ps, p)
 			}
-			p = new(PSItem)
-			p.Term = strings.ToUpper(s)
-			p.Items = fetchItems(p.Term)
+			if s == "克" {
+				p = nil
+			} else {
+				p = new(PSItem)
+				p.Term = strings.ToUpper(s)
+				p.Items = fetchItems(p.Term)
+			}
 		}
 	}
 	if p != nil {

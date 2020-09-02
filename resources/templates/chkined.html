@@ -48,8 +48,8 @@
 	      <small class="form-text text-muted">可以输入品名或其拼音索引</small>
 	    </div>
 	    <div class="col col-3" style="padding-left:0">
-          <input style="width:100%" type=button id="act" onclick="addGoods()" class="btn btn-success" value="添  加" />
-	    </div>
+		  <button style="width:100%" id="act" onclick="addGoods()" class="btn btn-success">添加</button>
+		</div>
 	  </div>
 	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
 	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
@@ -175,7 +175,9 @@ function pick(item, cnt) {
 	addGoods()
 }
 function addGoods() {
-    var rx = $('#goods').val().trim()
+	var act = $('#act')
+	act.html(`<span class="spinner-border spinner-border-sm" role="status"></span>&nbsp;稍等...`)
+	var rx = $('#goods').val().trim()
     $('#choice').empty()
     var memo = $('#memo').val()
     var id = $('#bid').val()
@@ -208,6 +210,7 @@ function addGoods() {
       } else { 
         $('#choice').css('display', '')
       }
+      act.html(`添加`)
     })
 }
 function getBillInfo() {

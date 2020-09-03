@@ -85,6 +85,11 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		assert(r.ParseForm())
+		_, nu := db.AnalyzeGoodsUsage()
+		stock := make(map[string]int)
+		for _, u := range nu {
+			stock[u.Name] = u.Amount
+		}
 		rx := r.FormValue("rx")
 		res := make(map[string]interface{})
 		ps := db.GetPSItems(rx)
@@ -100,7 +105,21 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 				}, 0)
 			}
 		}
+		var unused []db.UsageInfo
+		_, items := db.GetBill(id, 0)
+		for _, it := range items {
+			amt := stock[it.GoodsName]
+			if amt > 0 {
+				unused = append(unused, db.UsageInfo{
+					Name:   it.GoodsName,
+					Amount: amt,
+					Batch:  1,
+				})
+			}
+
+		}
 		res["rx_items"] = ps
+		res["unused"] = unused
 		jsonReply(w, res)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

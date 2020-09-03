@@ -54,6 +54,10 @@
 	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
 	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
 	  <p id="cart"></p>
+	  <div id="unused" style="display:none">
+		<p style="font-weight:bold">以下药材最近<span style="color:red">三个月未使用</span>，不建议采购：</p>
+		<p id="list"></p>
+	  </div>
 	  <p id="wait"></p>
 	  <p id="wip"></p>
 	  <p id="done"></p>
@@ -205,6 +209,16 @@ function addGoods() {
         }
       })
       getBillInfo()
+	  if (typeof(e.unused) == 'object' && e.unused != null && e.unused.length > 0) {
+		  var list = ""
+		  $.each(e.unused, function(_, u) {
+			  list += `${u.name} ${u.amount}克&nbsp; &nbsp;`
+		  })	  
+		  $('#unused #list').html(list)
+		  $('#unused').css("display", "")
+	  } else {
+		  $('#unused').css("display", "none")
+	  }
       if ($('#choice').is(':empty')) {
         $('#choice').css('display', 'none')
       } else { 

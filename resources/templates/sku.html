@@ -84,7 +84,7 @@
             <p style="margin-top:1rem;font-weight:bold"><u>建议采购下列药材</u></p> 
             <div id="suggest" style="line-height:1.7em"></div>
             <div style="text-align:center;margin:1em">
-              <button class="btn btn-success">创建采购单</button>
+              <button id="act" class="btn btn-success" onclick="createOrder()">创建采购单</button>
             </div>
             <p style="margin-top:1em;color:#444444;font-size:small">
               <span class="fas fa-info-circle"></span> 创建后可以在入库单界面进行增删改
@@ -136,6 +136,13 @@ function editSku(sku) {
   var sku = $(sku)
   $('#edsku #gid').val(sku.attr('id'))
   $('#edsku').modal('show')
+}
+function createOrder() {
+  var act = $('#act')
+	act.html(`<span class="spinner-border spinner-border-sm" role="status"></span>&nbsp;稍等...`)
+  $.get(`/api/invstat?act=1`, function(e) {
+    window.location.href = `/chkin/${e.id}`
+  })
 }
 function submitSku(sku) {
   var data = new Array()

@@ -90,7 +90,7 @@ func ListBillSummary(billType, uid int) []BillSummary {
 	if uid > 0 {
 		user = fmt.Sprintf(` AND user_id=%d`, uid)
 	}
-	qry := fmt.Sprintf(`SELECT COUNT(id) AS count,strftime('%%Y-%%m', updated) AS
+	qry := fmt.Sprintf(`SELECT COUNT(id) AS count,strftime('%%Y-%%m', created) AS
 		month FROM bom WHERE type=%d%s GROUP BY month ORDER BY month DESC`, billType,
 		user)
 	var bs []BillSummary
@@ -107,8 +107,8 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 	if uid > 0 {
 		user = fmt.Sprintf(` AND user_id=%d`, uid)
 	}
-	qry := fmt.Sprintf(`SELECT * FROM bom WHERE type=?%s AND updated>=? 
-		AND updated<=?`, user)
+	qry := fmt.Sprintf(`SELECT * FROM bom WHERE type=?%s AND created>=? 
+		AND created<=?`, user)
 	assert(db.Select(&bills, qry, billType, firstDay, lastDay))
 	if len(bills) == 0 {
 		return
@@ -143,7 +143,7 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 	sort.Slice(bills, func(i, j int) (res bool) {
 		bi := bills[i]
 		bj := bills[j]
-		diff := bi.Updated.Unix() - bj.Updated.Unix()
+		diff := bi.Created.Unix() - bj.Created.Unix()
 		if diff > 0 {
 			return true
 		}

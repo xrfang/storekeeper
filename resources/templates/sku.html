@@ -117,10 +117,13 @@
         </div>
         <div class="row">
           <div class="form-group col">
-            成本：<span id="cost"></span>元/克
+            <label for="name">批量（克）</label>
+            <input type="text" class="form-control" id="batch">
+            <small class="form-text text-muted">设为0表示不建议采购</small>
           </div>
           <div class="form-group col">
-            库存：<span id="stock"></span>克
+            <label for="name">库存（克）</label>
+            <div class="form-text"><span id="stock"></span> (<span id="cost"></span>元/克)</div>
           </div>
         </div>
       </div>
@@ -213,7 +216,7 @@ function doSearch() {
       $.each(e.found, function(_, h) {
         $('#list').append(`<a onclick="editSku(this)" href="#" id="${h.id}" style="line-height:1.75rem;font-weight:bold">${h.name[0]}</a>&nbsp; &nbsp;`)
       })
-      $('#list').append(`<p style="margin:1rem 0 1rem 0">您可点击上面的品名进行编辑（更改其名称或拼音索引）</p>`)
+      $('#list').append(`<p style="margin:1rem 0 1rem 0">您可点击上面的品名进行编辑</p>`)
     } else if (terms.length == 0) {
       $('#list').append(`<p style="margin:1rem 0 1rem 0;font-weight:bold">找到 <span style="color:red">0</span> 个药材</p>`)
     }
@@ -249,6 +252,7 @@ $(document).ready(function () {
     $.get(`/api/sku/${id}`, function(e) {
       $('#edsku #name').val(e.name)
       $('#edsku #pinyin').val(e.pinyin)
+      $('#edsku #batch').val(e.batch)
       $('#edsku #stock').text(e.stock)
       $('#edsku #cost').text(e.cost)
     })
@@ -259,8 +263,9 @@ $(document).ready(function () {
       var id = parseInt($('#edsku #gid').val(), 10) 
       var name = $('#edsku #name').val()
       var pinyin = $('#edsku #pinyin').val()
+      var batch =  parseInt($('#edsku #batch').val(), 10)
       var data = new Array()
-      data.push({id:id, name: name, pinyin: pinyin})
+      data.push({id:id, name: name, pinyin: pinyin, batch: batch})
       $.post("/api/sku/", JSON.stringify(data), function(e) {
         toast("操作成功", "药材信息已保存", "success")
         $(`#${id}`).text(name)

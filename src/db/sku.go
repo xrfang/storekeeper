@@ -200,7 +200,13 @@ func UpdateSKUs(skus []Goods) {
 		return
 	}
 	tx := db.MustBegin()
-	defer tx.Commit()
+	defer func() {
+		if e := recover(); e != nil {
+			tx.Rollback()
+			panic(e)
+		}
+		assert(tx.Commit())
+	}()
 	for _, h := range skus {
 		h.Name = strings.TrimSpace(h.Name)
 		if h.Name == "" {
@@ -210,15 +216,23 @@ func UpdateSKUs(skus []Goods) {
 		var args []interface{}
 		if h.ID == 0 {
 			h.Pinyin = pinInit(h.Name)
-			stmt = `INSERT INTO goods (name,pinyin) VALUES (?,?)`
-			args = []interface{}{h.Name, h.Pinyin}
+			if h.Batch > 0 {
+				stmt = `INSERT INTO goods (name,pinyin,batch) VALUES (?,?,?)`
+				args = []interface{}{h.Name, h.Pinyin, h.Batch}
+			} else {
+				stmt = `INSERT INTO goods (name,pinyin) VALUES (?,?)`
+				args = []interface{}{h.Name, h.Pinyin}
+			}
 		} else {
 			h.Pinyin = strings.ToUpper(strings.TrimSpace(h.Pinyin))
 			if strings.TrimSpace(h.Pinyin) == "" {
 				h.Pinyin = pinInit(h.Name)
 			}
-			stmt = `UPDATE goods SET name=?,pinyin=?`
-			args = []interface{}{h.Name, h.Pinyin}
+			if h.Batch < 0 {
+				h.Batch = 0
+			}
+			stmt = `UPDATE goods SET name=?,pinyin=?,batch=?`
+			args = []interface{}{h.Name, h.Pinyin, h.Batch}
 			stmt += ` WHERE id=?`
 			args = append(args, h.ID)
 		}

@@ -34,8 +34,13 @@ var rs []*regexp.Regexp = []*regexp.Regexp{
 
 func fetchItems(term string) []item {
 	var its []item
-	assert(db.Select(&its, `SELECT id,cost,name FROM goods WHERE name 
-	    LIKE ? OR pinyin LIKE ?`, `%`+term+`%`, `%`+term+`%`))
+	assert(db.Select(&its, `SELECT id,cost,name FROM goods WHERE name
+		LIKE ? OR pinyin LIKE ?`, `%`+term+`%`, `%`+term+`%`))
+	for _, it := range its {
+		if it.Name == term {
+			return []item{it}
+		}
+	}
 	return its
 }
 

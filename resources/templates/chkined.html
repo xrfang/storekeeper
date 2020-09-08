@@ -178,7 +178,7 @@ function pick(item, cnt) {
 	$('#goods').val(`${name} ${cnt}`)
 	addGoods()
 }
-
+/*
 function addGoods() {
 	var spec = $('#goods').val().trim().split(/\s+/)
 	if (spec.length != 2) {
@@ -252,8 +252,8 @@ function addGoods() {
 		}		
 	})
 }
+*/
 
-/*
 function addGoods() {
 	var act = $('#act')
 	act.html(`<span class="spinner-border spinner-border-sm" role="status"></span>&nbsp;稍等...`)
@@ -261,7 +261,8 @@ function addGoods() {
     $('#choice').empty()
     var memo = $('#memo').val()
     var id = $('#bid').val()
-    $.post(`/chkin/item/${id}`, {rx: rx}, function(e) {
+	var ci = $('#docheckin').attr('value')
+    $.post(`/chkin/item/${id}`, {mode:ci, rx: rx}, function(e) {
       $.each(e.rx_items, function(_, rx) {
         var len = 0
         if (rx.items) len = rx.items.length
@@ -303,7 +304,6 @@ function addGoods() {
       act.html(`添加`)
     })
 }
-*/
 
 function getBillInfo() {
   var bid = $('#bid').val()

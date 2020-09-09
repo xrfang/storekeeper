@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"storekeeper/db"
 	"strconv"
@@ -87,8 +86,6 @@ func chkOutEditItem(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 		assert(r.ParseForm())
-		mode, _ := strconv.Atoi(r.FormValue("mode"))
-		fmt.Println("TODO: check mode...")
 		rx := r.FormValue("rx")
 		res := make(map[string]interface{})
 		ps := db.GetPSItems(rx)

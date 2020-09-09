@@ -84,42 +84,60 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Path[12:])
 	switch r.Method {
 	case "POST":
-		assert(r.ParseForm())
-		_, nu := db.AnalyzeGoodsUsage()
-		stock := make(map[string]int)
-		for _, u := range nu {
-			stock[u.Name] = u.Amount
-		}
-		rx := r.FormValue("rx")
 		res := make(map[string]interface{})
+		assert(r.ParseForm())
+		rx := r.FormValue("rx")
 		ps := db.GetPSItems(rx)
-		for _, p := range ps {
-			if len(p.Items) == 1 && p.Weight > 0 {
-				db.SetBillItem(db.BillItem{
-					BomID:     id,
-					Cost:      p.Items[0].Cost,
-					GoodsID:   p.Items[0].ID,
-					GoodsName: p.Items[0].Name,
-					Memo:      p.Memo,
-					Request:   p.Weight,
-				}, 0)
+		mode, _ := strconv.Atoi(r.FormValue("mode"))
+		switch mode {
+		case 0:
+			_, nu := db.AnalyzeGoodsUsage()
+			stock := make(map[string]int)
+			for _, u := range nu {
+				stock[u.Name] = u.Amount
 			}
-		}
-		var unused []db.UsageInfo
-		_, items := db.GetBill(id, 0)
-		for _, it := range items {
-			amt := stock[it.GoodsName]
-			if amt > 0 {
-				unused = append(unused, db.UsageInfo{
-					Name:   it.GoodsName,
-					Amount: amt,
-					Batch:  1,
-				})
+			for _, p := range ps {
+				if len(p.Items) == 1 && p.Weight > 0 {
+					db.SetBillItem(db.BillItem{
+						BomID:     id,
+						Cost:      p.Items[0].Cost,
+						GoodsID:   p.Items[0].ID,
+						GoodsName: p.Items[0].Name,
+						Memo:      p.Memo,
+						Request:   p.Weight,
+					}, 0)
+				}
 			}
-
+			var unused []db.UsageInfo
+			_, items := db.GetBill(id, 0)
+			for _, it := range items {
+				amt := stock[it.GoodsName]
+				if amt > 0 {
+					unused = append(unused, db.UsageInfo{
+						Name:   it.GoodsName,
+						Amount: amt,
+						Batch:  1,
+					})
+				}
+			}
+			res["unused"] = unused
+		default:
+			_, items := db.GetBill(id, 0)
+			itm := make(map[string]*db.BillItem)
+			for i, it := range items {
+				itm[it.GoodsName] = &items[i]
+			}
+			for i, p := range ps {
+				p.MatchItems(itm)
+				if len(p.Items) == 1 && p.Weight != 0 {
+					it := itm[p.Items[0].Name]
+					it.Confirm += p.Weight
+					db.SetBillItem(*it, 1)
+				}
+				ps[i] = p
+			}
 		}
 		res["rx_items"] = ps
-		res["unused"] = unused
 		jsonReply(w, res)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

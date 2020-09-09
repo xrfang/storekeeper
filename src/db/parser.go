@@ -8,23 +8,35 @@ import (
 	"unicode"
 )
 
-type item struct {
-	ID   int     `json:"id"`
-	Cost float64 `json:"cost"`
-	Name string  `json:"name"`
-}
-type PSItem struct {
-	Term   string `json:"term"`
-	Items  []item `json:"items"`
-	Weight int    `json:"weight"`
-	Memo   string `json:"memo"`
-}
-type PSItems []*PSItem
+type (
+	item struct {
+		ID   int     `json:"id"`
+		Cost float64 `json:"cost"`
+		Name string  `json:"name"`
+	}
+	PSItem struct {
+		Term   string `json:"term"`
+		Items  []item `json:"items"`
+		Weight int    `json:"weight"`
+		Memo   string `json:"memo"`
+	}
+	PSItems      []*PSItem
+	Prescription struct {
+		ID    int      `json:"id"`
+		Name  string   `json:"name"`
+		Items []string `json:"items"`
+	}
+)
 
-type Prescription struct {
-	ID    int      `json:"id"`
-	Name  string   `json:"name"`
-	Items []string `json:"items"`
+//MatchItems 将Items与参数itm匹配，没有出现在itm中的条目会被删除
+func (pi *PSItem) MatchItems(itm map[string]*BillItem) {
+	var its []item
+	for _, it := range pi.Items {
+		if itm[it.Name] != nil {
+			its = append(its, it)
+		}
+	}
+	pi.Items = its
 }
 
 var rs []*regexp.Regexp = []*regexp.Regexp{
@@ -46,7 +58,7 @@ func fetchItems(term string) []item {
 
 func GetPSItems(text string) PSItems {
 	cclass := func(r rune) int {
-		if r >= '0' && r <= '9' {
+		if (r >= '0' && r <= '9') || r == '-' {
 			return 1
 		}
 		return -1
@@ -72,7 +84,7 @@ func GetPSItems(text string) PSItems {
 	for _, s := range ss {
 		w, err := strconv.Atoi(s)
 		if err == nil {
-			if p != nil && w > 0 {
+			if p != nil {
 				p.Weight = w
 			}
 		} else if s[0] == '(' && s[len(s)-1] == ')' {

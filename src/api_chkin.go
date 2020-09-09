@@ -90,7 +90,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		assert(r.ParseForm())
 		status, _ := strconv.Atoi(r.FormValue("status"))
-		if status > 0 {
+		if status > 0 { //修改进货单状态
 			b, _ := db.GetBill(id, -1) //第二参数不是0或1表示不需要获取条目
 			b.Status = 1
 			db.SetBill(b)
@@ -115,64 +115,6 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			db.SetBillItem(item, 1)
 			return
 		}
-		item := r.FormValue("item")
-		goods := db.SearchGoods(item)
-		cfm, _ := strconv.Atoi(r.FormValue("confirm"))
-		if cfm != 0 { //验货入库
-			res := map[string]interface{}{"id": id, "item": []string{}, "count": cfm}
-			var items []interface{}
-			for _, g := range goods {
-				items = append(items, g.ID)
-			}
-			if len(items) == 0 {
-				jsonReply(w, res)
-				return
-			}
-			bis := db.GetBillItems(id, items...)
-			switch len(bis) {
-			case 0:
-				jsonReply(w, res)
-			case 1:
-				res["item"] = []string{bis[0].GoodsName}
-				bis[0].Confirm += cfm
-				db.SetBillItem(bis[0], 1)
-				res["count"] = bis[0].Confirm
-				jsonReply(w, res)
-			default:
-				var names []string
-				for _, bi := range bis {
-					names = append(names, bi.GoodsName)
-				}
-				res["item"] = names
-				jsonReply(w, res)
-			}
-			return
-		}
-		//增加新条目
-		items := []string{}
-		for _, g := range goods {
-			items = append(items, g.Name)
-		}
-		req, _ := strconv.Atoi(r.FormValue("request"))
-		if req > 0 && len(items) == 1 {
-			if id == 0 {
-				id = db.SetBill(db.Bill{ID: id, User: uid, Type: 1})
-			}
-			if db.SetBillItem(db.BillItem{
-				BomID:     id,
-				GoodsID:   goods[0].ID,
-				GoodsName: goods[0].Name,
-				Cost:      goods[0].Cost,
-				Request:   req,
-			}, 0) {
-				req = -req
-			}
-		}
-		jsonReply(w, map[string]interface{}{
-			"id":    id,
-			"item":  items,
-			"count": req,
-		})
 	case "DELETE":
 		ids := strings.SplitN(strings.TrimSpace(r.URL.Path[11:]), "/", 2)
 		bid, _ := strconv.Atoi(ids[0])

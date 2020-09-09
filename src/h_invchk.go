@@ -68,6 +68,7 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		assert(r.ParseForm())
 		item := r.FormValue("item")
+		//TODO: 使用PSItems Parser取代SearchGoods
 		goods := db.SearchGoods(item)
 		items := []string{}
 		for _, g := range goods {

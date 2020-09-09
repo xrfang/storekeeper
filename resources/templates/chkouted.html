@@ -272,10 +272,14 @@ function setMemoHeight() {
   if (mh < 36) mh = 36
   memo.css('height', mh)
 }
-function pick(item, cnt) {
-    var name = $(item).text()
-    $('#goods').val(`${name} ${cnt}`)
-    addGoods()
+function pick(ti, ii) {
+    var t = $('body').data("rx_items")[ti]
+    var ps = `${t.items[ii].name} ${t.weight}`
+    if (t.memo != '') ps += `(${t.memo})`
+    var g = $('#goods')
+    g.val(`${g.val()} ${ps}`)
+    if (!$('body').data('multi_rx'))
+        addGoods() //当只有一个选项时，直接提交
 }
 function addGoods() {
     var rx = $('#goods').val().trim()
@@ -284,7 +288,9 @@ function addGoods() {
     var memo = $('#memo').val()
     var id = $('#bid').val()
     $.post(`/chkout/item/${id}`, {rx: rx}, function(e) {
-      $.each(e.rx_items, function(_, rx) {
+      $('body').data("rx_items", e.rx_items)
+      var rxCnt = 0
+      $.each(e.rx_items, function(ti, rx) {
         var len = 0
         if (rx.items) len = rx.items.length
         switch(len) {
@@ -298,15 +304,17 @@ function addGoods() {
           break
         default:
           var choice = `<p><span style="color:red">${rx.term}</span> 是指`
-          $.each(rx.items, function(i, it) {
-              choice += ` &nbsp;<a onclick="pick(this, ${rx.weight})" href="#">${it.name}</a>&nbsp; `
-              if(i < rx.items.length-1) choice += '还是'
+          $.each(rx.items, function(ii, it) {
+              choice += ` &nbsp;<a onclick="pick(${ti}, ${ii})" href="#">${it.name}</a>&nbsp; `
+              if(ii < rx.items.length-1) choice += '还是'
           })
           choice += '?'
           $('#choice').append(choice)
+          rxCnt++
         }
       })
-      if (typeof(e.reference) != 'undefined' && e.reference.length > 0) {
+      $('body').data("multi_rx", rxCnt > 1)
+      if (typeof(e.reference) != 'undefined' && e.reference != null && e.reference.length > 0) {
         $.each(e.reference, function(_, r) {
           $('#rxref').append(`<p><a href='/chkout/${id}?ref=${r.id}'>${r.name}</a>&nbsp; &nbsp;${r.items.join('、')}</p>`)
         })

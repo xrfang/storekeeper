@@ -174,10 +174,14 @@ function switchCI() {
 	}
 	getBillInfo()
 }
-function pick(item, cnt) {
-	var name = $(item).text()
-	$('#goods').val(`${name} ${cnt}`)
-	addGoods()
+function pick(ti, ii) {
+    var t = $('body').data("rx_items")[ti]
+    var ps = `${t.items[ii].name} ${t.weight}`
+    if (t.memo != '') ps += `(${t.memo})`
+    var g = $('#goods')
+    g.val(`${g.val()} ${ps}`)
+    if (!$('body').data('multi_rx'))
+        addGoods() //当只有一个选项时，直接提交
 }
 
 function addGoods() {
@@ -189,7 +193,9 @@ function addGoods() {
     var id = $('#bid').val()
 	var ci = $('#docheckin').attr('value')
     $.post(`/chkin/item/${id}`, {mode:ci, rx: rx}, function(e) {
-      $.each(e.rx_items, function(_, rx) {
+	  $('body').data("rx_items", e.rx_items)
+      var rxCnt = 0		
+      $.each(e.rx_items, function(ti, rx) {
         var len = 0
         if (rx.items) len = rx.items.length
         switch(len) {
@@ -203,14 +209,16 @@ function addGoods() {
           break
         default:
           var choice = `<p><span style="color:red">${rx.term}</span> 是指`
-          $.each(rx.items, function(i, it) {
-              choice += ` &nbsp;<a onclick="pick(this, ${rx.weight})" href="#">${it.name}</a>&nbsp; `
-              if(i < rx.items.length-1) choice += '还是'
+          $.each(rx.items, function(ii, it) {
+              choice += ` &nbsp;<a onclick="pick(${ti}, ${ii})" href="#">${it.name}</a>&nbsp; `
+              if(ii < rx.items.length-1) choice += '还是'
           })
           choice += '?'
           $('#choice').append(choice)
+		  rxCnt++
         }
       })
+	  $('body').data("multi_rx", rxCnt > 1)
       getBillInfo()
 	  if (typeof(e.unused) == 'object' && e.unused != null && e.unused.length > 0) {
 		  var list = ""

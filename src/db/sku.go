@@ -16,6 +16,7 @@ type Goods struct {
 	Stock  int     `json:"stock"`
 	Cost   float64 `json:"cost"`
 	Batch  int     `json:"batch"`
+	Rack   string  `json:"rack"`
 }
 
 type skuQR struct {

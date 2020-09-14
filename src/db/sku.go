@@ -232,8 +232,8 @@ func UpdateSKUs(skus []Goods) {
 			if h.Batch < 0 {
 				h.Batch = 0
 			}
-			stmt = `UPDATE goods SET name=?,pinyin=?,batch=?`
-			args = []interface{}{h.Name, h.Pinyin, h.Batch}
+			stmt = `UPDATE goods SET name=?,pinyin=?,batch=?,rack=?`
+			args = []interface{}{h.Name, h.Pinyin, h.Batch, h.Rack}
 			stmt += ` WHERE id=?`
 			args = append(args, h.ID)
 		}

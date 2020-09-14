@@ -117,14 +117,21 @@
         </div>
         <div class="row">
           <div class="form-group col">
-            <label for="name">批量（克）</label>
-            <input type="text" class="form-control" id="batch">
-            <small class="form-text text-muted">设为0表示不建议采购</small>
+            <label for="name">存放位置（货架）</label>
+            <input type="text" class="form-control" id="rack">
           </div>
           <div class="form-group col">
             <label for="name">库存（克）</label>
             <div class="form-text"><span id="stock"></span> (<span id="cost"></span>元/克)</div>
           </div>
+        </div>
+        <div class="row">
+          <div class="form-group col">
+            <label for="name">批量（克）</label>
+            <input type="text" class="form-control" id="batch">
+            <small class="form-text text-muted">设为0表示不建议采购</small>
+          </div>
+          <div class="form-group col"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -255,6 +262,7 @@ $(document).ready(function () {
       $('#edsku #batch').val(e.batch)
       $('#edsku #stock').text(e.stock)
       $('#edsku #cost').text(e.cost)
+      $('#edsku #rack').val(e.rack)
     })
   })
   $('#edsku').on('hide.bs.modal', function (e) {
@@ -264,8 +272,9 @@ $(document).ready(function () {
       var name = $('#edsku #name').val()
       var pinyin = $('#edsku #pinyin').val()
       var batch =  parseInt($('#edsku #batch').val(), 10)
+      var rack = $('#edsku #rack').val()
       var data = new Array()
-      data.push({id:id, name: name, pinyin: pinyin, batch: batch})
+      data.push({id:id, name: name, pinyin: pinyin, batch: batch, rack: rack})
       $.post("/api/sku/", JSON.stringify(data), function(e) {
         toast("操作成功", "药材信息已保存", "success")
         $(`#${id}`).text(name)

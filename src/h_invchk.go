@@ -75,7 +75,7 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 			items = append(items, g.Name)
 		}
 		req := float64(0)
-		cfm, _ := strconv.ParseFloat(r.FormValue("confirm"), 64)
+		cfm, _ := float(r.FormValue("confirm"))
 		if cfm > 0 && len(items) == 1 {
 			bis := db.GetBillItems(id, goods[0].ID)
 			if len(bis) == 0 {

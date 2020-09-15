@@ -361,8 +361,8 @@ func SetInventoryByBill(bid, stat int) {
 		}
 		type billReq struct {
 			ID        int
-			Stock     int
-			Requested int
+			Stock     float64
+			Requested float64
 			Flag      int
 		}
 		var br []billReq
@@ -378,7 +378,7 @@ func SetInventoryByBill(bid, stat int) {
 				tx.MustExec(`UPDATE bom_item SET confirm=request WHERE gid=? AND bom_id=?`,
 					r.ID, bid)
 			} else {
-				confirm := -r.Stock / b.Sets
+				confirm := -r.Stock / float64(b.Sets)
 				tx.MustExec(`UPDATE goods SET stock=0 WHERE id=?`, r.ID)
 				tx.MustExec(`UPDATE bom_item SET confirm=? WHERE gid=? AND bom_id=?`,
 					confirm, r.ID, bid)

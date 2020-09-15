@@ -82,7 +82,7 @@ func GetPSItems(text string) PSItems {
 	var ps PSItems
 	var p *PSItem
 	for _, s := range ss {
-		w, err := strconv.ParseFloat(s, 64)
+		w, err := float(s)
 		if err == nil {
 			if p != nil {
 				p.Weight = w

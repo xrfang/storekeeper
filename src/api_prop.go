@@ -34,7 +34,7 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 	case "amount":
 		v := strings.SplitN(val, ",", 3)
 		gid, _ := strconv.Atoi(v[0])
-		amt, _ := strconv.ParseFloat(v[1], 64)
+		amt, _ := float(v[1])
 		ext, _ := strconv.Atoi(v[2])
 		db.GetBill(id, -1)
 		if amt > 0 {
@@ -74,13 +74,13 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 		b.Memo = val
 		db.SetBill(b)
 	case "fee":
-		fee, err := strconv.ParseFloat(val, 64)
+		fee, err := float(val)
 		assert(err)
 		b, _ := db.GetBill(id, -1)
 		b.Fee = fee
 		db.SetBill(b)
 	case "markup":
-		markup, err := strconv.ParseFloat(val, 64)
+		markup, err := float(val)
 		assert(err)
 		b, _ := db.GetBill(id, -1)
 		b.Markup = markup
@@ -107,7 +107,7 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 		b.Sets = sets
 		db.SetBill(b)
 	case "paid":
-		pay, err := strconv.ParseFloat(val, 64)
+		pay, err := float(val)
 		if err != nil {
 			panic(err)
 		}

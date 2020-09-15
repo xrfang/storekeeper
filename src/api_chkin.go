@@ -100,15 +100,15 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		if gid > 0 { //提交单条目编辑
 			items := db.GetBillItems(id, gid)
 			item := items[0]
-			cost, err := strconv.ParseFloat(r.FormValue("cost"), 64)
+			cost, err := float(r.FormValue("cost"))
 			if err == nil {
 				item.Cost = cost
 			}
-			req, err := strconv.ParseFloat(r.FormValue("request"), 64)
+			req, err := float(r.FormValue("request"))
 			if err == nil {
 				item.Request = req
 			}
-			cfm, err := strconv.ParseFloat(r.FormValue("confirm"), 64)
+			cfm, err := float(r.FormValue("confirm"))
 			if err == nil {
 				item.Confirm = cfm
 			}

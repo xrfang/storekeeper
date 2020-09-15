@@ -369,7 +369,7 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 		active[gname] = true
 		gu := usage[gname]
 		gu = append(gu, map[string]int64{
-			"amount": r["amount"].(int64),
+			"amount": int64(r["amount"].(float64)),
 			"sets":   r["sets"].(int64),
 		})
 		usage[gname] = gu

@@ -257,7 +257,7 @@ function getBillInfo() {
 		var dfamt = 0
 		$.each(e.items, function(_, it) {
 		  var diff = it.request - it.confirm
-		  if (diff != 0) {
+		  if (Math.abs(diff) >= 0.01) {
 			  lack.push({"name": it.gname, "diff": diff, "cost": it.cost})
 			  dfcnt++
 			  dfamt += diff * it.cost
@@ -349,12 +349,14 @@ function getBillInfo() {
 	  } else {
 		$('#chkin').css('display', '')
 		$.each(e.items, function(i, it) {
-			if (it.confirm == 0) {
-				$('#wait').append(`${it.gname} ${it.request}克 &nbsp; `)
-			} else if (it.confirm == it.request) {
-				$('#done').append(`${it.gname} ${it.request}克 &nbsp; `)
+			var req = it.request.toFixed(2)
+			var cfm = it.confirm.toFixed(2)
+			if (req == 0) {
+				$('#wait').append(`${it.gname} ${req}克 &nbsp; `)
+			} else if (Math.abs(cfm - req) < 0.01) {
+				$('#done').append(`${it.gname} ${req}克 &nbsp; `)
 			} else {
-				$('#wip').append(`${it.gname} ${it.request}克（入库${it.confirm}克） &nbsp; `)
+				$('#wip').append(`${it.gname} ${req}克（入库${cfm}克） &nbsp; `)
 			}
 		})
 		if (!$('#wait').is(':empty')) {

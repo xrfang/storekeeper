@@ -24,7 +24,7 @@ type Bill struct {
 	ID      int       `json:"id"`
 	Type    byte      `json:"type"` //1=入库；2=出库；3=盘点
 	User    int       `json:"user" db:"user_id"`
-	Markup  int       `json:"markup"`
+	Markup  float64   `json:"markup"`
 	Fee     float64   `json:"fee"`
 	Sets    int       `json:"sets"`
 	Cost    float64   `json:"cost"`  //非数据库条目，实时计算，表示单剂药的成本
@@ -47,19 +47,19 @@ type BillItem struct {
 	GoodsID   int       `json:"gid" db:"gid"`
 	GoodsName string    `json:"gname" db:"gname"`
 	Cost      float64   `json:"cost"`
-	Request   int       `json:"request"`
-	Confirm   int       `json:"confirm"`
+	Request   float64   `json:"request"`
+	Confirm   float64   `json:"confirm"`
 	Flag      int       `json:"flag"`
 	Memo      string    `json:"memo"`
 	Created   time.Time `json:"created"`
 	Updated   time.Time `json:"updated"`
-	inStock   int       //实际库存量（即无需外购，最大值为Request）
+	inStock   float64   //实际库存量（即无需外购，最大值为Request）
 }
 
 func (bi BillItem) MarshalJSON() ([]byte, error) {
 	type billitem BillItem
 	return json.Marshal(struct {
-		InStock int `json:"in_stock"`
+		InStock float64 `json:"in_stock"`
 		billitem
 	}{bi.inStock, billitem(bi)})
 }
@@ -181,18 +181,18 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 		case 2: //出库单
 			it.Request = -it.Request
 			it.Confirm = -it.Confirm
-			it.inStock = func() int {
+			it.inStock = func() float64 {
 				if bill.Status > 0 { //已经出库，不再计算库存变化
 					return it.Confirm
 				}
-				var stock int
+				var stock float64
 				for _, g := range gs {
 					if it.GoodsID == g.ID {
 						stock = g.Stock
 						break
 					}
 				}
-				stock /= bill.Sets
+				stock /= float64(bill.Sets)
 				if stock > it.Request {
 					return it.Request
 				}

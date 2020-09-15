@@ -15,10 +15,10 @@ type (
 		Name string  `json:"name"`
 	}
 	PSItem struct {
-		Term   string `json:"term"`
-		Items  []item `json:"items"`
-		Weight int    `json:"weight"`
-		Memo   string `json:"memo"`
+		Term   string  `json:"term"`
+		Items  []item  `json:"items"`
+		Weight float64 `json:"weight"`
+		Memo   string  `json:"memo"`
 	}
 	PSItems      []*PSItem
 	Prescription struct {
@@ -58,7 +58,7 @@ func fetchItems(term string) []item {
 
 func GetPSItems(text string) PSItems {
 	cclass := func(r rune) int {
-		if (r >= '0' && r <= '9') || r == '-' {
+		if (r >= '0' && r <= '9') || r == '-' || r == '.' {
 			return 1
 		}
 		return -1
@@ -82,7 +82,7 @@ func GetPSItems(text string) PSItems {
 	var ps PSItems
 	var p *PSItem
 	for _, s := range ss {
-		w, err := strconv.Atoi(s)
+		w, err := strconv.ParseFloat(s, 64)
 		if err == nil {
 			if p != nil {
 				p.Weight = w

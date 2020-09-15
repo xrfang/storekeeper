@@ -14,7 +14,7 @@ func setupSchema() {
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
         "name"    TEXT NOT NULL,                               -- 姓名
         "login"   TEXT NOT NULL UNIQUE,                        -- 登录标识（如email、手机号或用户名）
-        "markup"  INTEGER NOT NULL DEFAULT -1,                 -- 溢价率（-1表示使用系统默认）
+        "markup"  NUMERIC NOT NULL DEFAULT -1,                 -- 溢价率（-1表示使用系统默认）
         "otpkey"  TEXT NOT NULL DEFAULT "",                    -- OTP密钥（只有主账户有密钥，可以登录）
         "client"  INTEGER NOT NULL DEFAULT 0,                  -- 0表示主账户，非0表示那个主账户的客户
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注，可用于保存地址等信息     
@@ -33,7 +33,7 @@ func setupSchema() {
         "id"     INTEGER PRIMARY KEY AUTOINCREMENT,
         "name"   TEXT NOT NULL UNIQUE,               -- 品名
         "pinyin" TEXT NOT NULL DEFAULT "",           -- 拼音首字母索引
-        "stock"  INTEGER NOT NULL DEFAULT 0,         -- 存货数量
+        "stock"  NUMERIC NOT NULL DEFAULT 0,         -- 存货数量
         "cost"   NUMERIC NOT NULL DEFAULT 0,         -- 平均成本单价
         "batch"  NUMERIC NOT NULL DEFAULT 500,       -- 默认采购批量（克）
         "rack"   TEXT NOT NULL DEFAULT ""            -- 货架编号
@@ -42,7 +42,7 @@ func setupSchema() {
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
         "type"    INTEGER NOT NULL,                            -- 单据类型（1=入库；2=出库；3=盘点）
         "user_id" INTEGER NOT NULL,                            -- 操作用户ID
-        "markup"  INTEGER NOT NULL DEFAULT 0,                  -- 加价百分比
+        "markup"  NUMERIC NOT NULL DEFAULT 0,                  -- 加价百分比
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（如运费、外购费）
         "sets"    INTEGER NOT NULL DEFAULT 1,                  -- 服数
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
@@ -61,8 +61,8 @@ func setupSchema() {
         "gid"     INTEGER NOT NULL,                            -- 药材ID
         "gname"   TEXT NOT NULL,                               -- 药材名称
         "cost"    NUMERIC NOT NULL DEFAULT 0,                  -- 单位成本
-        "request" INTEGER NOT NULL,                            -- 需求数量
-        "confirm" INTEGER NOT NULL,                            -- 确认数量
+        "request" NUMERIC NOT NULL,                            -- 需求数量
+        "confirm" NUMERIC NOT NULL,                            -- 确认数量
         "flag"    INTEGER NOT NULL DEFAULT 0,                  -- 标志位（非0表示特殊含义）
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳

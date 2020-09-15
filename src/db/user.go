@@ -26,7 +26,7 @@ type User struct {
 	ID      int        `json:"id"`
 	Name    string     `json:"name,omitempty"`
 	Login   string     `json:"login,omitempty"`
-	Markup  int        `json:"markup"`
+	Markup  float64    `json:"markup"`
 	OTPKey  string     `json:"-"`
 	Client  int        `json:"client,omitempty"`
 	Memo    string     `json:"memo,omitempty"`

@@ -13,9 +13,9 @@ type Goods struct {
 	ID     int     `json:"id"`
 	Name   string  `json:"name"`
 	Pinyin string  `json:"pinyin"`
-	Stock  int     `json:"stock"`
+	Stock  float64 `json:"stock"`
 	Cost   float64 `json:"cost"`
-	Batch  int     `json:"batch"`
+	Batch  float64 `json:"batch"`
 	Rack   string  `json:"rack"`
 }
 
@@ -381,9 +381,9 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 	assert(db.Select(&gs, `SELECT * FROM goods`))
 	for _, g := range gs {
 		if active[g.Name] {
-			used[g.Name] = UsageInfo{g.Name, g.Stock, g.Batch}
+			used[g.Name] = UsageInfo{g.Name, int(g.Stock), int(g.Batch)}
 		} else if g.Stock > 0 {
-			unuse = append(unuse, UsageInfo{g.Name, g.Stock, g.Batch})
+			unuse = append(unuse, UsageInfo{g.Name, int(g.Stock), int(g.Batch)})
 		}
 	}
 	type survey struct {
@@ -395,8 +395,9 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 		if len(u) < 2 { //仅使用1次的药材不考虑采购
 			continue
 		}
-		k := used[g]      //药材的当前库存信息
-		if k.Batch <= 0 { //该药材被设置为不建议采购
+		k := used[g] //药材的当前库存信息
+		batch := int(k.Batch)
+		if batch <= 0 { //该药材被设置为不建议采购
 			continue
 		}
 		var total, max int
@@ -413,13 +414,13 @@ func AnalyzeGoodsUsage() ([]UsageInfo, []UsageInfo) {
 			Score: total * len(u),
 			Usage: max * len(u) / 3,
 		}
-		diff := s.Usage - k.Amount - 9
+		diff := s.Usage - int(k.Amount) - 9
 		if diff > 0 {
-			buy := diff / k.Batch
-			if diff%k.Batch > 0 {
+			buy := diff / batch
+			if diff%batch > 0 {
 				buy++
 			}
-			inuse = append(inuse, UsageInfo{g, buy * k.Batch, 1})
+			inuse = append(inuse, UsageInfo{g, buy * batch, 1})
 		}
 		sm[g] = s
 	}

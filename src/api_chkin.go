@@ -104,11 +104,11 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 			if err == nil {
 				item.Cost = cost
 			}
-			req, err := strconv.Atoi(r.FormValue("request"))
+			req, err := strconv.ParseFloat(r.FormValue("request"), 64)
 			if err == nil {
 				item.Request = req
 			}
-			cfm, err := strconv.Atoi(r.FormValue("confirm"))
+			cfm, err := strconv.ParseFloat(r.FormValue("confirm"), 64)
 			if err == nil {
 				item.Confirm = cfm
 			}

@@ -199,9 +199,10 @@ function doFind() {
           <th>库存</th>
         </tr></thead><tbody>`
     $.each(e, function(_, g) {
+      var name = g.rack ? `${g.name}[${g.rack}]` : g.name
       tbl += `
           <tr style="cursor:pointer">
-            <td>${g.name}</td>
+            <td>${name}</td>
             <td>${g.cost}</td>
             <td>${g.stock}</td>
           </tr>`

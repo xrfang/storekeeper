@@ -138,10 +138,14 @@ func pinInit(name string) string {
 func QuerySKU(terms []string) *SkuQueryResult {
 	var goods []Goods
 	if len(terms) == 0 {
-		assert(db.Select(&goods, `SELECT id,name FROM goods ORDER BY pinyin`))
+		assert(db.Select(&goods, `SELECT * FROM goods ORDER BY pinyin`))
 		var items []skuQR
 		for _, g := range goods {
-			items = append(items, skuQR{ID: g.ID, Name: []string{g.Name}})
+			name := g.Name
+			if g.Rack != "" {
+				name += "[" + g.Rack + "]"
+			}
+			items = append(items, skuQR{ID: g.ID, Name: []string{name}})
 		}
 		return &SkuQueryResult{Found: items}
 	}

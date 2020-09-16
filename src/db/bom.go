@@ -51,6 +51,7 @@ type BillItem struct {
 	Confirm   float64   `json:"confirm"`
 	Flag      int       `json:"flag"`
 	Memo      string    `json:"memo"`
+	Rack      string    `json:"rack"`
 	Created   time.Time `json:"created"`
 	Updated   time.Time `json:"updated"`
 	inStock   float64   //实际库存量（即无需外购，最大值为Request）
@@ -157,12 +158,15 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 
 func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 	assert(db.Get(&bill, `SELECT * FROM bom WHERE id=?`, id))
+	qry := `SELECT bi.*,rack FROM bom_item bi,goods g WHERE gid=g.id AND
+	    bom_id=? ORDER BY `
 	switch itmOrd {
 	case 0:
-		assert(db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=? ORDER BY id DESC`, id))
+		qry += `bi.id DESC`
+		assert(db.Select(&items, qry, id))
 	case 1:
-		assert(db.Select(&items, `SELECT bi.* FROM bom_item bi JOIN goods g ON g.id=gid
-		    WHERE bom_id=? ORDER BY g.pinyin`, id))
+		qry += `g.rack`
+		assert(db.Select(&items, qry, id))
 	default: //除以上两种itmOrd外，不返回items
 		return
 	}

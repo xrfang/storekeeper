@@ -25,7 +25,7 @@
         <input type="text" class="form-control" id="fee" placeholder="0" />
       </div>
       <small class="form-text text-muted">运费、外配等</small>
-    </div>    
+    </div>
     <div class="col">
       <label for="markup"><b>溢价率</b></label>
       <div class="input-group">
@@ -41,12 +41,13 @@
       <label for="memo"><b>备注</b></label>
       <div style="position:relative">
         <textarea class="form-control" id="memo" spellcheck="false" style="height:33px;resize:none"></textarea>
-        <button id="setm" onclick="submitMemo()" style="display:none;position:absolute;top:0;right:0" class="btn btn-success">
+        <button id="setm" onclick="submitMemo()" style="display:none;position:absolute;top:0;right:0"
+          class="btn btn-success">
           <i class="fas fa-check"></i>
         </button>
       </div>
     </div>
-  </div>    
+  </div>
   <div class="card border-success">
     <div class="card-header">
       <div class="row">
@@ -54,8 +55,8 @@
         <div class="op col">
           <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
           <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为拼音排序</a>
-      	  </div>
+            <a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为货架排序</a>
+          </div>
         </div>
       </div>
     </div>
@@ -75,9 +76,9 @@
         <span id="setprice"></span> 元，抓 <span id="sets"></span> 剂，共计
         <span id="charge"></span> 元<span id="payamt"></span>
       </p>
-      <p id="cart"></p>
+      <p id="cart" style="font-family: monospace"></p>
       <div id="rxref" style="display:none">
-         <p style="font-weight:bold">可直接选择下列方剂进行修改：</p>
+        <p style="font-weight:bold">可直接选择下列方剂进行修改：</p>
       </div>
       <p id="chkout" style="text-align:center;margin-top:2rem">
         <button onclick="doneCheckOut()" class="btn btn-success">&nbsp;完成出库&nbsp;</button>
@@ -102,30 +103,32 @@
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="form-group"><h4 id="gname"></h4></div>
+        <div class="form-group">
+          <h4 id="gname"></h4>
+        </div>
         <div class="form-group row">
           <div class="col">
-			      <div class="input-group mb-2">
+            <div class="input-group mb-2">
               <div class="input-group-prepend">
                 <div class="input-group-text">数量</div>
               </div>
               <input type="text" class="form-control" id="count">
               <div class="input-group-append">
                 <div class="input-group-text">克</div>
-              </div>              
+              </div>
             </div>
           </div>
         </div>
         <div class="form-group row">
           <div class="col">
-			      <div class="input-group mb-2">
+            <div class="input-group mb-2">
               <div class="input-group-prepend">
                 <div class="input-group-text">备注</div>
               </div>
               <input type="text" class="form-control" id="memo" placeholder="如：包煎、后下">
             </div>
           </div>
-        </div>                
+        </div>
         <div class="modal-footer" style="padding-left:0;padding-right:0">
           <div class="form-check" style="flex:auto">
             <input class="form-check-input" type="checkbox" id="extra">
@@ -143,179 +146,183 @@
 <div class="modal fade" id="edsets" tabindex="-1" role="dialog">
   <input type=hidden id="gid" />
   <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">设置剂数</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">设置剂数</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <h4 id="gname"></h4>
         </div>
-        <div class="modal-body">
-          <div class="form-group"><h4 id="gname"></h4></div>
-          <div class="form-group row">
-            <div class="col">
-              <div class="input-group mb-2">
-                <div class="input-group-prepend">
-                  <div class="input-group-text">剂数</div>
-                </div>
-                <input type="text" class="form-control" id="sets">
+        <div class="form-group row">
+          <div class="col">
+            <div class="input-group mb-2">
+              <div class="input-group-prepend">
+                <div class="input-group-text">剂数</div>
               </div>
+              <input type="text" class="form-control" id="sets">
             </div>
           </div>
-          <div class="modal-footer" style="padding-right:0;padding-bottom:0">
-            <button type="button" class="btn btn-success" data-dismiss="modal">保 存</button>
-          </div>
+        </div>
+        <div class="modal-footer" style="padding-right:0;padding-bottom:0">
+          <button type="button" class="btn btn-success" data-dismiss="modal">保 存</button>
         </div>
       </div>
+    </div>
   </div>
 </div>
 <div class="modal fade" id="paybill" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">订单支付</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">订单支付</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <h5>请输入实付金额</h5>
         </div>
-        <div class="modal-body">
-          <div class="form-group"><h5>请输入实付金额</h5></div>
-          <div class="form-group row">
-            <div class="col">
-              <div class="input-group mb-2">
-                <div class="input-group-prepend">
-                  <div class="input-group-text">&#x00A5</div>
-                </div>
-                <input type="text" class="form-control" id="paid">
+        <div class="form-group row">
+          <div class="col">
+            <div class="input-group mb-2">
+              <div class="input-group-prepend">
+                <div class="input-group-text">&#x00A5</div>
               </div>
+              <input type="text" class="form-control" id="paid">
             </div>
           </div>
-          <div class="modal-footer" style="padding-right:0;padding-bottom:0">
-            <button type="button" class="btn btn-success" data-dismiss="modal"> 支 付 </button>
-          </div>
+        </div>
+        <div class="modal-footer" style="padding-right:0;padding-bottom:0">
+          <button type="button" class="btn btn-success" data-dismiss="modal"> 支 付 </button>
         </div>
       </div>
+    </div>
   </div>
 </div>
 <div class="modal fade" id="cfmdone" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">确认出库</h5>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p>出库完成后条目不能再更改（但可以修改费用和备注等）</p>
-          <div class="modal-footer" style="padding-right:0;padding-bottom:0">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">取 消</button>
-            <button type="button" class="btn btn-success" data-dismiss="modal">完 成</button>
-          </div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">确认出库</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>出库完成后条目不能再更改（但可以修改费用和备注等）</p>
+        <div class="modal-footer" style="padding-right:0;padding-bottom:0">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">取 消</button>
+          <button type="button" class="btn btn-success" data-dismiss="modal">完 成</button>
         </div>
       </div>
+    </div>
   </div>
 </div>
 <script>
-var arg = {{.}}
-var bill //从服务器读取的bill详情
-function doneCheckOut() {
-  $('#cfmdone').modal('show')
-}
-function payBill() {
-  $('#paybill').modal('show')
-}
-function editItem(gid, gname, count, memo, extra) {
-	$('#choice').css('display', 'none')
-	$('#editem #gid').val(gid)
-	$('#editem #gname').text(gname)
-  $('#editem #count').val(count)
-  $('#editem #memo').val(memo)
-  $('#editem #extra').prop('checked', extra)
-  $('#editem').modal('show')
-}
-function editSets() {
+  var arg = {{.}}
+  var bill //从服务器读取的bill详情
+  function doneCheckOut() {
+    $('#cfmdone').modal('show')
+  }
+  function payBill() {
+    $('#paybill').modal('show')
+  }
+  function editItem(gid, gname, count, memo, extra) {
+    $('#choice').css('display', 'none')
+    $('#editem #gid').val(gid)
+    $('#editem #gname').text(gname)
+    $('#editem #count').val(count)
+    $('#editem #memo').val(memo)
+    $('#editem #extra').prop('checked', extra)
+    $('#editem').modal('show')
+  }
+  function editSets() {
     $('#edsets #sets').val($('#sets').text())
     $('#edsets').modal('show')
-}
-function switchSO() {
-    if($('#sortorder').attr('value') == "0") {
+  }
+  function switchSO() {
+    if ($('#sortorder').attr('value') == "0") {
       $('#sortorder').attr('value', '1')
       $('#sortorder').text('切换为后录在前')
     } else {
       $('#sortorder').attr('value', '0')
-      $('#sortorder').text('切换为拼音排序')
+      $('#sortorder').text('切换为货架排序')
     }
     getBillInfo()
-}
-function revertFee() {
+  }
+  function revertFee() {
     $('#fee').val($('#fee').attr('old'))
     $('#chgf').remove()
-}
-function submitFee() {
-  var id = $('#bid').val()
-  $.post(`/api/set/${id}`, {key: "fee", val: $('#fee').val()}, function(e) {
-		getBillInfo()
-	})
-  $('#chgf').remove()
-}
-function revertMarkup() {
+  }
+  function submitFee() {
+    var id = $('#bid').val()
+    $.post(`/api/set/${id}`, { key: "fee", val: $('#fee').val() }, function (e) {
+      getBillInfo()
+    })
+    $('#chgf').remove()
+  }
+  function revertMarkup() {
     $('#markup').val($('#markup').attr('old'))
     $('#chgm').html(`<div class="input-group-text">%</div>`)
-}
-function submitMarkup() {
-  var id = $('#bid').val()
-  $.post(`/api/set/${id}`, {key: "markup", val: $('#markup').val()}, function(e) {
-		getBillInfo()
-	})
-  $('#chgm').html(`<div class="input-group-text">%</div>`)
-}
-function setMemoHeight() {
-  var memo = $('#memo')
-  memo.css('overflow', 'hidden')
-  memo.css('height', 0)
-  var mh = memo.prop('scrollHeight')
-  if (mh < 36) mh = 36
-  memo.css('height', mh)
-}
-function pick(ti, ii) {
+  }
+  function submitMarkup() {
+    var id = $('#bid').val()
+    $.post(`/api/set/${id}`, { key: "markup", val: $('#markup').val() }, function (e) {
+      getBillInfo()
+    })
+    $('#chgm').html(`<div class="input-group-text">%</div>`)
+  }
+  function setMemoHeight() {
+    var memo = $('#memo')
+    memo.css('overflow', 'hidden')
+    memo.css('height', 0)
+    var mh = memo.prop('scrollHeight')
+    if (mh < 36) mh = 36
+    memo.css('height', mh)
+  }
+  function pick(ti, ii) {
     var t = $('body').data("rx_items")[ti]
     var ps = `${t.items[ii].name} ${t.weight}`
     if (t.memo != '') ps += `(${t.memo})`
     var g = $('#goods')
     g.val(`${g.val()} ${ps}`)
     if (!$('body').data('multi_rx'))
-        addGoods() //当只有一个选项时，直接提交
-}
-function addGoods() {
+      addGoods() //当只有一个选项时，直接提交
+  }
+  function addGoods() {
     var rx = $('#goods').val().trim()
     $('#rxref').css("display", "none")
     $('#choice').empty()
     var memo = $('#memo').val()
     var id = $('#bid').val()
-    $.post(`/chkout/item/${id}`, {rx: rx}, function(e) {
+    $.post(`/chkout/item/${id}`, { rx: rx }, function (e) {
       $('body').data("rx_items", e.rx_items)
       var rxCnt = 0
-      $.each(e.rx_items, function(ti, rx) {
+      $.each(e.rx_items, function (ti, rx) {
         var len = 0
         if (rx.items) len = rx.items.length
-        switch(len) {
-        case 0:
-          $('#choice').append(`<p><span style='color:red'>${rx.term}</span> 没有找到</p>`)
-          break
-        case 1:
-          if (rx.weight<0) {
-            $('#choice').append(`<p><span style='color:red'>${rx.items[0].name}</span> 已经添加了</p>`)
-          }
-          break
-        default:
-          var choice = `<p><span style="color:red">${rx.term}</span> 是指`
-          $.each(rx.items, function(ii, it) {
+        switch (len) {
+          case 0:
+            $('#choice').append(`<p><span style='color:red'>${rx.term}</span> 没有找到</p>`)
+            break
+          case 1:
+            if (rx.weight < 0) {
+              $('#choice').append(`<p><span style='color:red'>${rx.items[0].name}</span> 已经添加了</p>`)
+            }
+            break
+          default:
+            var choice = `<p><span style="color:red">${rx.term}</span> 是指`
+            $.each(rx.items, function (ii, it) {
               choice += ` &nbsp;<a onclick="pick(${ti}, ${ii})" href="#">${it.name}</a>&nbsp; `
-              if(ii < rx.items.length-1) choice += '还是'
-          })
-          choice += '?'
-          $('#choice').append(choice)
-          rxCnt++
+              if (ii < rx.items.length - 1) choice += '还是'
+            })
+            choice += '?'
+            $('#choice').append(choice)
+            rxCnt++
         }
       })
       $('body').data("multi_rx", rxCnt > 1)
-      if (typeof(e.reference) != 'undefined' && e.reference != null && e.reference.length > 0) {
-        $.each(e.reference, function(_, r) {
+      if (typeof (e.reference) != 'undefined' && e.reference != null && e.reference.length > 0) {
+        $.each(e.reference, function (_, r) {
           $('#rxref').append(`<p><a href='/chkout/${id}?ref=${r.id}'>${r.name}</a>&nbsp; &nbsp;${r.items.join('、')}</p>`)
         })
         $('#rxref').css("display", "")
@@ -323,242 +330,240 @@ function addGoods() {
       getBillInfo()
       if ($('#choice').is(':empty')) {
         $('#choice').css('display', 'none')
-      } else { 
+      } else {
         $('#choice').css('display', '')
       }
     })
-}
-function getBillInfo() {
-  var bid = $('#bid').val()
-  var so = $('#sortorder').attr('value')
-  $('#act').attr("disabled", false)
-  $('#goods').attr("disabled", false)
-  $('#memo').attr("disabled", false)
-  $('#finfo').text('')
-  $('#chkout').css('display', 'none')
-  $('#extbuy').css('display', 'none')
-  $.get(`/api/get/${bid}?order=${so}`, function(e) {
-    bill = e.bill
-    $('#finfo').text(``)
-    $('#payamt').text('')
-    $('#paybtn').css("display", "none")
-    if (bill.status == 0) {
-      $('#chkout').css('display', '')
-      $('#sets').html(`<a id="sets" onclick="editSets()" href="#">${bill.sets}</a>`)
-    } else {
-      $('#sets').text(bill.sets)
-      var lack = []
-      $.each(e.items, function(_, it) {
-        var diff = it.request - it.confirm
-        if (it.flag == 0 && diff != 0) lack.push({"name": it.gname, "diff": diff*bill.sets})
-      })
-      if (lack.length > 0) {
-        $('#xbitems').empty()
-        $.each(lack, function(_, l) {
-          $('#xbitems').append(`<span>${l["name"]} ${l["diff"]}克 &nbsp; </span>`)
-        })
-        $('#extbuy').css('display', '')
-      }
-      $('#act').attr("disabled", true)
-      var upd = new Date(bill.updated)
-      if (bill.status == 1) {
-        $('#paybtn').css("display", "")
+  }
+  function getBillInfo() {
+    var bid = $('#bid').val()
+    var so = $('#sortorder').attr('value')
+    $('#act').attr("disabled", false)
+    $('#goods').attr("disabled", false)
+    $('#memo').attr("disabled", false)
+    $('#finfo').text('')
+    $('#chkout').css('display', 'none')
+    $('#extbuy').css('display', 'none')
+    $.get(`/api/get/${bid}?order=${so}`, function (e) {
+      bill = e.bill
+      $('#finfo').text(``)
+      $('#payamt').text('')
+      $('#paybtn').css("display", "none")
+      if (bill.status == 0) {
+        $('#chkout').css('display', '')
+        $('#sets').html(`<a id="sets" onclick="editSets()" href="#">${bill.sets}</a>`)
       } else {
-        $('#payamt').text(`（实收${bill.paid}元）`)
-        $('#finfo').text(`结账时间：${upd.toLocaleString()}`)
-      }      
-    }
-    $('#requester').val(bill.user)
-    $('#markup').val(bill.markup)
-    $('#fee').val(bill.fee)
-    $('#itemcount').text(bill.count)
-    var markup = (100 + parseInt(bill.markup)) / 100
-    var sp = bill.cost
-    var charge = (sp * bill.sets) * markup + bill.fee
-    $('#setprice').text(sp.toFixed(2))
-    $('#charge').text(charge.toFixed(2))
-    $('#goods').val('')
-    $('#memo').val(bill.memo)
-    $('#cart').empty()
-    if (e.items != null && e.items.length > 0) {
-      $.each(e.items, function(_, it) {
-        var item = `${it.gname} ${it.request}克`
-        var bg = "white"
-        var extra = false
-        if (it.flag != 0) {
-          item = `[自备]` + item
-          extra = true
-        } else if (it.request != it.in_stock) {
-          item = `${it.gname} ${it.in_stock}/${it.request}克`
-          bg = "lightpink"
+        $('#sets').text(bill.sets)
+        var lack = []
+        $.each(e.items, function (_, it) {
+          var diff = it.request - it.confirm
+          if (it.flag == 0 && diff != 0) lack.push({ "name": it.gname, "diff": diff * bill.sets })
+        })
+        if (lack.length > 0) {
+          $('#xbitems').empty()
+          $.each(lack, function (_, l) {
+            $('#xbitems').append(`<span>${l["name"]} ${l["diff"]}克 &nbsp; </span>`)
+          })
+          $('#extbuy').css('display', '')
         }
-        if (it.memo != "") {
-          item += `（${it.memo}）`
-        }
-        if (bill.status == 0) {
-          $('#cart').append(`<a href="#" style="font-family:monospace;font-size:large;
-            background:${bg}" onclick="editItem(${it.gid}, '${it.gname}', ${it.request},
-            '${it.memo}', ${extra})">${item}</a> &nbsp; `)
+        $('#act').attr("disabled", true)
+        var upd = new Date(bill.updated)
+        if (bill.status == 1) {
+          $('#paybtn').css("display", "")
         } else {
-          $('#cart').append(`${item} &nbsp; `)  
+          $('#payamt').text(`（实收${bill.paid}元）`)
+          $('#finfo').text(`结账时间：${upd.toLocaleString()}`)
         }
-      })
-    }
-  })
-}
-function submitMemo() {
-  var id = $('#bid').val()
-  var memo = $('#memo').val()
-  $.post(`/api/set/${id}`, {key: "memo", val: memo}, function(e) {})
-  $('#setm').css("display", "none")
-}
-$(document).ready(function () {
-  $('#memo').focus(function(e) {
+      }
+      $('#requester').val(bill.user)
+      $('#markup').val(bill.markup)
+      $('#fee').val(bill.fee)
+      $('#itemcount').text(bill.count)
+      var markup = (100 + parseInt(bill.markup)) / 100
+      var sp = bill.cost
+      var charge = (sp * bill.sets) * markup + bill.fee
+      $('#setprice').text(sp.toFixed(2))
+      $('#charge').text(charge.toFixed(2))
+      $('#goods').val('')
+      $('#memo').val(bill.memo)
+      $('#cart').empty()
+      if (e.items != null && e.items.length > 0) {
+        $.each(e.items, function (_, it) {
+          var item = `${it.gname}&nbsp;${it.request}克`
+          var bg = "white"
+          var extra = false
+          if (it.flag != 0) {
+            item = `[自备]` + item
+            extra = true
+          } else if (it.request != it.in_stock) {
+            item = `${it.gname}&nbsp;${it.in_stock}/${it.request}克`
+            bg = "lightpink"
+          }
+          if (it.rack !='' && it.flag == 0) item = `[${it.rack}]${item}`
+          if (it.memo != "") item += `（${it.memo}）`
+          if (bill.status == 0) {
+            $('#cart').append(`<a href="#" style="background:${bg}" onclick="editItem(${it.gid},
+            '${it.gname}', ${it.request}, '${it.memo}', ${extra})">${item}</a> `)
+          } else {
+            $('#cart').append(`${item} `)
+          }
+        })
+      }
+    })
+  }
+  function submitMemo() {
+    var id = $('#bid').val()
+    var memo = $('#memo').val()
+    $.post(`/api/set/${id}`, { key: "memo", val: memo }, function (e) { })
+    $('#setm').css("display", "none")
+  }
+  $(document).ready(function () {
+    $('#memo').focus(function (e) {
       $('#memo').attr('old', bill.memo)
-  })
-  $('#memo').keyup(function(e) {
-    setMemoHeight()
-    var old = $('#memo').attr('old')
-    var txt = $('#memo').val().trim()
-    $('#setm').css('display', 'none')
-    if (e.which === 27) {
-      $('#memo').val($('#memo').attr('old'))
+    })
+    $('#memo').keyup(function (e) {
       setMemoHeight()
-      return
-    }
-    if (old == txt) return
-    $('#setm').css('display', '')
-    $('#setm').css('border-top-left-radius', 0)
-    $('#setm').css('border-bottom-left-radius', 0)
-    var bh = $('#memo').prop('scrollHeight')
-    if (bh > 40) {
-      bh = 36
-      $('#setm').css('border-bottom-right-radius', 0)
-    } else {
-      $('#setm').css('border-bottom-right-radius', "0.25rem")
-    }
-    $('#setm').css('height', bh)
-  })
-  $('#markup').focus(function(e) {
+      var old = $('#memo').attr('old')
+      var txt = $('#memo').val().trim()
+      $('#setm').css('display', 'none')
+      if (e.which === 27) {
+        $('#memo').val($('#memo').attr('old'))
+        setMemoHeight()
+        return
+      }
+      if (old == txt) return
+      $('#setm').css('display', '')
+      $('#setm').css('border-top-left-radius', 0)
+      $('#setm').css('border-bottom-left-radius', 0)
+      var bh = $('#memo').prop('scrollHeight')
+      if (bh > 40) {
+        bh = 36
+        $('#setm').css('border-bottom-right-radius', 0)
+      } else {
+        $('#setm').css('border-bottom-right-radius', "0.25rem")
+      }
+      $('#setm').css('height', bh)
+    })
+    $('#markup').focus(function (e) {
       $('#markup').attr('old', $('#markup').val())
-  })
-  $('#markup').keyup(function(e) {
-    var txt = $('#markup').val().trim()
-    if (txt == '') {
-      $('#chgm').html(`<div class="input-group-text">%</div>`)
-      return
-    }
-    if (txt.match(/^\d+$/)) {
-      $('#chgm').html(`<button onclick="submitMarkup()" class="btn btn-outline-success border-left-0 border" type="button">
+    })
+    $('#markup').keyup(function (e) {
+      var txt = $('#markup').val().trim()
+      if (txt == '') {
+        $('#chgm').html(`<div class="input-group-text">%</div>`)
+        return
+      }
+      if (txt.match(/^\d+$/)) {
+        $('#chgm').html(`<button onclick="submitMarkup()" class="btn btn-outline-success border-left-0 border" type="button">
         <i class="fas fa-check"></i></button>`)
-    } else {
-      $('#chgm').html(`<button onclick="revertMarkup()" class="btn btn-outline-danger border-left-0 border"
+      } else {
+        $('#chgm').html(`<button onclick="revertMarkup()" class="btn btn-outline-danger border-left-0 border"
         type="button"><i class="fas fa-times"></i></button>`)
-    }
-  })
-  $('#fee').focus(function(e) {
+      }
+    })
+    $('#fee').focus(function (e) {
       $('#fee').attr('old', $('#fee').val())
-  })
-  $('#fee').keyup(function(e) {
-    var txt = $('#fee').val().trim()
-    if (txt == '') {
-      $('#chgf').remove()
-      return
-    }
-    var func = `revertFee()`
-    var btncls = `danger`
-    var btncap = `times`
-    if (txt.match(/^\d+\.?\d*$/)) {
-      func = `submitFee()`
-      btncls = `success`
-      btncap = `check`
-    }
-    var btn = `<div class="input-group-append" id="chgf"><button onclick="${func}"
+    })
+    $('#fee').keyup(function (e) {
+      var txt = $('#fee').val().trim()
+      if (txt == '') {
+        $('#chgf').remove()
+        return
+      }
+      var func = `revertFee()`
+      var btncls = `danger`
+      var btncap = `times`
+      if (txt.match(/^\d+\.?\d*$/)) {
+        func = `submitFee()`
+        btncls = `success`
+        btncap = `check`
+      }
+      var btn = `<div class="input-group-append" id="chgf"><button onclick="${func}"
       class="btn btn-outline-${btncls} border-left-0 border"type="button"><i
       class="fas fa-${btncap}"></i></button></div>`
-    $('#chgf').remove()
-    $('#igfee').append(btn)
-  })
-  setMemoHeight()
-  $.each(arg.users, function(_, u) {
+      $('#chgf').remove()
+      $('#igfee').append(btn)
+    })
+    setMemoHeight()
+    $.each(arg.users, function (_, u) {
       $('#requester').append(`<option value="${u.id}">${u.name}</option>`)
-  })
-  $('#requester').change(function(e) {
+    })
+    $('#requester').change(function (e) {
       var id = $('#bid').val()
-      $.post(`/api/set/${id}`, {key: "user", val: $('#requester').val()}, function(e) {
-          getBillInfo()
-      })
-  })
-  $('#bid').val(Math.abs(arg.bill))
-  if (arg.bill < 0) {
-    $('#title').text('新建出货单')
-  } else {
-    $('#title').text('编辑出货单')
-  }
-  $('#goods').on('keypress', function (e) {
-    if (e.which === 13) addGoods()
-  })
-  $('#edsets').on('shown.bs.modal', function (e) {
-  	$('#edsets #sets').focus()
-  	$('#edsets #sets').select()
-  })
-  $('#edsets').on('hide.bs.modal', function (e) {
-    var btn = $(document.activeElement)
-    if (btn.hasClass("btn-success")) {
-  	  var bid = $('#bid').val()
-      var sets = $('#edsets #sets').val()
-      $.post(`/api/set/${bid}`, {key: "sets", val: sets}, function(e) {
+      $.post(`/api/set/${id}`, { key: "user", val: $('#requester').val() }, function (e) {
         getBillInfo()
       })
+    })
+    $('#bid').val(Math.abs(arg.bill))
+    if (arg.bill < 0) {
+      $('#title').text('新建出货单')
+    } else {
+      $('#title').text('编辑出货单')
     }
-  })
-  $('#editem').on('shown.bs.modal', function(e) {
-    $('#editem #count').focus()
-  	$('#editem #count').select()
-  })
-  $('#editem').on('hide.bs.modal', function(e) {
-    var bid = $('#bid').val()
-    var gid = $('#editem #gid').val()
-    var btn = $(document.activeElement)
-    if (btn.hasClass("btn-success")) {
-      var cnt = $('#editem #count').val()
-      var memo = $('#editem #memo').val()
-      var ext = $('#editem #extra').is(':checked') ? 1 : 0
-      $.post(`/api/set/${bid}`, {key: "amount", val: `${gid},${cnt},${ext}`}, function(e) {
-        $.post(`/api/set/${bid}`, {key: "itememo", val: `${gid},${memo}`}, function(e) {
-          getBillInfo()
-        })
-      })
-    } else if (btn.hasClass("btn-danger")) {
-      $.post(`/api/set/${bid}`, {key: "amount", val: `${gid},0,0`}, function(e) {
-        getBillInfo()
-      })
-    }
-  })
-  $('#cfmdone').on('hide.bs.modal', function(e) {
-    var btn = $(document.activeElement)
-    if (btn.hasClass("btn-success")) {
+    $('#goods').on('keypress', function (e) {
+      if (e.which === 13) addGoods()
+    })
+    $('#edsets').on('shown.bs.modal', function (e) {
+      $('#edsets #sets').focus()
+      $('#edsets #sets').select()
+    })
+    $('#edsets').on('hide.bs.modal', function (e) {
+      var btn = $(document.activeElement)
+      if (btn.hasClass("btn-success")) {
         var bid = $('#bid').val()
-        $.post(`/api/set/${bid}`, {key: "stat", val: 1}, function(e) {
+        var sets = $('#edsets #sets').val()
+        $.post(`/api/set/${bid}`, { key: "sets", val: sets }, function (e) {
           getBillInfo()
         })
-    }
-  })
-  $('#paybill').on('hide.bs.modal', function(e) {
-    var btn = $(document.activeElement)
-    if (btn.hasClass("btn-success")) {
+      }
+    })
+    $('#editem').on('shown.bs.modal', function (e) {
+      $('#editem #count').focus()
+      $('#editem #count').select()
+    })
+    $('#editem').on('hide.bs.modal', function (e) {
+      var bid = $('#bid').val()
+      var gid = $('#editem #gid').val()
+      var btn = $(document.activeElement)
+      if (btn.hasClass("btn-success")) {
+        var cnt = $('#editem #count').val()
+        var memo = $('#editem #memo').val()
+        var ext = $('#editem #extra').is(':checked') ? 1 : 0
+        $.post(`/api/set/${bid}`, { key: "amount", val: `${gid},${cnt},${ext}` }, function (e) {
+          $.post(`/api/set/${bid}`, { key: "itememo", val: `${gid},${memo}` }, function (e) {
+            getBillInfo()
+          })
+        })
+      } else if (btn.hasClass("btn-danger")) {
+        $.post(`/api/set/${bid}`, { key: "amount", val: `${gid},0,0` }, function (e) {
+          getBillInfo()
+        })
+      }
+    })
+    $('#cfmdone').on('hide.bs.modal', function (e) {
+      var btn = $(document.activeElement)
+      if (btn.hasClass("btn-success")) {
+        var bid = $('#bid').val()
+        $.post(`/api/set/${bid}`, { key: "stat", val: 1 }, function (e) {
+          getBillInfo()
+        })
+      }
+    })
+    $('#paybill').on('hide.bs.modal', function (e) {
+      var btn = $(document.activeElement)
+      if (btn.hasClass("btn-success")) {
         var bid = $('#bid').val()
         var pay = $('#paid').val()
-        $.post(`/api/set/${bid}`, {key: "paid", val: pay}, function(e) {
+        $.post(`/api/set/${bid}`, { key: "paid", val: pay }, function (e) {
           var d = new Date(bill.updated)
           var month = '' + (d.getMonth() + 1)
           var year = d.getFullYear()
           if (month.length < 2) month = '0' + month;
           window.location.href = `/chkout?month=${year}-${month}`
         })
-    }
+      }
+    })
+    getBillInfo()
   })
-  getBillInfo()    
-})
 </script>
 {{template "footer"}} {{end}}

@@ -90,6 +90,7 @@
               <span class="fas fa-info-circle"></span> 创建后可以在入库单界面进行增删改
             </p>
           </div>
+          <p id="nosuggest" style="color:darkgrey;margin-top:1rem;font-weight:bold">目前暂无推荐采购的药材</p> 
         </div>
       </div>
     </div>
@@ -292,11 +293,17 @@ $(document).ready(function () {
   })
   $('#cinv').on('shown.bs.collapse', function() {
     $.get("/api/invstat", function(e) {
+      $('#wait').css("display", "none")
+      $('#nosuggest').css("display", "")
       var sdiv = $('#suggest')
+      sdiv.text('')
+      if (typeof(e.suggest) == 'undefined' ||
+         e.suggest == null || e.suggest.length == 0)
+         return
+      $('#nosuggest').css("display", "none")
       $.each(e.suggest, function(_, s) {
         sdiv.append(`${s.name} ${s.amount}克&nbsp; &nbsp;`)
       })
-      $('#wait').css("display", "none")
       $('#plan').css("display", "")
     })
   })

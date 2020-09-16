@@ -13,6 +13,7 @@ type (
 		ID   int     `json:"id"`
 		Cost float64 `json:"cost"`
 		Name string  `json:"name"`
+		Rack string  `json:"rack"`
 	}
 	PSItem struct {
 		Term   string  `json:"term"`
@@ -46,8 +47,8 @@ var rs []*regexp.Regexp = []*regexp.Regexp{
 
 func fetchItems(term string) []item {
 	var its []item
-	assert(db.Select(&its, `SELECT id,cost,name FROM goods WHERE name
-		LIKE ? OR pinyin LIKE ?`, `%`+term+`%`, `%`+term+`%`))
+	assert(db.Select(&its, `SELECT id,cost,name,rack FROM goods WHERE
+	    name LIKE ? OR pinyin LIKE ?`, `%`+term+`%`, `%`+term+`%`))
 	for _, it := range its {
 		if it.Name == term {
 			return []item{it}

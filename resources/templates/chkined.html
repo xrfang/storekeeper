@@ -34,7 +34,7 @@
 		  <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
 		  <div class="dropdown-menu dropdown-menu-right">
 			<a class="dropdown-item" href="#" id="viewstyle" value="0" onclick="switchVS()">切换为表格显示</a>
-			<a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为拼音排序</a>
+			<a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为货架排序</a>
 			<div class="dropdown-divider"></div>
 			<a class="dropdown-item" href="#" id="docheckin" value="0" onclick="switchCI()">到货入库</a>
 		  </div>
@@ -51,16 +51,16 @@
 		  <button style="width:100%" id="act" onclick="addGoods()" class="btn btn-success">添加</button>
 		</div>
 	  </div>
-	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
+	  <p id="choice" style="display:none;font-family:monospace;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
 	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
-	  <p id="cart"></p>
+	  <p id="cart" style="font-family:monospace"></p>
 	  <div id="unused" style="display:none">
 		<p style="font-weight:bold">以下药材最近<span style="color:red">三个月未使用</span>，不建议采购：</p>
 		<p id="list"></p>
 	  </div>
-	  <p id="wait"></p>
-	  <p id="wip"></p>
-	  <p id="done"></p>
+	  <p id="wait" style="font-family:monospace"></p>
+	  <p id="wip" style="font-family:monospace"></p>
+	  <p id="done" style="font-family:monospace"></p>
 	  <p id="chkin" style="display:none;text-align:center;margin-top:2rem">
 		<button onclick="doneCheckIn()" class="btn btn-info">&nbsp;完成入库&nbsp;</button>
 	  </p>
@@ -141,7 +141,7 @@ function switchSO() {
 	  $('#sortorder').text('切换为后录在前')
 	} else {
 	  $('#sortorder').attr('value', '0')
-      $('#sortorder').text('切换为拼音排序')
+      $('#sortorder').text('切换为货架排序')
 	}
 	getBillInfo()
 }
@@ -203,9 +203,15 @@ function addGoods() {
           $('#choice').append(`<p><span style='color:red'>${rx.term}</span> 没有找到</p>`)
           break
         case 1:
+		  var it = rx.items[0]
           if (rx.weight<0 && ci == 0) {
-            $('#choice').append(`<p><span style='color:red'>${rx.items[0].name}</span> 已经添加了</p>`)
-          }
+            $('#choice').append(`<p><span style='color:red'>${it.name}</span> 已经添加了</p>`)
+          } else if (ci == 1) {
+			if (typeof(it.rack) != "undefined" && it.rack != null && it.rack.length > 0)
+			  $('#choice').append(`<p><span style="color:purple">${it.name}</span>请放置于货架<span style="color:red">[${it.rack}]</span></p>`)
+			else
+			  $('#choice').append(`<p><span style="color:purple">${it.name}</span>未设置货架号！</span></p>`)
+		  }
           break
         default:
           var choice = `<p><span style="color:red">${rx.term}</span> 是指`
@@ -310,6 +316,9 @@ function getBillInfo() {
 		switch (vs) {
 	    case "0":
 	      $.each(e.items, function(_, item) {
+			var cap = `${item.gname} ${item.request.toFixed(0)}克`
+			if (typeof(item.rack) != 'undefined' && item.rack != null && item.rack.length > 0)
+			  cap = `[${item.rack}]${cap}`
 			if (e.bill.status == 0) {
 			  var bg =  'white'
               if (item.cost == 0) {
@@ -317,9 +326,9 @@ function getBillInfo() {
             	  ci = '2'
               }
               $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
-                >${item.gname} ${item.request}克</a> &nbsp; `)
+                >${cap}</a> &nbsp; `)
 			} else {
-			  $('#cart').append(`${item.gname} ${item.request}克 &nbsp; `)  
+			  $('#cart').append(`${cap} &nbsp; `)  
 			}
 	      })
 	      break
@@ -331,6 +340,8 @@ function getBillInfo() {
 	        var total = item.cost * item.request
 			var bg =  'white'
 			var name = item.gname
+			if (typeof(item.rack) != 'undefined' && item.rack != null && item.rack.length > 0)
+			  name = `[${item.rack}]${name}`
 			if (e.bill.status == 0) {
 	          if (item.cost == 0) {
 	            bg = 'lightpink'
@@ -338,8 +349,8 @@ function getBillInfo() {
 	          }
 			  name = `<a href="#" onclick="editItem(${item.gid})">${name}</a>`
 			}
-	        tbl += `<tr style="background:${bg}"><td>${name}</td><td class="text-right"
-			  >${item.request}</td><td class="text-right">${item.cost.toFixed(2)}</td>
+	        tbl += `<tr style="font-family:monospace;background:${bg}"><td>${name}</td>
+			  <td class="text-right">${item.request}</td><td class="text-right">${item.cost.toFixed(2)}</td>
 			  <td class="text-right">${total.toFixed(2)}</td></tr>`
 	      })
 	      tbl += `</tbody></table>`
@@ -349,14 +360,17 @@ function getBillInfo() {
 	  } else {
 		$('#chkin').css('display', '')
 		$.each(e.items, function(i, it) {
-			var req = it.request.toFixed(2)
-			var cfm = it.confirm.toFixed(2)
-			if (req == 0) {
-				$('#wait').append(`${it.gname} ${req}克 &nbsp; `)
+			var req = it.request.toFixed(0)
+			var cfm = it.confirm.toFixed(0)
+			var name = it.gname
+			if (typeof(it.rack) != 'undefined' && it.rack != null && it.rack.length > 0)
+			  name = `[${it.rack}]${name}`
+			if (Math.abs(cfm) < 0.01) {
+				$('#wait').append(`${name} ${req}克 &nbsp; `)
 			} else if (Math.abs(cfm - req) < 0.01) {
-				$('#done').append(`${it.gname} ${req}克 &nbsp; `)
+				$('#done').append(`${name} ${req}克 &nbsp; `)
 			} else {
-				$('#wip').append(`${it.gname} ${req}克（入库${cfm}克） &nbsp; `)
+				$('#wip').append(`${name} ${req}克（入库${cfm}克） &nbsp; `)
 			}
 		})
 		if (!$('#wait').is(':empty')) {

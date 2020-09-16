@@ -76,7 +76,7 @@
         <span id="setprice"></span> 元，抓 <span id="sets"></span> 剂，共计
         <span id="charge"></span> 元<span id="payamt"></span>
       </p>
-      <p id="cart" style="font-family: monospace"></p>
+      <p id="cart" style="font-family:monospace"></p>
       <div id="rxref" style="display:none">
         <p style="font-weight:bold">可直接选择下列方剂进行修改：</p>
       </div>
@@ -403,9 +403,9 @@
           if (it.memo != "") item += `（${it.memo}）`
           if (bill.status == 0) {
             $('#cart').append(`<a href="#" style="background:${bg}" onclick="editItem(${it.gid},
-            '${it.gname}', ${it.request}, '${it.memo}', ${extra})">${item}</a> `)
+            '${it.gname}', ${it.request}, '${it.memo}', ${extra})">${item}</a> &nbsp; `)
           } else {
-            $('#cart').append(`${item} `)
+            $('#cart').append(`${item} &nbsp; `)
           }
         })
       }

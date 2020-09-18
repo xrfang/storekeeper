@@ -24,7 +24,12 @@ func apiInvChkList(w http.ResponseWriter, r *http.Request) {
 	thisMonth := time.Now().Format("2006-01")
 	month := r.URL.Query().Get("month")
 	if month == "" {
-		month = thisMonth
+		month = getCookie(r, "bm")
+		if month == "" {
+			month = thisMonth
+		}
+	} else {
+		setCookie(w, "bm", month, 600)
 	}
 	summary := db.ListBillSummary(3, 0)
 	if len(summary) == 0 || summary[0].Month != thisMonth {

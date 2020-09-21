@@ -204,7 +204,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 			items[i] = it
 			if it.Flag == 0 {
 				if bill.Status == 0 {
-					bill.Cost += math.Abs(it.Cost * float64(it.inStock))
+					bill.Cost += math.Abs(it.Cost * float64(it.inStock) / float64(bill.Sets))
 				} else {
 					bill.Cost += math.Abs(it.Cost * float64(it.Confirm))
 				}

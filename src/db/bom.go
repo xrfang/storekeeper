@@ -187,7 +187,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 			it.Confirm = -it.Confirm
 			it.inStock = func() float64 {
 				if bill.Status > 0 { //已经出库，不再计算库存变化
-					return it.Confirm
+					return it.Confirm * float64(bill.Sets)
 				}
 				var stock float64
 				for _, g := range gs {
@@ -196,9 +196,8 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 						break
 					}
 				}
-				stock /= float64(bill.Sets)
-				if stock > it.Request {
-					return it.Request
+				if stock > it.Request*float64(bill.Sets) {
+					return it.Request * float64(bill.Sets)
 				}
 				return stock
 			}()

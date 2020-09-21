@@ -389,23 +389,26 @@
       $('#cart').empty()
       if (e.items != null && e.items.length > 0) {
         $.each(e.items, function (_, it) {
-          var item = `${it.gname}&nbsp;${it.request}克`
+          var total = it.in_stock
           var bg = "white"
           var extra = false
           if (it.flag != 0) {
-            item = `[自备]` + item
+            total = it.request * bill.sets
             extra = true
-          } else if (it.request != it.in_stock) {
-            item = `${it.gname}&nbsp;${it.in_stock}/${it.request}克`
+          } else if (Math.abs(it.request * bill.sets - it.in_stock) >= 0.1) {
             bg = "lightpink"
           }
-          if (it.rack !='' && it.flag == 0) item = `[${it.rack}]${item}`
+          var item = `${it.gname}&nbsp;${total}/${it.request}克`
+          if (extra) 
+            item = `[自备]${item}`
+          else if (it.rack !='')
+            item = `[${it.rack}]${item}`
           if (it.memo != "") item += `（${it.memo}）`
           if (bill.status == 0) {
             $('#cart').append(`<a href="#" style="background:${bg}" onclick="editItem(${it.gid},
             '${it.gname}', ${it.request}, '${it.memo}', ${extra})">${item}</a> &nbsp; `)
           } else {
-            $('#cart').append(`${item} &nbsp; `)
+            $('#cart').append(`<span style="background:${bg}">${item}</span> &nbsp; `)
           }
         })
       }

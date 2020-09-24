@@ -32,24 +32,19 @@ func invChkEdit(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	id, _ := strconv.Atoi(r.URL.Path[8:])
-	switch r.Method {
-	case "GET":
-		u := db.GetUser(uid)
-		if id == 0 {
-			id = db.InventoryWIP()
-			if id == 0 {
-				id = db.SetBill(db.Bill{Type: 3, User: uid})
-			}
-			db.UpdateInventory(id)
-			id = -id
-		} else {
-			db.UpdateInventory(id)
-		}
-		renderTemplate(w, "invchked.html", map[string]interface{}{"user": u, "bill": id})
-	default:
+	if r.Method != "GET" {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
 	}
+	id, _ := strconv.Atoi(r.URL.Path[8:])
+	if id == 0 {
+		id = db.InventoryWIP()
+	}
+	if id == 0 {
+		id = db.CreateInventory(uid)
+	}
+	u := db.GetUser(uid)
+	renderTemplate(w, "invchked.html", map[string]interface{}{"user": u, "bill": id})
 }
 
 func invChkEditItem(w http.ResponseWriter, r *http.Request) {

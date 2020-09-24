@@ -2,18 +2,11 @@ package db
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"sort"
 	"strings"
-	"sync"
 	"time"
-)
-
-var (
-	ErrItemAlreadyExists = errors.New("item already exists")
-	iop                  sync.Mutex
 )
 
 /*
@@ -328,8 +321,6 @@ func DeleteBillItem(bid, gid int) {
 }
 
 func SetInventoryByBill(bid, stat int) {
-	iop.Lock()
-	defer iop.Unlock()
 	tx, err := db.Beginx()
 	assert(err)
 	defer func() {
@@ -402,19 +393,8 @@ func SetInventoryByBill(bid, stat int) {
 	}
 }
 
-func UpdateInventory(bid int) {
-	iop.Lock()
-	defer iop.Unlock()
-	bill, _ := GetBill(bid, -1)
-	if bill.Status != 0 {
-		return
-	}
-	var bis []BillItem
-	bim := make(map[int]bool)
-	assert(db.Select(&bis, `SELECT gid FROM bom_item WHERE bom_id=?`, bid))
-	for _, bi := range bis {
-		bim[bi.GoodsID] = true
-	}
+func CreateInventory(uid int) int {
+	id := SetBill(Bill{Type: 3, User: uid})
 	var gs []Goods
 	assert(db.Select(&gs, `SELECT id,name,stock,cost FROM goods`))
 	tx := db.MustBegin()
@@ -426,12 +406,8 @@ func UpdateInventory(bid int) {
 		assert(tx.Commit())
 	}()
 	for _, g := range gs {
-		if bim[g.ID] {
-			tx.MustExec(`UPDATE bom_item SET request=?,cost=? WHERE bom_id=? AND gid=?`,
-				g.Stock, g.Cost, bid, g.ID)
-		} else if g.Stock > 0 {
-			tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,request,cost,confirm)
-			    VALUES (?,?,?,?,?,?)`, bid, g.ID, g.Name, g.Stock, g.Cost, 0)
-		}
+		tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm)
+			VALUES (?,?,?,?,?,?)`, id, g.ID, g.Name, g.Cost, g.Stock, g.Stock)
 	}
+	return id
 }

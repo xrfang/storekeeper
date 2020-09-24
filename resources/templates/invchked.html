@@ -5,7 +5,7 @@
     <span class="navbar-toggler-icon"></span>
   </button>
   <div class="collapse navbar-collapse" id="navbarMenu">
-    <a class="navbar-brand" href="#" id="title"></a>
+    <a class="navbar-brand" href="#">库存盘点</a>
     <ul class="navbar-nav ml-auto">
 	  <a class="nav-link" href="/invchk"><i class="fas fa-chevron-circle-left"></i></a>
     </ul>
@@ -55,7 +55,7 @@
 	  </p>
 	  <p id="cart" style="font-family:monospace;font-size:large"></p>
 	  <p id="fin" style="text-align:center;margin-top:2rem">
-		<button onclick="doneInvChk()" class="btn btn-success">&nbsp;完成盘点&nbsp;</button>
+		<button onclick="doneInvChk()" class="btn btn-success">&nbsp;结束盘点&nbsp;</button>
 	  </p>	  
 	  <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
 	</div>
@@ -69,7 +69,7 @@
   		<button type="button" class="close" data-dismiss="modal">&times;</button>
   	  </div>
   	  <div class="modal-body">
-  		<p>某些药材的库存数量与实际清点不符，如现在确认盘点完成，将修改这些药材的库存。</p>
+  		<p>某些药材的库存数量与实际清点不符，如现在确认盘点结束，将修改这些药材的库存。</p>
   		<div class="modal-footer" style="padding-right:0;padding-bottom:0">
   		  <button type="button" class="btn btn-secondary" data-dismiss="modal">取 消</button>
   		  <button type="button" class="btn btn-success" data-dismiss="modal">完 成</button>
@@ -163,13 +163,12 @@ function getBillInfo() {
   $.get(`/api/get/${bid}?order=1`, function(e) {
 	if (e.items == null) e.items = []
 	if (e.bill.status > 0) {
-	  $('#title').text('盘点单')
       $('#act').attr("disabled", true)
       $('#goods').attr("disabled", true)
       $('#memo').attr("disabled", true)
 	  $('#fin').css("display", "none")
 	  var upd = new Date(e.bill.updated)
-	  $('#finfo').text(`完成时间：${upd.toLocaleString()}`)
+	  $('#finfo').text(`结束时间：${upd.toLocaleString()}`)
 	}
 	$('#skucnt').text(e.items.length)
     var diff = 0
@@ -235,12 +234,6 @@ function doneInvChk() {
 $(document).ready(function () {
   $('#uid').val(arg.user.id)
   $('#bid').val(Math.abs(arg.bill))
-  if (arg.bill < 0) {
-	$('#title').text('新建盘点单')
-	$('#creator').val(arg.user.name)
-  } else {
-	$('#title').text('编辑盘点单')
-  }
   getBillInfo()
   $('#goods').on('keypress', function (e) {
     if (e.which === 13) addGoods()

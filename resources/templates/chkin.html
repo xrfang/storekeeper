@@ -33,7 +33,9 @@
 </div>
 <script>
 function openBill(id) {
-  window.location.href = `/chkin/${id}`
+  $.get(`/chkin/${id}?_probe=1`, function() {
+    window.location.href = `/chkin/${id}`
+  })
 }
 function listBills(data) {
   $('#monthlyBills').empty()

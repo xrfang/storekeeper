@@ -435,9 +435,3 @@ func UpdateInventory(bid int) {
 		}
 	}
 }
-
-func InventoryInProgress() bool {
-	var cnt int
-	db.Get(&cnt, "SELECT COUNT(id) FROM bom WHERE type=3 AND status=0")
-	return cnt > 0
-}

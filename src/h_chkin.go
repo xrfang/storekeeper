@@ -34,7 +34,7 @@ func chkInEdit(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	if db.InventoryInProgress() {
+	if db.InventoryWIP() != 0 {
 		http.Error(w, "当前有未结束的盘点", http.StatusConflict)
 		return
 	}

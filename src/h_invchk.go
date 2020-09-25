@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"storekeeper/db"
 	"strconv"
@@ -63,37 +64,26 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		assert(r.ParseForm())
 		item := r.FormValue("item")
-		//TODO: 使用PSItems Parser取代SearchGoods
-		goods := db.SearchGoods(item)
-		items := []string{}
-		for _, g := range goods {
-			items = append(items, g.Name)
+		ps := db.GetPSItems(item)
+		if len(ps) == 0 {
+			http.Error(w, "输入错误", http.StatusBadRequest)
+			return
 		}
-		req := float64(0)
-		cfm, _ := float(r.FormValue("confirm"))
-		if cfm > 0 && len(items) == 1 {
-			bis := db.GetBillItems(id, goods[0].ID)
-			if len(bis) == 0 {
-				bi := db.BillItem{
-					BomID:     id,
-					GoodsID:   goods[0].ID,
-					GoodsName: goods[0].Name,
-					Request:   0,
-					Confirm:   cfm,
-				}
-				db.SetBillItem(bi, 0)
-			} else {
-				req = bis[0].Request
-				bis[0].Confirm = cfm
-				db.SetBillItem(bis[0], 1)
+		errItems := db.PSItems{}
+		for _, p := range ps {
+			if len(p.Items) != 1 {
+				errItems = append(errItems, p)
+				continue
 			}
+			bis := db.GetBillItems(id, p.Items[0].ID)
+			if len(bis) != 1 {
+				panic(fmt.Errorf("GetBillItems failed: bid=%v; gid=%v", id, p.Items[0].ID))
+			}
+			bis[0].Confirm = p.Weight
+			bis[0].Flag = 1
+			db.SetBillItem(bis[0], 1)
 		}
-		jsonReply(w, map[string]interface{}{
-			"id":   id,
-			"item": items,
-			"req":  req,
-			"cfm":  cfm,
-		})
+		jsonReply(w, errItems)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}

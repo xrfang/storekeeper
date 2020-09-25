@@ -42,8 +42,8 @@
 	<div class="card-body">
 	  <div class="row" style="margin-bottom: 1rem">
 	    <div class="col col-9">
-	      <input type="text" class="form-control" id="goods" placeholder="格式：品名 数量" />
-	      <small class="form-text text-muted">可以输入品名或其拼音索引</small>
+	      <input type="text" class="form-control" id="goods" placeholder="品名 数量 (允许一次输入多组)" />
+	      <small class="form-text text-muted">可以输入药材名称或拼音首字母缩写</small>
 	    </div>
 	    <div class="col col-3" style="padding-left:0">
           <input style="width:100%" type=button id="act" onclick="addGoods()" class="btn btn-success" value="盘  点" />
@@ -105,43 +105,42 @@ function switchHM() {
 	}
 	getBillInfo()
 }
-function pick(item, cnt) {
-  var name = $(item).text()
-  $('#goods').val(`${name} ${cnt}`)
-  addGoods()
+function pick(ti, ii) {
+  var t = $('body').data("rx_items")[ti]
+  var ps = `${t.items[ii].name} ${t.weight}`
+  if (t.memo != '') ps += `(${t.memo})`
+  var g = $('#goods')
+  g.val(`${g.val()} ${ps}`)
+  if (!$('body').data('multi_rx'))
+    addGoods() //当只有一个选项时，直接提交
 }
 function addGoods() {
-  var spec = $('#goods').val().trim().split(/\s+/)
-  if (spec.length != 2) {
-  	toast("输入错误", "示例: “甘草 500”表示“500克甘草”", "warning")
-  	return
-  }
+  var item = $('#goods').val().trim()
+  if (item.length == 0) return
   $('#goods').val('')
-  var item = spec[0]
-  var cnt = parseInt(spec[1])
-  if (isNaN(cnt) || cnt <= 0) {
-  	toast("输入错误", "数量必须是正整数", "warning")
-  	return
-  }
   $('#choice').empty()
   var memo = $('#memo').val()
   var id = $('#bid').val()
-  $.post(`/invchk/item/${id}`, {item:item,confirm:cnt}, function(e) {
-    switch (e.item.length) {
-  	case 0:
-  	  $('#choice').append(`<p><span style='color:red'>${item}</span> 没有找到</p>`)
-  	  break
-  	case 1:
-      break
-  	default:
-  	  var choice = `<p><span style="color:red">${item}</span> 是指`
-  	  $.each(e.item, function(i, it) {
-  	    choice += ` &nbsp;<a onclick="pick(this, ${cnt})" href="#">${it}</a>&nbsp; `
-  	    if(i < e.item.length-1) choice += '还是'
-  	  })
-  	  choice += '?'
-  	  $('#choice').append(choice)			  
-    }
+  $.post(`/invchk/item/${id}`, {item:item}, function(e) {
+	if (e.length > 0) {
+		$('body').data("rx_items", e)
+		var rxCnt = 0
+		$.each(e, function(ti, it) {
+			if (it.items != null && it.items.length > 0) {
+  	            var choice = `<p><span style="color:red">${it.term}</span> 是指`
+  	            $.each(it.items, function(i, t) {
+  	              choice += ` &nbsp;<a onclick="pick(${ti}, ${i})" href="#">${t.name}</a>&nbsp; `
+  	              if(i < it.items.length-1) choice += '还是'
+  	            })
+  	            choice += '?'
+  	            $('#choice').append(choice)
+				rxCnt++					
+			} else {
+				$('#choice').append(`<p><span style='color:red'>${it.term}</span> 没有找到</p>`)
+			}
+		})
+		$('body').data("multi_rx", rxCnt > 1)
+	}
     getBillInfo()
     if ($('#choice').is(':empty')) {
       $('#choice').css('display', 'none')

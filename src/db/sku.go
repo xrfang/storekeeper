@@ -256,32 +256,6 @@ func GetSKUs(ids ...interface{}) (goods []Goods) {
 	return
 }
 
-func SearchGoods(term string) (goods []Goods) {
-	name := strings.ToUpper(strings.TrimSpace(term))
-	term = "%" + name + "%"
-	args := []interface{}{term, term}
-	qry := `SELECT * FROM goods WHERE name LIKE ? OR pinyin LIKE ?`
-	assert(db.Select(&goods, qry, args...))
-	idx := -1
-	for i, g := range goods {
-		ns := strings.FieldsFunc(g.Name, func(c rune) bool {
-			return c == ' ' || c == '　' || c == '\t' || c == ',' || c == '，' ||
-				c == '/' || c == '(' || c == ')' || c == '（' || c == '）'
-		})
-		for _, n := range ns {
-			if strings.TrimSpace(n) == name {
-				idx = i
-				goods[i].Name = n
-				break
-			}
-		}
-	}
-	if idx >= 0 {
-		goods = []Goods{goods[idx]}
-	}
-	return
-}
-
 func FindSKU(idx string) (gs []Goods) {
 	split := func(r rune) bool {
 		return r < 'A' || r > 'Z'

@@ -192,6 +192,7 @@ function addGoods() {
     var memo = $('#memo').val()
     var id = $('#bid').val()
 	var ci = $('#docheckin').attr('value')
+	if (ci == 2) ci = 0 //服务端API不认识ci=2
     $.post(`/chkin/item/${id}`, {mode:ci, rx: rx}, function(e) {
 	  $('body').data("rx_items", e.rx_items)
       var rxCnt = 0		

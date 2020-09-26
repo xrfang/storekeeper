@@ -15,11 +15,11 @@
   <input type="hidden" id="bid" />
   <input type="hidden" id="uid" />
   <div class="row" style="margin-bottom:0.8rem">
-	<div class="col col-3" style="padding-right:0">
+	<div class="col col-4" style="padding-right:0">
 	  <label for="creator"><b>创建者</b></label>
 	  <input type="text" readonly class="form-control" id="creator" />
 	</div>
-	<div class="col col-9">
+	<div class="col col-8">
 	  <label for="memo"><b>备注</b></label>
 	  <div class="input-group" id="igmm">
 		<input type="text" class="form-control" id="memo" />
@@ -28,30 +28,33 @@
   </div>
   <div class="card border-success">
 	<div class="card-header">
-	  <div class="row">
-		<div class="col"><b>药材清单</b></div>
-		<div class="op col">
-		  <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
-		  <div class="dropdown-menu dropdown-menu-right">
-			<a class="dropdown-item" href="#" id="viewstyle" value="0" onclick="switchVS()">切换为表格显示</a>
-			<a class="dropdown-item" href="#" id="hidematch" value="0" onclick="switchHM()">仅显示盘有差异药材</a>
-		  </div>
-		</div>  
-	  </div>
+	  <b>药材清单</b>
 	</div>
 	<div class="card-body">
 	  <div class="row" style="margin-bottom: 1rem">
 	    <div class="col col-9">
-	      <input type="text" class="form-control" id="goods" placeholder="品名 数量 (允许一次输入多组)" />
-	      <small class="form-text text-muted">可以输入药材名称或拼音首字母缩写</small>
+	      <input type="text" class="form-control" id="goods" placeholder="品名 数量..." />
+	      <small class="form-text text-muted">可以输入药材名称或拼音索引</small>
 	    </div>
 	    <div class="col col-3" style="padding-left:0">
-          <input style="width:100%" type=button id="act" onclick="addGoods()" class="btn btn-success" value="盘  点" />
+          <input style="width:100%" type=button id="act" onclick="addGoods()" class="btn btn-success" value="盘点" />
 	    </div>
 	  </div>
 	  <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
-	  <p id="summary" style="font-weight:bold">
-		共有<span id="skucnt"></span>种药材，其中<span id="dfcnt"></span>种盘点有差异
+	  <p id="summary">
+		<fieldset style="border: 1px groove #ddd !important;
+		  padding: 0 1.4em 1.4em 1.4em !important;
+		  margin: 0 0 1.5em 0 !important;
+		  -webkit-box-shadow:  0px 0px 0px 0px #000;
+		  box-shadow:  0px 0px 0px 0px #000;">
+		  <legend style="width:inherit; font-weight:bold;
+		  padding:0 10px;font-size: medium;
+		  border-bottom:none;">盘点状态</legend>
+		  盘点后数量显示为：<b>实际数量 / 记录数量</b>。
+		  名称为<span style="font-weight:bold;color:green">绿色</span>差异小于10克；
+		  <span style="font-weight:bold;color:#F85E00">橙色</span>差异10到50克；
+		  <span style="font-weight:bold;color:red">红色</span>差异大于50克。
+		</fieldset>
 	  </p>
 	  <p id="cart" style="font-family:monospace;font-size:large"></p>
 	  <p id="fin" style="text-align:center;margin-top:2rem">
@@ -65,14 +68,14 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
   	<div class="modal-content">
   	  <div class="modal-header">
-  		<h5 class="modal-title">请注意</h5>
+  		<h5 class="modal-title">请确认</h5>
   		<button type="button" class="close" data-dismiss="modal">&times;</button>
   	  </div>
   	  <div class="modal-body">
-  		<p>某些药材的库存数量与实际清点不符，如现在确认盘点结束，将修改这些药材的库存。</p>
+  		<p>盘点过的药材的库存数量将按实际情况修改，未盘点过的药材库存数量不变。</p>
   		<div class="modal-footer" style="padding-right:0;padding-bottom:0">
-  		  <button type="button" class="btn btn-secondary" data-dismiss="modal">取 消</button>
-  		  <button type="button" class="btn btn-success" data-dismiss="modal">完 成</button>
+  		  <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+  		  <button type="button" class="btn btn-success" data-dismiss="modal">结束</button>
   		</div>
   	  </div>
   	</div>
@@ -84,26 +87,6 @@ function editItem(gid) {
 	$('#choice').css('display', 'none')
 	$('#editem #gid').val(gid)
     $('#editem').modal('show')
-}
-function switchVS() {
-	if($('#viewstyle').attr('value') == "0") {
-	  $('#viewstyle').attr('value', '1')
-	  $('#viewstyle').text('切换为普通显示')
-	} else {
-	  $('#viewstyle').attr('value', '0')
-      $('#viewstyle').text('切换为表格显示')
-	}
-	getBillInfo()
-}
-function switchHM() {
-	if($('#hidematch').attr('value') == "0") {
-	  $('#hidematch').attr('value', '1')
-	  $('#hidematch').text('显示所有药材')
-	} else {
-	  $('#hidematch').attr('value', '0')
-      $('#hidematch').text('仅显盘点有差异药材')
-	}
-	getBillInfo()
 }
 function pick(ti, ii) {
   var t = $('body').data("rx_items")[ti]
@@ -119,7 +102,6 @@ function addGoods() {
   if (item.length == 0) return
   $('#goods').val('')
   $('#choice').empty()
-  var memo = $('#memo').val()
   var id = $('#bid').val()
   $.post(`/invchk/item/${id}`, {item:item}, function(e) {
 	if (e.length > 0) {
@@ -151,8 +133,6 @@ function addGoods() {
 }
 function getBillInfo() {
   var bid = $('#bid').val()
-  var vs = $('#viewstyle').attr('value')
-  var hm = $('#hidematch').attr('value')
   $('#act').attr("disabled", false)
   $('#goods').attr("disabled", false)
   $('#memo').attr("disabled", false)
@@ -161,6 +141,7 @@ function getBillInfo() {
   $('#finfo').text('')
   $.get(`/api/get/${bid}?order=1`, function(e) {
 	if (e.items == null) e.items = []
+	$('#memo').val(e.bill.memo)
 	if (e.bill.status > 0) {
       $('#act').attr("disabled", true)
       $('#goods').attr("disabled", true)
@@ -169,43 +150,24 @@ function getBillInfo() {
 	  var upd = new Date(e.bill.updated)
 	  $('#finfo').text(`结束时间：${upd.toLocaleString()}`)
 	}
-	$('#skucnt').text(e.items.length)
-    var diff = 0
 	$('#creator').val(e.user)
-	switch(vs) {
-	case "0":
-	  $.each(e.items, function(_, it) {
-		if (hm == '1' && it.request == it.confirm) return
-	    var bg =  'white'
-        if (hm == '0' && it.request != it.confirm) {
-      	  bg = 'lightpink'
-		  diff++
-        }
-		var cnt = `${it.request}克`
-		if (it.confirm > 0 && it.confirm != it.request) cnt = `${it.confirm}/${cnt}`
-        $('#cart').append(`<span style="background:${bg};font-family:monospace"
-		  >${it.gname} ${cnt}</span> &nbsp; `)
-	  })
-	  $('#dfcnt').text(diff)
-	  break
-	case "1":
-	  var tbl = `<table class="table table-sm table-hover"><thead class="thead-light">
-	    <tr><th>品名</th><th class="text-right">记录库存</th><th class="text-right">实际库存</th>
-		</tr></thead><tbody>`
-	  $.each(e.items, function(_, it) {
-		if (hm == '1' && it.request == it.confirm) return
-		var bg =  'white'
-		if (hm == '0' && it.request != it.confirm) {
-      	  bg = 'lightpink'
-		  diff++
-        }
-		tbl += `<tr style="background:${bg}"><td>${it.gname}</td><td class="text-right"
-			>${it.request}</td><td class="text-right">${it.confirm}</td></tr>`
-	  })
-	  tbl += `</tbody></table>`
-	  $('#cart').append(tbl)
-	  $('#dfcnt').text(diff)
-	}
+	$.each(e.items, function(_, it) {
+	  var clr = "black"
+	  var cnt = `${it.request}克`
+	  if (it.flag > 0) {
+		var diff = Math.abs(it.request - it.confirm)
+		if (diff < 10)
+		  clr = "green"
+		else if (diff <= 50)
+		  clr = "#F85E00"
+		else
+		  clr = "red"
+		cnt = `${it.confirm}/${it.request}克`
+	  }
+	  var rack = it.rack ? `[${it.rack}]` : ""
+	  $('#cart').append(`<span style="color:${clr};font-family:monospace">
+	    ${rack}${it.gname} ${cnt}</span> &nbsp;`)
+	})
   })
 }
 function submitMemo() {
@@ -223,12 +185,7 @@ function setInvChkDone() {
 	})
 }
 function doneInvChk() {
-  var diff = $('#dfcnt').text()
-  if (diff != '0') {
-    $('#cfmdone').modal('show')
-    return
-  }
-  setInvChkDone()
+  $('#cfmdone').modal('show')
 }
 $(document).ready(function () {
   $('#uid').val(arg.user.id)

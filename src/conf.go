@@ -18,6 +18,7 @@ type Configuration struct {
 	OrgName string  `yaml:"org_name"`
 	TLSCert string  `yaml:"tls_cert"`
 	TLSPKey string  `yaml:"tls_pkey"`
+	OffDuty string  `yaml:"off_duty"`
 	cfgFile string
 	cfgPath string
 }

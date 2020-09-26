@@ -36,7 +36,10 @@ type User struct {
 	Updated *time.Time `json:"updated,omitempty"`
 }
 
-var ErrInvalidOTP = errors.New("invalid otp password")
+var (
+	ErrInvalidOTP   = errors.New("invalid otp password")
+	ErrOutOfService = errors.New("out-of-service")
+)
 
 func findUser(login string) (*User, error) {
 	var u User
@@ -58,6 +61,24 @@ func UpdateOTPKey(login, key string) {
 	}
 }
 
+func genToken(u *User) (string, error) {
+	tok := uuid(16)
+	_, err := db.Exec(`INSERT INTO access (tok,uid,upd) VALUES (?,?,?)`,
+		tok, u.ID, time.Now())
+	return tok, err
+}
+
+func MaintenanceLogin(login string) (string, error) {
+	u, err := findUser(login)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = ErrInvalidOTP
+		}
+		return "", err
+	}
+	return genToken(u)
+}
+
 func Login(login, code string) (string, error) {
 	u, err := findUser(login)
 	if err != nil {
@@ -73,15 +94,9 @@ func Login(login, code string) (string, error) {
 		Algorithm: otp.AlgorithmSHA256,
 	})
 	if !ok {
-		if err == nil {
-			err = ErrInvalidOTP
-		}
-		return "", err
+		return "", ErrInvalidOTP
 	}
-	tok := uuid(16)
-	_, err = db.Exec(`INSERT INTO access (tok,uid,upd) VALUES (?,?,?)`,
-		tok, u.ID, time.Now())
-	return tok, err
+	return genToken(u)
 }
 
 func Logout(token string) error {

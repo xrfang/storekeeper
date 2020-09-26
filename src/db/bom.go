@@ -383,8 +383,9 @@ func SetInventoryByBill(bid, stat int) {
 		if stat != 1 {
 			return
 		}
+		tx.MustExec(`DELETE FROM bom_item WHERE flag=0 AND bom_id=?`, bid)
 		var bis []BillItem
-		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE flag<>0 AND bom_id=?`, bid))
+		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, bid))
 		for _, bi := range bis {
 			tx.MustExec(`UPDATE goods SET stock=? WHERE id=?`, bi.Confirm, bi.GoodsID)
 		}

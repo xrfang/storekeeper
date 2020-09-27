@@ -80,16 +80,13 @@
       <div id="rxref" style="display:none">
         <p style="font-weight:bold">可直接选择下列方剂进行修改：</p>
       </div>
-      <p id="chkout" style="text-align:center;margin-top:2rem">
-        <button onclick="doneCheckOut()" class="btn btn-success">&nbsp;完成出库&nbsp;</button>
-      </p>
       <div id='extbuy' style="display:none">
         <p><b><u>需外购药材清单</u></b></p>
         <p id="xbitems" style="font-family:monospace;font-size:large"></p>
       </div>
-      <div id="paybtn" style="text-align:center;padding:1rem">
-        <button class="btn btn-success" onclick="payBill()"> 结 &nbsp; 帐 </button>
-      </div>
+      <p style="text-align:center;margin-top:2rem">
+        <button id="chkout" onclick="proceedCheckOut()" class="btn btn-success"></button>
+      </p>
       <p id="finfo" class="mb-0 text-muted" style="font-size:small"></p>
     </div>
   </div>
@@ -194,24 +191,57 @@
           </div>
         </div>
         <div class="modal-footer" style="padding-right:0;padding-bottom:0">
-          <button type="button" class="btn btn-success" data-dismiss="modal"> 支 付 </button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-success" data-dismiss="modal">确定</button>
         </div>
       </div>
     </div>
   </div>
 </div>
-<div class="modal fade" id="cfmdone" tabindex="-1" role="dialog">
+<div class="modal fade" id="cfmout" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">确认出库</h5>
+        <h5 class="modal-title">订单发货</h5>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
-        <p>出库完成后条目不能再更改（但可以修改费用和备注等）</p>
+        <div class="form-group">
+          <h5>请输入快递单号（包括快递公司名字）</h5>
+        </div>
+        <div class="form-group row">
+          <div class="col">
+            <div class="input-group mb-2">
+              <div class="input-group-prepend">
+                <div class="input-group-text">&numero;</div>
+              </div>
+              <input type="text" class="form-control" id="shipping">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding-left:0;padding-right:0;padding-bottom:0">
+          <div style="flex:auto" style="margin-left:0">
+            <i class="fas fa-info-circle"></i> 如不知或无需记录单号可留空
+          </div>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-success" data-dismiss="modal">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="cfmlock" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">锁定库存</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>库存锁定后不能修改剂数或曾删改条目，但可以修改费用和备注等。</p>
         <div class="modal-footer" style="padding-right:0;padding-bottom:0">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">取 消</button>
-          <button type="button" class="btn btn-success" data-dismiss="modal">完 成</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-success" data-dismiss="modal">确定</button>
         </div>
       </div>
     </div>
@@ -220,8 +250,16 @@
 <script>
   var arg = {{.}}
   var bill //从服务器读取的bill详情
-  function doneCheckOut() {
-    $('#cfmdone').modal('show')
+  function proceedCheckOut() {
+    switch(bill.status) {
+    case 0:
+      $('#cfmlock').modal('show')
+      break
+    case 1:
+      $('#cfmout').modal('show')
+      break
+    case 2:
+    }
   }
   function payBill() {
     $('#paybill').modal('show')
@@ -335,57 +373,64 @@
       }
     })
   }
+  function showExtBuy(sets, items) {
+    var lack = []
+    $.each(items, function (_, it) {
+      var diff = it.request - it.confirm
+      if (it.flag == 0 && diff != 0) lack.push({ "name": it.gname, "diff": diff * sets })
+    })
+    if (lack.length > 0) {
+      $('#xbitems').empty()
+      $.each(lack, function (_, l) {
+        $('#xbitems').append(`<span>${l["name"]} ${l["diff"].toFixed(0)}克 &nbsp; </span>`)
+      })
+      $('#extbuy').css('display', '')
+    }
+  }
   function getBillInfo() {
+    $('#act').attr("disabled", true)
+    $('#memo').attr("disabled", false)
+    $('#goods').val('')
+    $('#payamt').text('')
+    $('#finfo').text('')
+    $('#chkout').css('display', '')
+    $('#extbuy').css('display', 'none')
     var bid = $('#bid').val()
     var so = $('#sortorder').attr('value')
-    $('#act').attr("disabled", false)
-    $('#goods').attr("disabled", false)
-    $('#memo').attr("disabled", false)
-    $('#finfo').text('')
-    $('#chkout').css('display', 'none')
-    $('#extbuy').css('display', 'none')
     $.get(`/api/get/${bid}?order=${so}`, function (e) {
       bill = e.bill
-      $('#finfo').text(``)
-      $('#payamt').text('')
-      $('#paybtn').css("display", "none")
-      if (bill.status == 0) {
-        $('#chkout').css('display', '')
-        $('#sets').html(`<a id="sets" onclick="editSets()" href="#">${bill.sets}</a>`)
-      } else {
-        $('#sets').text(bill.sets)
-        var lack = []
-        $.each(e.items, function (_, it) {
-          var diff = it.request - it.confirm
-          if (it.flag == 0 && diff != 0) lack.push({ "name": it.gname, "diff": diff * bill.sets })
-        })
-        if (lack.length > 0) {
-          $('#xbitems').empty()
-          $.each(lack, function (_, l) {
-            $('#xbitems').append(`<span>${l["name"]} ${l["diff"]}克 &nbsp; </span>`)
-          })
-          $('#extbuy').css('display', '')
-        }
-        $('#act').attr("disabled", true)
-        var upd = new Date(bill.updated)
-        if (bill.status == 1) {
-          $('#paybtn').css("display", "")
-        } else {
-          $('#payamt').text(`（实收${bill.paid}元）`)
-          $('#finfo').text(`结账时间：${upd.toLocaleString()}`)
-        }
-      }
+      $('#memo').val(bill.memo)
       $('#requester').val(bill.user)
       $('#markup').val(bill.markup)
       $('#fee').val(bill.fee)
       $('#itemcount').text(bill.count)
       var markup = (100 + parseInt(bill.markup)) / 100
-      var sp = bill.cost
-      var charge = (sp * bill.sets) * markup + bill.fee
-      $('#setprice').text(sp.toFixed(2))
+      var charge = (bill.cost * bill.sets) * markup + bill.fee
+      $('#setprice').text(bill.cost.toFixed(2))
       $('#charge').text(charge.toFixed(2))
-      $('#goods').val('')
-      $('#memo').val(bill.memo)
+      var sets = `<span>${bill.sets}</span>`
+      switch(bill.status) {
+      case 0: //编辑中
+        $('#act').attr("disabled", false)
+        sets = `<a id="sets" onclick="editSets()" href="#">${bill.sets}</a>`
+        $('#chkout').text('锁定库存')
+        break
+      case 1: //库存锁定
+        showExtBuy(bill.sets, e.items)
+        $('#chkout').text('完成出库')
+        break
+      case 2: //出库完成
+        showExtBuy(bill.sets, e.items)
+        $('#chkout').text('结帐')
+        break
+      case 3: //已经收款
+        showExtBuy(bill.sets, e.items)
+        $('#chkout').css('display', 'none')
+        var upd = new Date(bill.updated)
+        $('#payamt').text(`（实收${bill.paid}元）`)
+        $('#finfo').text(`结账时间：${upd.toLocaleString()}`)
+      }
+      $('#sets').html(sets)
       $('#cart').empty()
       if (e.items != null && e.items.length > 0) {
         $.each(e.items, function (_, it) {
@@ -543,7 +588,7 @@
         })
       }
     })
-    $('#cfmdone').on('hide.bs.modal', function (e) {
+    $('#cfmlock').on('hide.bs.modal', function (e) {
       var btn = $(document.activeElement)
       if (btn.hasClass("btn-success")) {
         var bid = $('#bid').val()
@@ -552,6 +597,15 @@
         })
       }
     })
+    $('#cfmout').on('hide.bs.modal', function (e) {
+      var btn = $(document.activeElement)
+      if (btn.hasClass("btn-success")) {
+        var bid = $('#bid').val()
+        $.post(`/api/set/${bid}`, { key: "stat", val: 2 }, function (e) {
+          getBillInfo()
+        })
+      }
+    })    
     $('#paybill').on('hide.bs.modal', function (e) {
       var btn = $(document.activeElement)
       if (btn.hasClass("btn-success")) {

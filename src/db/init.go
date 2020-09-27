@@ -46,7 +46,7 @@ func setupSchema() {
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（如运费、外购费）
         "sets"    INTEGER NOT NULL DEFAULT 1,                  -- 服数
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
-        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（0=未完成；1=已完成；2=已收款）
+        "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（原始状态一律为0，其他状态各单据类型自行定义）
         "paid"    NUMERIC NOT NULL DEFAULT 0,                  -- 实际付款金额
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最后更新时间戳

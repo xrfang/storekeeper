@@ -42,6 +42,9 @@ func main() {
 	}
 	L = NewLogger(cf.LogPath, 1024*1024, 10)
 	L.SetDebug(cf.DbgMode)
+	if cf.OffDuty != "" {
+		db.ReokeTokens()
+	}
 	policy := res.Verbatim
 	if cf.DbgMode {
 		policy = res.OverwriteIfNewer

@@ -104,6 +104,10 @@ func Logout(token string) error {
 	return err
 }
 
+func ReokeTokens() {
+	db.MustExec(`DELETE FROM access`)
+}
+
 func CheckToken(token string) int {
 	var uid int
 	var upd time.Time

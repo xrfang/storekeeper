@@ -97,9 +97,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		assert(r.ParseForm())
 		status, _ := strconv.Atoi(r.FormValue("status"))
 		if status > 0 { //修改进货单状态
-			b, _ := db.GetBill(id, -1) //第二参数不是0或1表示不需要获取条目
-			b.Status = 1
-			db.SetBill(b)
+			db.SetInventoryByBill(id) //标记为完成并修改库存数量
 			return
 		}
 		gid, _ := strconv.Atoi(r.FormValue("gid"))

@@ -198,7 +198,7 @@
     </div>
   </div>
 </div>
-<div class="modal fade" id="cfmout" tabindex="-1" role="dialog">
+<div class="modal fade" id="cfmship" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -215,7 +215,7 @@
               <div class="input-group-prepend">
                 <div class="input-group-text">&numero;</div>
               </div>
-              <input type="text" class="form-control" id="shipping">
+              <input type="text" class="form-control" id="bol">
             </div>
           </div>
         </div>
@@ -256,9 +256,10 @@
       $('#cfmlock').modal('show')
       break
     case 1:
-      $('#cfmout').modal('show')
+      $('#cfmship').modal('show')
       break
     case 2:
+      $('#paybill').modal('show')
     }
   }
   function payBill() {
@@ -592,16 +593,17 @@
       var btn = $(document.activeElement)
       if (btn.hasClass("btn-success")) {
         var bid = $('#bid').val()
-        $.post(`/api/set/${bid}`, { key: "stat", val: 1 }, function (e) {
+        $.post(`/api/set/${bid}`, { key: "setinv" }, function (e) {
           getBillInfo()
         })
       }
     })
-    $('#cfmout').on('hide.bs.modal', function (e) {
+    $('#cfmship').on('hide.bs.modal', function (e) {
       var btn = $(document.activeElement)
       if (btn.hasClass("btn-success")) {
         var bid = $('#bid').val()
-        $.post(`/api/set/${bid}`, { key: "stat", val: 2 }, function (e) {
+        var bol = $('#bol').val() //运单号
+        $.post(`/api/set/${bid}`, { key: "ship", val: bol }, function (e) {
           getBillInfo()
         })
       }

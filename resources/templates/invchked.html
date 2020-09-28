@@ -180,7 +180,7 @@ function submitMemo() {
 }
 function setInvChkDone() {
 	var bid = $('#bid').val()
-	$.post(`/api/set/${bid}`, {key: "stat", val: 1}, function(e) {
+	$.post(`/api/set/${bid}`, { key: "setinv" }, function(e) {
 		getBillInfo()
 	})
 }

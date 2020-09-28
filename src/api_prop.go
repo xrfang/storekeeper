@@ -66,9 +66,8 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 			Flag:      bis[0].Flag,
 			Memo:      memo,
 		}, 1)
-	case "stat":
-		stat, _ := strconv.Atoi(val)
-		db.SetInventoryByBill(id, stat)
+	case "setinv":
+		db.SetInventoryByBill(id)
 	case "memo":
 		b, _ := db.GetBill(id, -1)
 		b.Memo = val
@@ -106,14 +105,25 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 		b, _ := db.GetBill(id, -1)
 		b.Sets = sets
 		db.SetBill(b)
+	case "ship":
+		b, _ := db.GetBill(id, -1)
+		if b.Status != 1 {
+			panic(fmt.Errorf("bill #%d: expect status 1 when shipping", id))
+		}
+		b.Courier = val
+		b.Status = 2
+		db.SetBill(b)
 	case "paid":
 		pay, err := float(val)
 		if err != nil {
 			panic(err)
 		}
 		b, _ := db.GetBill(id, -1)
+		if b.Status != 2 {
+			panic(fmt.Errorf("bill #%d: expect status 2 when paying", id))
+		}
 		b.Paid = pay
-		b.Status = 2
+		b.Status = 3
 		db.SetBill(b)
 	}
 }

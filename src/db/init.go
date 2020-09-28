@@ -47,6 +47,7 @@ func setupSchema() {
         "sets"    INTEGER NOT NULL DEFAULT 1,                  -- 服数
         "memo"    TEXT NOT NULL DEFAULT "",                    -- 备注
         "status"  INTEGER NOT NULL DEFAULT 0,                  -- 状态（原始状态一律为0，其他状态各单据类型自行定义）
+        "courier" TEXT NOT NULL DEFAULT "",                    -- 运单号
         "paid"    NUMERIC NOT NULL DEFAULT 0,                  -- 实际付款金额
         "created" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 创建时间戳
         "updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最后更新时间戳

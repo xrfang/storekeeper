@@ -44,6 +44,16 @@ function openBill(id) {
     window.location.href = `/chkout/${id}`
   })
 }
+function viewBill(e) {
+  var tag = e.target.tagName.toLowerCase()
+  if (tag == "td") {
+    var bid = $(e.target).parent().attr("bid")
+    openBill(bid)
+  } else {
+    var bol = $(e.target).attr("bol")
+    toast("运单号", bol, "info")
+  }
+}
 function listBills(data) {
   $('#monthlyBills').empty()
   $.each(data.summary, function(i, s) {
@@ -82,22 +92,29 @@ function listBills(data) {
         var t = new Date(b.created)
         var when = `${t.getMonth()+1}月${t.getDate()}日`
         var summary = ""
+        var clr = ""
         switch(b.status) {
         case 0:
           clr = "red"
           summary = `${b.count}种药材`
           break
         case 1:
+          clr = "purple"
+          summary = `${b.count}种药材`
+          break
+        case 2:
           var clr = "black"
           var amount= b.sets*b.cost*(1+b.markup/100)+b.fee
           summary = `欠${amount.toFixed(2)}元`
+          if(b.courier) summary += ` <i bol="${b.courier}" class="fas fa-shipping-fast"></i>`
           break
-        case 2:
+        case 3:
           clr = "darkgray"
           summary = `收${b.paid.toFixed(2)}元`
+          if(b.courier) summary += ` <i bol="${b.courier}" class="fas fa-shipping-fast"></i>`
         }
         list += `
-          <tr style="color:${clr};cursor:pointer" onclick="openBill(${b.id})">
+          <tr bid="${b.id}" style="color:${clr};cursor:pointer" onclick="viewBill(event)">
             <td>${when}</td>
             <td>${data.users[b.user]}</td>
             <td>${summary}</td>

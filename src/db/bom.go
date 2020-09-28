@@ -24,6 +24,7 @@ type Bill struct {
 	Count   int       `json:"count"` //非数据库条目，实时计算
 	Memo    string    `json:"memo"`
 	Status  int       `json:"status"`
+	Courier string    `json:"courier"`
 	Paid    float64   `json:"paid"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -242,15 +243,8 @@ func SetBill(b Bill) (id int) {
 		return int(id)
 	}
 	tx.MustExec(`UPDATE bom SET user_id=?,markup=?,fee=?,memo=?,sets=?,
-		status=?,paid=? WHERE ID=?`, b.User, b.Markup, b.Fee, b.Memo, b.Sets,
-		b.Status, b.Paid, b.ID)
-	if b.Status > 0 && b.Type == 1 {
-		var bis []BillItem
-		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, b.ID))
-		for _, bi := range bis {
-			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, bi.Confirm, bi.GoodsID)
-		}
-	}
+		status=?,paid=?,courier=? WHERE ID=?`, b.User, b.Markup, b.Fee, b.Memo, b.Sets,
+		b.Status, b.Paid, b.Courier, b.ID)
 	return b.ID
 }
 
@@ -320,7 +314,9 @@ func DeleteBillItem(bid, gid int) {
 	assert(err)
 }
 
-func SetInventoryByBill(bid, stat int) {
+//请注意：不论是什么类型的Bill，只有在状态0转变为1的时候才会去修改库存！
+//其它的状态修改可以调用SetBill，不能用这个函数。
+func SetInventoryByBill(bid int) {
 	tx, err := db.Beginx()
 	assert(err)
 	defer func() {
@@ -332,27 +328,18 @@ func SetInventoryByBill(bid, stat int) {
 	}()
 	var b Bill
 	assert(tx.Get(&b, `SELECT * FROM bom WHERE id=?`, bid))
-	switch b.Status {
-	case 0:
-		if stat != 1 {
-			panic(fmt.Errorf("bill#%d.status=0; stat=%d", bid, stat))
-		}
-	case 1:
-		if stat != 2 {
-			panic(fmt.Errorf("bill#%d.status=1; stat=%d", bid, stat))
-		}
-		if b.Type != 2 {
-			panic(fmt.Errorf("cannot set stat=2 for bill type %d", b.Type))
-		}
-	default:
-		panic(fmt.Errorf("bill#%d.status=%d; stat=%d", bid, b.Status, stat))
+	if b.Status != 0 {
+		panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
 	}
+	tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, 1, b.ID)
 	switch b.Type {
-	case 2:
-		tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
-		if stat != 1 {
-			return
+	case 1:
+		var bis []BillItem
+		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, b.ID))
+		for _, bi := range bis {
+			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, bi.Confirm, bi.GoodsID)
 		}
+	case 2:
 		type billReq struct {
 			ID        int
 			Stock     float64
@@ -379,10 +366,6 @@ func SetInventoryByBill(bid, stat int) {
 			}
 		}
 	case 3:
-		tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, stat, b.ID)
-		if stat != 1 {
-			return
-		}
 		tx.MustExec(`DELETE FROM bom_item WHERE flag=0 AND bom_id=?`, bid)
 		var bis []BillItem
 		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, bid))

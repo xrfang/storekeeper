@@ -172,9 +172,9 @@ func ListUsers(account int, props ...string) (users []User) {
 		for _, a := range account {
 			b := ab[a.UserID]
 			switch a.Status {
-			case 1:
-				b.due = a.Total
 			case 2:
+				b.due = a.Total
+			case 3:
 				b.paid = a.Total
 			}
 			ab[a.UserID] = b

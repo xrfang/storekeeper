@@ -436,6 +436,7 @@
       if (e.items != null && e.items.length > 0) {
         $.each(e.items, function (_, it) {
           var total = it.in_stock
+          var item = `${it.gname}&nbsp;`
           var bg = "white"
           var extra = false
           if (it.flag != 0) {
@@ -444,10 +445,15 @@
           } else if (Math.abs(it.request * bill.sets - it.in_stock) >= 0.1) {
             bg = "lightpink"
           }
-          var item = `${it.gname}&nbsp;${total}/${it.request}克`
+          if (bill.status > 0 ) {
+            item = `${item}${total}/${it.request}克`
+          } else {
+            item = `${item}${it.request}克`
+            bg = "white"
+          }
           if (extra) 
             item = `[自备]${item}`
-          else if (it.rack !='')
+          else if (it.rack !='' && bill.status > 0)
             item = `[${it.rack}]${item}`
           if (it.memo != "") item += `（${it.memo}）`
           if (bill.status == 0) {

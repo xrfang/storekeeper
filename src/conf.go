@@ -21,6 +21,7 @@ type Configuration struct {
 	OffDuty string  `yaml:"off_duty"`
 	cfgFile string
 	cfgPath string
+	bkupDir string
 }
 
 func (c Configuration) abs(fn string) string {
@@ -40,6 +41,8 @@ func (c *Configuration) Load(fn string) {
 	fp, err := filepath.Abs(fn)
 	assert(err)
 	c.cfgPath = path.Dir(fp)
+	cf.bkupDir = filepath.Join(cf.cfgPath, "backup")
+	assert(os.MkdirAll(cf.bkupDir, 0755))
 }
 
 var cf Configuration
@@ -57,7 +60,9 @@ func loadConfig(cfgFile string) {
 	}
 	cf.WebRoot = cf.abs(cf.WebRoot)
 	cf.LogPath = cf.abs(cf.LogPath)
+	assert(os.MkdirAll(cf.LogPath, 0755))
 	cf.DBFile = cf.abs(cf.DBFile)
+	assert(os.MkdirAll(filepath.Dir(cf.DBFile), 0755))
 	cf.TLSCert = cf.abs(cf.TLSCert)
 	cf.TLSPKey = cf.abs(cf.TLSPKey)
 }

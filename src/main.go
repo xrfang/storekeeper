@@ -42,6 +42,7 @@ func main() {
 	}
 	L = NewLogger(cf.LogPath, 1024*1024, 10)
 	L.SetDebug(cf.DbgMode)
+	startBackup()
 	if cf.OffDuty != "" {
 		db.ReokeTokens()
 	}

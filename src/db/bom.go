@@ -133,6 +133,7 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 	}
 	bills = nil
 	for _, b := range bm {
+		b.Cost = float64(int(b.Cost*10000)) / float64(10000)
 		bills = append(bills, b)
 	}
 	sort.Slice(bills, func(i, j int) (res bool) {
@@ -208,6 +209,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 			bill.Cost += math.Abs(it.Cost * float64(it.Request))
 		}
 	}
+	bill.Cost = float64(int(bill.Cost*10000)) / float64(10000)
 	return
 }
 

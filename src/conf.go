@@ -10,7 +10,7 @@ import (
 
 type Configuration struct {
 	LogPath string  `yaml:"log_path"`
-	DbgMode bool    `yaml:"dbg_mode"`
+	DbgMode bool    `yaml:"debug"`
 	Markup  float64 `yaml:"markup"`
 	Port    string  `yaml:"port"`
 	WebRoot string  `yaml:"web_root"`

@@ -11,7 +11,7 @@ import (
 
 /*
 入库单状态：0=未完成；1=已完成
-出库单状态：0=未完成；1=已完成；2=已收款
+出库单状态：0=未完成；1=已锁库；2=已出库；3=已收款
 */
 type Bill struct {
 	ID      int       `json:"id"`
@@ -24,8 +24,9 @@ type Bill struct {
 	Count   int       `json:"count"` //非数据库条目，实时计算
 	Memo    string    `json:"memo"`
 	Status  int       `json:"status"`
-	Courier string    `json:"courier"`
 	Paid    float64   `json:"paid"`
+	Courier string    `json:"courier"`
+	Changed int64     `json:"changed"` //status最后变化时间戳，注意：除status以外的属性变化不管！
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }
@@ -85,9 +86,9 @@ func ListBillSummary(billType, uid int) []BillSummary {
 	if uid > 0 {
 		user = fmt.Sprintf(` AND user_id=%d`, uid)
 	}
-	qry := fmt.Sprintf(`SELECT COUNT(id) AS count,strftime('%%Y-%%m', created) AS
-		month FROM bom WHERE type=%d%s GROUP BY month ORDER BY month DESC`, billType,
-		user)
+	qry := fmt.Sprintf(`SELECT COUNT(id) AS count,strftime('%%Y-%%m', datetime(changed,
+		'unixepoch', 'localtime')) AS month FROM bom WHERE type=%d%s GROUP BY month 
+		ORDER BY month DESC`, billType, user)
 	var bs []BillSummary
 	assert(db.Select(&bs, qry))
 	return bs
@@ -95,16 +96,15 @@ func ListBillSummary(billType, uid int) []BillSummary {
 
 func ListBills(billType, uid int, month string) (bills []Bill) {
 	firstDay := month + "-01" //month格式为yyyy-mm
-	start, _ := time.Parse("2006-01-02", firstDay)
-	until := time.Date(start.Year(), start.Month()+1, start.Day(), 0, 0, 0, 0, time.Local)
-	lastDay := until.Format("2006-01-02")
+	since, _ := time.Parse("2006-01-02", firstDay)
+	until := time.Date(since.Year(), since.Month()+1, since.Day(), 0, 0, 0, 0, time.Local)
 	user := ""
 	if uid > 0 {
 		user = fmt.Sprintf(` AND user_id=%d`, uid)
 	}
-	qry := fmt.Sprintf(`SELECT * FROM bom WHERE type=?%s AND created>=? 
-		AND created<=?`, user)
-	assert(db.Select(&bills, qry, billType, firstDay, lastDay))
+	qry := fmt.Sprintf(`SELECT * FROM bom WHERE type=?%s AND changed>=? 
+		AND changed<=?`, user)
+	assert(db.Select(&bills, qry, billType, since.Unix(), until.Unix()))
 	if len(bills) == 0 {
 		return
 	}
@@ -138,7 +138,7 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 	sort.Slice(bills, func(i, j int) (res bool) {
 		bi := bills[i]
 		bj := bills[j]
-		diff := bi.Created.Unix() - bj.Created.Unix()
+		diff := bi.Changed - bj.Changed
 		if diff > 0 {
 			return true
 		}
@@ -234,17 +234,26 @@ func SetBill(b Bill) (id int) {
 	if b.Sets == 0 {
 		b.Sets = 1
 	}
+	now := time.Now().Unix()
 	if b.ID == 0 {
-		res := tx.MustExec(`INSERT INTO bom (type,user_id,markup,fee,memo,
-			sets,paid) VALUES (?,?,?,?,?,?,?)`, b.Type, b.User, b.Markup,
-			b.Fee, b.Memo, b.Sets, b.Paid)
+		res := tx.MustExec(`INSERT INTO bom (type,user_id,markup,fee,sets,
+			memo,paid,changed) VALUES (?,?,?,?,?,?,?,?)`, b.Type, b.User,
+			b.Markup, b.Fee, b.Sets, b.Memo, b.Paid, now)
 		id, err := res.LastInsertId()
 		assert(err)
 		return int(id)
 	}
-	tx.MustExec(`UPDATE bom SET user_id=?,markup=?,fee=?,memo=?,sets=?,
-		status=?,paid=?,courier=? WHERE ID=?`, b.User, b.Markup, b.Fee, b.Memo, b.Sets,
-		b.Status, b.Paid, b.Courier, b.ID)
+	upd := `UPDATE bom SET user_id=?,markup=?,fee=?,sets=?,memo=?,paid=?,courier=?`
+	arg := []interface{}{b.User, b.Markup, b.Fee, b.Sets, b.Memo, b.Paid, b.Courier}
+	var status int
+	assert(tx.Get(&status, `SELECT status FROM bom WHERE id=?`, b.ID))
+	if status != b.Status {
+		upd += `,status=?,changed=?`
+		arg = append(arg, b.Status, now)
+	}
+	upd += ` WHERE id=?`
+	arg = append(arg, b.ID)
+	tx.MustExec(upd, arg...)
 	return b.ID
 }
 
@@ -331,7 +340,8 @@ func SetInventoryByBill(bid int) {
 	if b.Status != 0 {
 		panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
 	}
-	tx.MustExec(`UPDATE bom SET status=? WHERE id=?`, 1, b.ID)
+	now := time.Now().Unix()
+	tx.MustExec(`UPDATE bom SET status=?,changed=? WHERE id=?`, 1, now, b.ID)
 	switch b.Type {
 	case 1:
 		var bis []BillItem

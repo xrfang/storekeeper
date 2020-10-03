@@ -89,8 +89,8 @@ function listBills(data) {
           <th>概况</th>
         </tr></thead><tbody>`
       $.each(data.list, function(_, b) {
-        var t = new Date(b.created)
-        var when = `${t.getMonth()+1}月${t.getDate()}日`
+        var t = new Date(b.changed * 1000)
+        var when = `${t.getMonth()+1}/${t.getDate()}`
         var summary = ""
         var clr = ""
         switch(b.status) {

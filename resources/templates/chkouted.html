@@ -427,7 +427,7 @@
       case 3: //已经收款
         showExtBuy(bill.sets, e.items)
         $('#chkout').css('display', 'none')
-        var upd = new Date(bill.updated)
+        var upd = new Date(bill.changed * 1000)
         $('#payamt').text(`（实收${bill.paid}元）`)
         $('#finfo').text(`结账时间：${upd.toLocaleString()}`)
       }

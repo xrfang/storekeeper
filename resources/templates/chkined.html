@@ -299,7 +299,7 @@ function getBillInfo() {
 		$('#act').attr("disabled", true)
 		$('#goods').attr("disabled", true)
 		$('#memo').attr("disabled", true)
-		var upd = new Date(e.bill.updated)
+		var upd = new Date(e.bill.changed * 1000)
 		$('#finfo').text(`完成时间：${upd.toLocaleString()}`)
 	}
 	$('#goods').val('')

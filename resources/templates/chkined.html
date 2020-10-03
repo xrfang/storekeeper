@@ -318,8 +318,6 @@ function getBillInfo() {
 	    case "0":
 	      $.each(e.items, function(_, item) {
 			var cap = `${item.gname} ${item.request.toFixed(0)}克`
-			if (typeof(item.rack) != 'undefined' && item.rack != null && item.rack.length > 0)
-			  cap = `[${item.rack}]${cap}`
 			if (e.bill.status == 0) {
 			  var bg =  'white'
               if (item.cost == 0) {

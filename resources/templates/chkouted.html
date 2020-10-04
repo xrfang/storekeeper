@@ -626,6 +626,10 @@
       if (btn.hasClass("btn-success")) {
         var bid = $('#bid').val()
         var pay = $('#paid').val()
+        if (!pay.match(/^[+-]?\d+(\.\d+)?$/)) {
+          toast("错误", "支付金额必须是数字", "error")
+          return
+        }
         $.post(`/api/set/${bid}`, { key: "paid", val: pay }, function (e) {
           var d = new Date(bill.updated)
           var month = '' + (d.getMonth() + 1)

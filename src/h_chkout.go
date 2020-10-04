@@ -47,6 +47,7 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "OK") //可以继续访问
 		return
 	}
+	viewUser := r.URL.Query().Get("user")
 	id, _ := strconv.Atoi(r.URL.Path[8:])
 	switch r.Method {
 	case "GET":
@@ -75,7 +76,11 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 				us = db.ListUsers(u.Client)
 			}
 		}
-		renderTemplate(w, "chkouted.html", map[string]interface{}{"users": us, "bill": id})
+		renderTemplate(w, "chkouted.html", map[string]interface{}{
+			"user":  viewUser,
+			"users": us,
+			"bill":  id,
+		})
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}

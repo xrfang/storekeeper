@@ -41,7 +41,7 @@ var billym={{.Month}}
 var billuser={{.User}}
 function openBill(id) {
   $.get(`/chkout/${id}?_probe=1`, function() {
-    window.location.href = `/chkout/${id}`
+    window.location.href = `/chkout/${id}?user=${billuser}`
   })
 }
 function viewBill(e) {

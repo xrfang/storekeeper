@@ -389,8 +389,11 @@
     }
   }
   function getBillInfo() {
-    $('#act').attr("disabled", true)
+    $('#fee').attr("disabled", false)
+    $('#markup').attr("disabled", false)
     $('#memo').attr("disabled", false)
+    $('#requester').attr("disabled", false)
+    $('#act').attr("disabled", true)
     $('#goods').val('')
     $('#payamt').text('')
     $('#finfo').text('')
@@ -425,6 +428,10 @@
         $('#chkout').text('结帐')
         break
       case 3: //已经收款
+        $('#fee').attr("disabled", true)
+        $('#markup').attr("disabled", true)
+        $('#memo').attr("disabled", true)
+        $('#requester').attr("disabled", true)
         showExtBuy(bill.sets, e.items)
         $('#chkout').css('display', 'none')
         var upd = new Date(bill.changed * 1000)

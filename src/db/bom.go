@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -233,29 +234,82 @@ func SetBill(b Bill) (id int) {
 		}
 		assert(tx.Commit())
 	}()
-	if b.Sets == 0 {
-		b.Sets = 1
+	currentStatus := 0
+	if b.ID != 0 {
+		err := tx.Get(&currentStatus, `SELECT status FROM bom WHERE id=?`, b.ID)
+		if err != nil {
+			panic(fmt.Errorf("status(#%v): %v", b.ID, err))
+		}
 	}
 	now := time.Now().Unix()
+	props := make(map[string]interface{})
+	switch currentStatus {
+	case 0:
+		if b.ID == 0 {
+			props["type"] = b.Type
+			props["changed"] = now
+		}
+		props["user_id"] = b.User
+		props["markup"] = b.Markup
+		props["fee"] = b.Fee
+		if b.Sets <= 0 {
+			props["sets"] = 1
+		} else {
+			props["sets"] = b.Sets
+		}
+		props["memo"] = b.Memo
+	case 1:
+		props["user_id"] = b.User
+		props["markup"] = b.Markup
+		props["fee"] = b.Fee
+		props["memo"] = b.Memo
+	case 2:
+		props["user_id"] = b.User
+		props["markup"] = b.Markup
+		props["fee"] = b.Fee
+		props["memo"] = b.Memo
+		props["courier"] = b.Courier
+		props["paid"] = b.Paid
+	default:
+		panic(fmt.Errorf("not changeable: status(#%v)=%v", b.ID, currentStatus))
+	}
+	if currentStatus != b.Status {
+		props["status"] = b.Status
+		props["changed"] = now
+	}
 	if b.ID == 0 {
-		res := tx.MustExec(`INSERT INTO bom (type,user_id,markup,fee,sets,
-			memo,paid,changed) VALUES (?,?,?,?,?,?,?,?)`, b.Type, b.User,
-			b.Markup, b.Fee, b.Sets, b.Memo, b.Paid, now)
+		t, ok := props["type"].(byte)
+		if !ok || t < 1 || t > 3 {
+			panic(errors.New("missing or invalid bill type"))
+		}
+		uid, _ := props["user_id"].(int)
+		var c int
+		tx.Get(&c, `SELECT COUNT(id) FROM user WHERE id=?`, uid)
+		if c != 1 {
+			panic(errors.New("missing or invalid user_id"))
+		}
+		var ks []string
+		var vs []interface{}
+		for k, v := range props {
+			ks = append(ks, k)
+			vs = append(vs, v)
+		}
+		cmd := fmt.Sprintf(`INSERT INTO bom (%s) VALUES (%s)`, strings.Join(ks, ","),
+			strings.Repeat("?,", len(vs)-1)+`?`)
+		res := tx.MustExec(cmd, vs...)
 		id, err := res.LastInsertId()
 		assert(err)
 		return int(id)
 	}
-	upd := `UPDATE bom SET user_id=?,markup=?,fee=?,sets=?,memo=?,paid=?,courier=?`
-	arg := []interface{}{b.User, b.Markup, b.Fee, b.Sets, b.Memo, b.Paid, b.Courier}
-	var status int
-	assert(tx.Get(&status, `SELECT status FROM bom WHERE id=?`, b.ID))
-	if status != b.Status {
-		upd += `,status=?,changed=?`
-		arg = append(arg, b.Status, now)
+	var ks []string
+	var vs []interface{}
+	for k, v := range props {
+		ks = append(ks, fmt.Sprintf(`%s=?`, k))
+		vs = append(vs, v)
 	}
-	upd += ` WHERE id=?`
-	arg = append(arg, b.ID)
-	tx.MustExec(upd, arg...)
+	vs = append(vs, b.ID)
+	cmd := fmt.Sprintf(`UPDATE bom SET %s WHERE id=?`, strings.Join(ks, ","))
+	tx.MustExec(cmd, vs...)
 	return b.ID
 }
 

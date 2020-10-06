@@ -114,7 +114,11 @@
         }
         var res = xhr.responseJSON
         if (res.stat) {
-          window.location.href = res.goto
+          if (opener) {
+            close()
+            opener.location.reload(true)
+          } else
+            location.href = res.goto
           return
         }
         toast("操作失败", res.mesg, 'error')

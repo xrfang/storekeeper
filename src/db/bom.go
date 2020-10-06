@@ -263,6 +263,7 @@ func SetBill(b Bill) (id int) {
 		props["markup"] = b.Markup
 		props["fee"] = b.Fee
 		props["memo"] = b.Memo
+		props["courier"] = b.Courier
 	case 2:
 		props["user_id"] = b.User
 		props["markup"] = b.Markup

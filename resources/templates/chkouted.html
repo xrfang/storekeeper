@@ -84,6 +84,16 @@
         <p><b><u>需外购药材清单</u></b></p>
         <p id="xbitems" style="font-family:monospace;font-size:large"></p>
       </div>
+      <div id="delivery" class="alert alert-success">
+        <p><b><u>配送信息</u></b></p>
+        <p id="addr">
+        {{if .memo }}
+          {{.memo}}（可<a href="javascript:setAddr()">点击此处</a>修改）
+        {{else}}
+          该用户未设置配送信息，可<a href="javascript:setAddr()">点击此处</a>设置。
+        {{end}}
+        </p>
+      </div>
       <p style="text-align:center;margin-top:2rem">
         <button id="chkout" onclick="proceedCheckOut()" class="btn btn-success"></button>
       </p>
@@ -250,6 +260,10 @@
 <script>
   var arg = {{.}}
   var bill //从服务器读取的bill详情
+  function setAddr() {
+    window.open(`/users/${bill.user}`)
+    $('#addr').html(`<span style="color:red">设置完成后请刷新本页面</span>`)
+  }
   function proceedCheckOut() {
     switch(bill.status) {
     case 0:
@@ -553,7 +567,7 @@
     $('#requester').change(function (e) {
       var id = $('#bid').val()
       $.post(`/api/set/${id}`, { key: "user", val: $('#requester').val() }, function (e) {
-        getBillInfo()
+        location.reload(true)
       })
     })
     $('#bid').val(Math.abs(arg.bill))
@@ -635,7 +649,7 @@
           var month = '' + (d.getMonth() + 1)
           var year = d.getFullYear()
           if (month.length < 2) month = '0' + month;
-          window.location.href = `/chkout?month=${year}-${month}`
+          location.href = `/chkout?month=${year}-${month}`
         })
       }
     })

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"storekeeper/db"
 	"strconv"
+	"strings"
 )
 
 func chkOutList(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +52,7 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Path[8:])
 	switch r.Method {
 	case "GET":
+		var memo string //用户的备注，保存快递信息
 		var us []db.User
 		if id == 0 {
 			us = db.ListUsers(uid)
@@ -68,6 +70,7 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 				db.CloneBillItems(b, ref)
 			}
 			u := db.GetUser(b.User)
+			memo = strings.TrimSpace(u.Memo)
 			if uid == 1 {
 				us = db.ListUsers(1)
 			} else if u.Client == 0 {
@@ -80,6 +83,7 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			"user":  viewUser,
 			"users": us,
 			"bill":  id,
+			"memo":  memo,
 		})
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

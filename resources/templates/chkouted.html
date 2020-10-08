@@ -85,7 +85,7 @@
         <p id="xbitems" style="font-family:monospace;font-size:large"></p>
       </div>
       <div id="delivery" class="alert alert-success">
-        <p><b><u>配送信息</u></b></p>
+        <p><b><u>配送信息</u></b> <a href="#" onclick="setBOL()"><i class="fas fa-shipping-fast"></i> <span id="courier">{{.courier}}</span></a></p>
         <p id="addr">
         {{if .memo }}
           {{.memo}}（可<a href="javascript:setAddr()">点击此处</a>修改）
@@ -212,7 +212,7 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">订单发货</h5>
+        <h5 class="modal-title">配送信息</h5>
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
@@ -260,6 +260,10 @@
 <script>
   var arg = {{.}}
   var bill //从服务器读取的bill详情
+  function setBOL() {
+    $('#cfmship #bol').val($('#courier').text())
+    $('#cfmship').modal('show')
+  }
   function setAddr() {
     window.open(`/users/${bill.user}`)
     $('#addr').html(`<span style="color:red">设置完成后请刷新本页面</span>`)
@@ -417,6 +421,7 @@
     var so = $('#sortorder').attr('value')
     $.get(`/api/get/${bid}?order=${so}`, function (e) {
       bill = e.bill
+      $('#courier').text(bill.courier)
       $('#memo').val(bill.memo)
       $('#requester').val(bill.user)
       $('#markup').val(bill.markup)

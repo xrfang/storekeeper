@@ -52,7 +52,7 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Path[8:])
 	switch r.Method {
 	case "GET":
-		var memo string //用户的备注，保存快递信息
+		var memo, courier string //用户备注信息、快递单号
 		var us []db.User
 		if id == 0 {
 			us = db.ListUsers(uid)
@@ -69,6 +69,7 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			if ref > 0 {
 				db.CloneBillItems(b, ref)
 			}
+			courier = b.Courier
 			u := db.GetUser(b.User)
 			memo = strings.TrimSpace(u.Memo)
 			if uid == 1 {
@@ -80,10 +81,11 @@ func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		renderTemplate(w, "chkouted.html", map[string]interface{}{
-			"user":  viewUser,
-			"users": us,
-			"bill":  id,
-			"memo":  memo,
+			"user":    viewUser,
+			"users":   us,
+			"bill":    id,
+			"memo":    memo,
+			"courier": courier,
 		})
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

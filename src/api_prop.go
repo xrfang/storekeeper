@@ -107,8 +107,8 @@ func apiSetProp(w http.ResponseWriter, r *http.Request) {
 		db.SetBill(b)
 	case "ship":
 		b, _ := db.GetBill(id, -1)
-		if b.Status != 1 {
-			panic(fmt.Errorf("bill #%d: expect status 1 when shipping", id))
+		if b.Status < 1 || b.Status > 2 {
+			panic(fmt.Errorf("bill #%d: expect status 1 or 2 when shipping", id))
 		}
 		b.Courier = val
 		b.Status = 2

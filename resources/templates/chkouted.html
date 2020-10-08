@@ -274,7 +274,10 @@
       $('#cfmlock').modal('show')
       break
     case 1:
-      $('#cfmship').modal('show')
+      var bid = $('#bid').val()
+      $.post(`/api/set/${bid}`, { key: "ship" }, function (e) {
+        getBillInfo()
+      })
       break
     case 2:
       $('#paybill').modal('show')

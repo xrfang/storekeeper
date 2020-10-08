@@ -73,8 +73,9 @@
       <p id="choice" style="display:none;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
       <p id="summary" style="font-weight:bold">
         <span id="itemcount"></span> 种药材，每剂成本
-        <span id="setprice"></span> 元，抓 <span id="sets"></span> 剂，共计
-        <span id="charge"></span> 元<span id="payamt"></span>
+        <span id="setprice"></span> 元，抓 <span id="sets"></span> 剂，共
+        <span id="charge"></span> 元，包装袋费用<span id="packfee"></span>元，
+        总计<span id="sigma" style="color:red"></span>元<span id="payamt"></span>
       </p>
       <p id="cart" style="font-family:monospace;font-size:large"></p>
       <div id="rxref" style="display:none">
@@ -432,8 +433,11 @@
       $('#itemcount').text(bill.count)
       var markup = (100 + parseInt(bill.markup)) / 100
       var charge = (bill.cost * bill.sets) * markup + bill.fee
+      var sigma = charge + bill.pack_fee
       $('#setprice').text(bill.cost.toFixed(2))
       $('#charge').text(charge.toFixed(2))
+      $('#packfee').text(bill.pack_fee.toFixed(2))
+      $('#sigma').text(sigma.toFixed(2))
       var sets = `<span>${bill.sets}</span>`
       switch(bill.status) {
       case 0: //编辑中

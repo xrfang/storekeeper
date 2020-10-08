@@ -104,7 +104,7 @@ function listBills(data) {
           break
         case 2:
           var clr = "black"
-          var amount= b.sets*b.cost*(1+b.markup/100)+b.fee
+          var amount= b.sets*b.cost*(1+b.markup/100)+b.fee+b.pack_fee
           summary = `欠${amount.toFixed(2)}元`
           if(b.courier) summary += ` <i bol="${b.courier}" class="fas fa-shipping-fast"></i>`
           break

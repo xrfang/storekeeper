@@ -19,6 +19,10 @@ type Configuration struct {
 	TLSCert string  `yaml:"tls_cert"`
 	TLSPKey string  `yaml:"tls_pkey"`
 	OffDuty string  `yaml:"off_duty"`
+	PackFee struct {
+		Large float64 `yaml:"large"` //大包装袋价格（每剂一个）
+		Small float64 `yaml:"small"` //小包装袋价格（先煎/后下各一个）
+	} `yaml:"pack_fee"`
 	cfgFile string
 	cfgPath string
 	bkupDir string
@@ -54,6 +58,8 @@ func loadConfig(cfgFile string) {
 	cf.DBFile = "herbs.db"
 	cf.Markup = 30 //系统默认溢价率
 	cf.OrgName = "Herb Store"
+	cf.PackFee.Large = 0.3
+	cf.PackFee.Small = 0.2
 	cf.cfgPath = path.Dir(os.Args[0])
 	if cfgFile != "" {
 		cf.Load(cfgFile)

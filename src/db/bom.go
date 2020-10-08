@@ -10,6 +10,13 @@ import (
 	"time"
 )
 
+var pf [2]float64 //包装费用，全系统公用且运行时不可更改
+
+func SetPackFee(large, small float64) {
+	pf[0] = large
+	pf[1] = small
+}
+
 /*
 入库单状态：0=未完成；1=已完成
 出库单状态：0=未完成；1=已锁库；2=已出库；3=已收款
@@ -21,8 +28,9 @@ type Bill struct {
 	Markup  float64   `json:"markup"`
 	Fee     float64   `json:"fee"`
 	Sets    int       `json:"sets"`
-	Cost    float64   `json:"cost"`  //非数据库条目，实时计算，表示单剂药的成本
-	Count   int       `json:"count"` //非数据库条目，实时计算
+	Cost    float64   `json:"cost"`     //非数据库条目，实时计算，表示单剂药的成本
+	Count   int       `json:"count"`    //非数据库条目，实时计算
+	PackFee float64   `json:"pack_fee"` //非数据库条目，实时计算，包装袋总费用
 	Memo    string    `json:"memo"`
 	Status  int       `json:"status"`
 	Paid    float64   `json:"paid"`
@@ -118,12 +126,20 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 	var bis []BillItem
 	assert(db.Select(&bis, `SELECT * FROM bom_item WHERE bom_id IN (?`+
 		strings.Repeat(`,?`, len(ids)-1)+`)`, ids...))
+	xp := make(map[int][2]float64) //先煎/后下药材的额外包装费用
 	for _, bi := range bis {
 		b := bm[bi.BomID]
 		b.Count++
+		x := xp[bi.BomID]
 		if b.Type == 3 { //盘点单
 			//TODO: 计算盘点单成本
 		} else { //非盘点单
+			if strings.Contains(bi.Memo, "先煎") {
+				x[0] = pf[1]
+			}
+			if strings.Contains(bi.Memo, "后下") {
+				x[1] = pf[1]
+			}
 			if b.Status == 0 {
 				b.Cost += math.Abs(bi.Cost * float64(bi.Request))
 			} else {
@@ -131,10 +147,13 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 			}
 		}
 		bm[bi.BomID] = b
+		xp[bi.BomID] = x
 	}
 	bills = nil
 	for _, b := range bm {
 		b.Cost = float64(int(b.Cost*10000)) / float64(10000)
+		x := xp[b.ID]
+		b.PackFee = float64(b.Sets) * (pf[0] + x[0] + x[1])
 		bills = append(bills, b)
 	}
 	sort.Slice(bills, func(i, j int) (res bool) {
@@ -169,6 +188,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 	var gs []Goods
 	assert(db.Select(&gs, `SELECT id,stock FROM goods WHERE id IN (
 		SELECT gid FROM bom_item WHERE bom_id=?)`, id))
+	var xp [2]float64 //先煎/后下药材的额外包装费用，仅用于出库单
 	bill.Count = len(items)
 	for i, it := range items {
 		switch bill.Type {
@@ -179,6 +199,12 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 				bill.Cost += math.Abs(it.Cost * float64(it.Confirm))
 			}
 		case 2: //出库单
+			if strings.Contains(it.Memo, "先煎") {
+				xp[0] = pf[1]
+			}
+			if strings.Contains(it.Memo, "后下") {
+				xp[1] = pf[1]
+			}
 			it.Request = -it.Request
 			it.Confirm = -it.Confirm
 			it.inStock = func() float64 {
@@ -210,6 +236,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 			bill.Cost += math.Abs(it.Cost * float64(it.Request))
 		}
 	}
+	bill.PackFee = float64(bill.Sets) * (pf[0] + xp[0] + xp[1]) //仅用于出库单
 	bill.Cost = float64(int(bill.Cost*10000)) / float64(10000)
 	return
 }

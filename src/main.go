@@ -40,6 +40,7 @@ func main() {
 		db.UpdateOTPKey("admin", key.Secret())
 		return
 	}
+	db.SetPackFee(cf.PackFee.Large, cf.PackFee.Small)
 	L = NewLogger(cf.LogPath, 1024*1024, 10)
 	L.SetDebug(cf.DbgMode)
 	startBackup()

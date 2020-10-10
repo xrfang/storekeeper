@@ -95,9 +95,13 @@ func ListBillSummary(billType, uid int) []BillSummary {
 	if uid > 0 {
 		user = fmt.Sprintf(` AND user_id=%d`, uid)
 	}
-	qry := fmt.Sprintf(`SELECT COUNT(id) AS count,strftime('%%Y-%%m', datetime(changed,
-		'unixepoch', 'localtime')) AS month FROM bom WHERE type=%d%s GROUP BY month 
-		ORDER BY month DESC`, billType, user)
+	grp := `datetime(changed,'unixepoch','localtime')`
+	if billType == 2 {
+		grp = `created`
+	}
+	qry := fmt.Sprintf(`SELECT COUNT(id) AS count,strftime('%%Y-%%m', %s) AS
+		month FROM bom WHERE type=%d%s GROUP BY month ORDER BY month DESC`,
+		grp, billType, user)
 	var bs []BillSummary
 	assert(db.Select(&bs, qry))
 	return bs
@@ -111,9 +115,15 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 	if uid > 0 {
 		user = fmt.Sprintf(` AND user_id=%d`, uid)
 	}
-	qry := fmt.Sprintf(`SELECT * FROM bom WHERE type=?%s AND changed>=? 
-		AND changed<=?`, user)
-	assert(db.Select(&bills, qry, billType, since.Unix(), until.Unix()))
+	if billType == 2 {
+		qry := fmt.Sprintf(`SELECT * FROM bom WHERE type=?%s AND created>=? 
+		    AND created<=?`, user)
+		assert(db.Select(&bills, qry, billType, since, until))
+	} else {
+		qry := fmt.Sprintf(`SELECT * FROM bom WHERE type=?%s AND changed>=? 
+		    AND changed<=?`, user)
+		assert(db.Select(&bills, qry, billType, since.Unix(), until.Unix()))
+	}
 	if len(bills) == 0 {
 		return
 	}

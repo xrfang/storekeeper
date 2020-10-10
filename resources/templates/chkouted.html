@@ -86,7 +86,7 @@
         <p id="xbitems" style="font-family:monospace;font-size:large"></p>
       </div>
       <div id="delivery" class="alert alert-success">
-        <p><b><u>配送信息</u></b> <a href="#" onclick="setBOL()"><i class="fas fa-shipping-fast"></i> <span id="courier">{{.courier}}</span></a></p>
+        <p><b><u>配送信息</u></b> <a id="setbol" href="#" onclick="setBOL()"><i class="fas fa-shipping-fast"></i> <span id="courier">{{.courier}}</span></a></p>
         <p id="addr">
         {{if .memo }}
           {{.memo}}（可<a href="javascript:setAddr()">点击此处</a>修改）
@@ -421,6 +421,7 @@
     $('#finfo').text('')
     $('#chkout').css('display', '')
     $('#extbuy').css('display', 'none')
+    $('#setbol').css({'pointer-events':'all', 'cursor':'pointer'})
     var bid = $('#bid').val()
     var so = $('#sortorder').attr('value')
     $.get(`/api/get/${bid}?order=${so}`, function (e) {
@@ -458,6 +459,7 @@
         $('#markup').attr("disabled", true)
         $('#memo').attr("disabled", true)
         $('#requester').attr("disabled", true)
+        $('#setbol').css({'pointer-events':'none', 'cursor':'default'})
         showExtBuy(bill.sets, e.items)
         $('#chkout').css('display', 'none')
         var upd = new Date(bill.changed * 1000)

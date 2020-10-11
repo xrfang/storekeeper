@@ -33,7 +33,7 @@
 		<div class="op col">
 		  <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
 		  <div class="dropdown-menu dropdown-menu-right">
-			<a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为货架排序</a>
+			<a class="dropdown-item" href="#" id="showprice" value="0" onclick="showPrice()">显示价格</a>
 			<div class="dropdown-divider"></div>
 			<a class="dropdown-item" href="#" id="docheckin" value="0" onclick="switchCI()">到货入库</a>
 		  </div>
@@ -147,13 +147,14 @@ function editItem(gid) {
 	$('#editem #gid').val(gid)
     $('#editem').modal('show')
 }
-function switchSO() {
-	if($('#sortorder').attr('value') == "0") {
-	  $('#sortorder').attr('value', '1')
-	  $('#sortorder').text('切换为后录在前')
+function showPrice() {
+	var sp = parseInt($('#showprice').attr('value'))
+	if(sp == 0) {
+	  $('#showprice').attr('value', '1')
+	  $('#showprice').text('隐藏价格信息')
 	} else {
-	  $('#sortorder').attr('value', '0')
-      $('#sortorder').text('切换为货架排序')
+	  $('#showprice').attr('value', '0')
+      $('#showprice').text('显示价格信息')
 	}
 	getBillInfo()
 }
@@ -258,14 +259,14 @@ function addGoods() {
 }
 function getBillInfo() {
   var bid = $('#bid').val()
-  var so = $('#sortorder').attr('value')
+  var sp = parseInt($('#showprice').attr('value'))
   var ci = $('#docheckin').attr('value')
   $('#chkin').css('display', 'none')
   $('#act').attr("disabled", false)
   $('#goods').attr("disabled", false)
   $('#memo').attr("disabled", false)
   $('#finfo').text('')
-  $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
+  $.get(`/api/chkin/${bid}?order=1`, function(e) {
 	items = e.items
 	if (e.bill.status == 1) {
 		$('#title').text('进货单')
@@ -312,16 +313,17 @@ function getBillInfo() {
 		  >${e.bill.count}种药材，总价${e.bill.cost.toFixed(2)}元</span>
 		  <a class="btn btn-link fas fa-copy" id="clip" onclick="copyItems()"
 		  data-toggle="tooltip" data-placement="top"></a>`)
-	    $.each(e.items, function(_, item) {
-		  var cap = `${item.gname} ${item.request.toFixed(0)}克`
+	    $.each(e.items, function(_, it) {
+		  var cap = `${it.gname} ${it.request.toFixed(0)}克`
+		  if (sp) cap += `（${it.cost}元/克）`
 		  if (e.bill.status == 0) {
 		    var bg =  'white'
-              if (item.cost == 0) {
-            	  bg = 'lightpink'
-            	  ci = '2'
-              }
-              $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
-                >${cap}</a> &nbsp; `)
+			if (it.cost == 0) {
+			  bg = 'lightpink'
+			  ci = '2'
+			}
+			$('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${it.gid})"
+              >${cap}</a> &nbsp; `)
 		  } else {
 		    $('#cart').append(`${cap} &nbsp; `)  
 		  }

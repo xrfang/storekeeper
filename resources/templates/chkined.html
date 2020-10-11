@@ -33,7 +33,6 @@
 		<div class="op col">
 		  <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
 		  <div class="dropdown-menu dropdown-menu-right">
-			<a class="dropdown-item" href="#" id="viewstyle" value="0" onclick="switchVS()">切换为表格显示</a>
 			<a class="dropdown-item" href="#" id="sortorder" value="0" onclick="switchSO()">切换为货架排序</a>
 			<div class="dropdown-divider"></div>
 			<a class="dropdown-item" href="#" id="docheckin" value="0" onclick="switchCI()">到货入库</a>
@@ -124,16 +123,6 @@ function editItem(gid) {
 	$('#choice').css('display', 'none')
 	$('#editem #gid').val(gid)
     $('#editem').modal('show')
-}
-function switchVS() {
-	if($('#viewstyle').attr('value') == "0") {
-	  $('#viewstyle').attr('value', '1')
-	  $('#viewstyle').text('切换为普通显示')
-	} else {
-	  $('#viewstyle').attr('value', '0')
-      $('#viewstyle').text('切换为表格显示')
-	}
-	getBillInfo()
 }
 function switchSO() {
 	if($('#sortorder').attr('value') == "0") {
@@ -249,7 +238,6 @@ function addGoods() {
 function getBillInfo() {
   var bid = $('#bid').val()
   var so = $('#sortorder').attr('value')
-  var vs = $('#viewstyle').attr('value')
   var ci = $('#docheckin').attr('value')
   $('#chkin').css('display', 'none')
   $('#act').attr("disabled", false)
@@ -274,25 +262,10 @@ function getBillInfo() {
 		  $('#dfcnt').text(dfcnt)
 		  $('#dfamt').text(dfamt)
 		  $('#dfitems').empty()
-		  switch(vs) {
-		  case "0":
-            $.each(lack, function(_, l) {
-			  var diff = (l["diff"] > 0) ? `缺${l["diff"]}` : `多${-l["diff"]}`
-              $('#dfitems').append(`<span>${l["name"]} ${diff}克 &nbsp; </span>`)
-            })
-			break
-		  case "1":
-		    var tbl = `<table class="table table-sm table-hover">
-	          <thead class="thead-light"><tr><th>品名</th><th class="text-right">缺少</th>
-	          <th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
-			$.each(lack, function(_, l) {
-			  var total = l["diff"] * l["cost"]
-			  tbl += `<tr><td>${l["name"]}</td><td class="text-right">${l["diff"]}</td>
-				<td class="text-right">${l["cost"].toFixed(2)}</td>
-				<td class="text-right">${total.toFixed(2)}</td></tr>`				
-			})
-			$('#dfitems').html(tbl)
-		  }
+          $.each(lack, function(_, l) {
+          	var diff = (l["diff"] > 0) ? `缺${l["diff"]}` : `多${-l["diff"]}`
+          	$('#dfitems').append(`<span>${l["name"]} ${diff}克 &nbsp; </span>`)
+          })
 		  $('#diff').css('display', '')
 		}
 		ci = 3 //表示订单已经完成，checkin菜单不可再用
@@ -314,47 +287,20 @@ function getBillInfo() {
 	  if (ci != "1") {
 		if (ci != 3) ci = "0"
 		$('#summary').text(`${e.bill.count}种药材，总价${e.bill.cost.toFixed(2)}元`)
-		switch (vs) {
-	    case "0":
-	      $.each(e.items, function(_, item) {
-			var cap = `${item.gname} ${item.request.toFixed(0)}克`
-			if (e.bill.status == 0) {
-			  var bg =  'white'
+	    $.each(e.items, function(_, item) {
+		  var cap = `${item.gname} ${item.request.toFixed(0)}克`
+		  if (e.bill.status == 0) {
+		    var bg =  'white'
               if (item.cost == 0) {
             	  bg = 'lightpink'
             	  ci = '2'
               }
               $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${item.gid})"
                 >${cap}</a> &nbsp; `)
-			} else {
-			  $('#cart').append(`${cap} &nbsp; `)  
-			}
-	      })
-	      break
-	    case "1":
-	      var tbl = `<table class="table table-sm table-hover">
-	    	<thead class="thead-light"><tr><th>品名</th><th class="text-right">数量</th>
-	    	<th class="text-right">单价</th><th class="text-right">总价</th></tr></thead><tbody>`
-	      $.each(e.items, function(_, item) {
-	        var total = item.cost * item.request
-			var bg =  'white'
-			var name = item.gname
-			if (typeof(item.rack) != 'undefined' && item.rack != null && item.rack.length > 0)
-			  name = `[${item.rack}]${name}`
-			if (e.bill.status == 0) {
-	          if (item.cost == 0) {
-	            bg = 'lightpink'
-	            ci = '2'
-	          }
-			  name = `<a href="#" onclick="editItem(${item.gid})">${name}</a>`
-			}
-	        tbl += `<tr style="font-family:monospace;background:${bg}"><td>${name}</td>
-			  <td class="text-right">${item.request}</td><td class="text-right">${item.cost.toFixed(2)}</td>
-			  <td class="text-right">${total.toFixed(2)}</td></tr>`
-	      })
-	      tbl += `</tbody></table>`
-	      $('#cart').append(tbl)
-	    }
+		  } else {
+		    $('#cart').append(`${cap} &nbsp; `)  
+		  }
+	    })
 	    $('#docheckin').attr('value', ci)
 	  } else {
 		$('#chkin').css('display', '')

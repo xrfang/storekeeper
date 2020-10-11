@@ -192,7 +192,10 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 	case 1:
 		qry += `g.rack`
 		assert(db.Select(&items, qry, id))
-	default: //除以上两种itmOrd外，不返回items
+	case 2:
+		qry += `g.pinyin`
+		assert(db.Select(&items, qry, id))
+	default: //除以上三种itmOrd外，不返回items
 		return
 	}
 	var gs []Goods

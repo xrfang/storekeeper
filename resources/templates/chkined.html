@@ -266,7 +266,7 @@ function getBillInfo() {
   $('#goods').attr("disabled", false)
   $('#memo').attr("disabled", false)
   $('#finfo').text('')
-  $.get(`/api/chkin/${bid}?order=1`, function(e) {
+  $.get(`/api/chkin/${bid}?order=2`, function(e) {
 	items = e.items
 	if (e.bill.status == 1) {
 		$('#title').text('进货单')

@@ -106,16 +106,18 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 			for _, u := range nu {
 				stock[u.Name] = u.Amount
 			}
-			for _, p := range ps {
+			for i, p := range ps {
 				if len(p.Items) == 1 && p.Weight > 0 {
-					db.SetBillItem(db.BillItem{
+					if db.SetBillItem(db.BillItem{
 						BomID:     id,
 						Cost:      p.Items[0].Cost,
 						GoodsID:   p.Items[0].ID,
 						GoodsName: p.Items[0].Name,
 						Memo:      p.Memo,
 						Request:   p.Weight,
-					}, 0)
+					}, 0) {
+						ps[i].Weight = -p.Weight
+					}
 				}
 			}
 			var unused []db.UsageInfo

@@ -51,7 +51,7 @@
 		</div>
 	  </div>
 	  <p id="choice" style="display:none;font-family:monospace;padding:1rem 0.3rem 0.1rem 0.8rem;background:#eeeeee;border-radius:0.6rem"></p>
-	  <p id="summary" style="font-weight:bold;text-decoration:underline"></p>
+	  <p id="summary" style="font-weight:bold"></p>
 	  <p id="cart" style="font-family:monospace;font-size:large"></p>
 	  <div id="unused" style="display:none">
 		<p style="font-weight:bold">以下药材最近<span style="color:red">三个月未使用</span>，不建议采购：</p>
@@ -119,6 +119,29 @@
 </div>
 <script>
 var arg = {{.}}
+var items //用于保存条目
+function setClipboardText(text) {
+    var ta = $("<textarea>");
+    $("body").append(ta);
+    ta.val(text).select();
+    document.execCommand("copy");
+    ta.remove();
+}
+function copyItems() {
+	var clip = $('#clip')
+	clip.tooltip({
+		trigger: "manual",
+		title: "已复制到剪贴板"
+	})
+	var lines = [`品名,数量（斤）`]
+	$.each(items, function(_, it) {
+		var amt = it.request / 500
+		lines.push(`${it.gname},${amt}`)
+	})
+	setClipboardText(lines.join("\n"))
+	clip.tooltip('show')
+	setTimeout(function() {clip.tooltip('hide')}, 1500)
+}
 function editItem(gid) {
 	$('#choice').css('display', 'none')
 	$('#editem #gid').val(gid)
@@ -172,7 +195,6 @@ function pick(ti, ii) {
     if (!$('body').data('multi_rx'))
         addGoods() //当只有一个选项时，直接提交
 }
-
 function addGoods() {
 	var act = $('#act')
 	act.html(`<span class="spinner-border spinner-border-sm" role="status"></span>&nbsp;稍等...`)
@@ -234,7 +256,6 @@ function addGoods() {
       act.html(`添加`)
     })
 }
-
 function getBillInfo() {
   var bid = $('#bid').val()
   var so = $('#sortorder').attr('value')
@@ -245,6 +266,7 @@ function getBillInfo() {
   $('#memo').attr("disabled", false)
   $('#finfo').text('')
   $.get(`/api/chkin/${bid}?order=${so}`, function(e) {
+	items = e.items
 	if (e.bill.status == 1) {
 		$('#title').text('进货单')
 		var lack = []
@@ -286,7 +308,10 @@ function getBillInfo() {
 	if (e.items != null && e.items.length > 0) {
 	  if (ci != "1") {
 		if (ci != 3) ci = "0"
-		$('#summary').text(`${e.bill.count}种药材，总价${e.bill.cost.toFixed(2)}元`)
+		$('#summary').html(`<span style="text-decoration:underline"
+		  >${e.bill.count}种药材，总价${e.bill.cost.toFixed(2)}元</span>
+		  <a class="btn btn-link fas fa-copy" id="clip" onclick="copyItems()"
+		  data-toggle="tooltip" data-placement="top"></a>`)
 	    $.each(e.items, function(_, item) {
 		  var cap = `${item.gname} ${item.request.toFixed(0)}克`
 		  if (e.bill.status == 0) {

@@ -259,6 +259,12 @@
   </div>
 </div>
 <script>
+  window.onload = function() {
+    if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_BACK_FORWARD) {
+      location.reload(true)
+    }
+  }
+  window.onunload = function() { $('#bid').val('') }
   var arg = {{.}}
   var bill //从服务器读取的bill详情
   function setBOL() {
@@ -480,15 +486,15 @@
           } else if (Math.abs(it.request * bill.sets - it.in_stock) >= 0.1) {
             bg = "lightpink"
           }
-          if (bill.status > 0 ) {
+          if (bill.status > 0) {
             item = `${item}${total}/${it.request}克`
           } else {
             item = `${item}${it.request}克`
             bg = "white"
           }
-          if (extra) 
+          if (extra)
             item = `[自备]${item}`
-          else if (it.rack !='' && bill.status > 0)
+          else if (it.rack != '' && bill.status > 0)
             item = `[${it.rack}]${item}`
           if (it.memo != "") item += `（${it.memo}）`
           if (bill.status == 0) {
@@ -648,7 +654,7 @@
           getBillInfo()
         })
       }
-    })    
+    })
     $('#paybill').on('hide.bs.modal', function (e) {
       var btn = $(document.activeElement)
       if (btn.hasClass("btn-success")) {

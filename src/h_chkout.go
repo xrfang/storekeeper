@@ -31,7 +31,8 @@ func chkOutList(w http.ResponseWriter, r *http.Request) {
 func chkOutEdit(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
-			httpError(w, e)
+			L.Err("%v", e)
+			http.Redirect(w, r, "/chkout/", http.StatusTemporaryRedirect)
 		}
 	}()
 	uid := db.CheckToken(getCookie(r, "token"))

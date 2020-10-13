@@ -587,7 +587,7 @@
     $('#requester').change(function (e) {
       var id = $('#bid').val()
       $.post(`/api/set/${id}`, { key: "user", val: $('#requester').val() }, function (e) {
-        location.reload(true)
+        getBillInfo()
       })
     })
     $('#bid').val(Math.abs(arg.bill))

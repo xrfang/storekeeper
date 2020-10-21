@@ -28,6 +28,7 @@ func setupRoutes() {
 	http.HandleFunc("/chkout", chkOutList)
 	http.HandleFunc("/chkout/", chkOutEdit)
 	http.HandleFunc("/chkout/item/", chkOutEditItem)
+	http.HandleFunc("/finchk", finChk)
 	http.HandleFunc("/invstat", invStat)
 	http.HandleFunc("/invchk", invChkList)
 	http.HandleFunc("/invchk/", invChkEdit)

@@ -1,0 +1,23 @@
+{{define "body"}} {{template "header"}}
+{{$wip := false}}
+<nav class="navbar navbar-expand navbar-dark bg-dark">
+  <a class="navbar-brand" href="#"><img src="/imgs/nav_title.png"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMenu">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarMenu">
+    <a class="navbar-brand" href="#">账目</a>
+    <ul class="navbar-nav ml-auto">
+      <a class="nav-link" href="/"><i class="fas fa-chevron-circle-left"></i></a>
+    </ul>
+  </div>
+</nav>
+<div class="container" style="padding-top:1em">
+TODO: ACCOUNT CHECKING 
+</div>
+<script>
+$(document).ready(function () {
+
+})
+</script>
+{{template "footer"}} {{end}}

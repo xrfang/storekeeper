@@ -16,5 +16,7 @@ func apiFinChk(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	jsonReply(w, map[string]interface{}{})
+	jsonReply(w, map[string]interface{}{
+		"mesg": "TODO: financial checking...",
+	})
 }

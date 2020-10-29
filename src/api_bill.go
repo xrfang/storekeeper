@@ -41,10 +41,12 @@ func apiGetBill(w http.ResponseWriter, r *http.Request) {
 	users := db.ListUsers(1)
 	for _, u := range users {
 		if u.ID == bill.User {
-			if u.Markup < 0 {
-				bill.Markup = cf.Markup //系统默认
-			} else {
-				bill.Markup = u.Markup
+			if id == 0 {
+				if u.Markup < 0 {
+					bill.Markup = cf.Markup //系统默认
+				} else {
+					bill.Markup = u.Markup
+				}
 			}
 			res["user"] = u.Name
 			break

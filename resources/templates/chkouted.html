@@ -26,15 +26,6 @@
       </div>
       <small class="form-text text-muted">运费、外配等</small>
     </div>
-    <div class="col">
-      <label for="markup"><b>溢价率</b></label>
-      <div class="input-group">
-        <input type="text" class="form-control border-right-0" id="markup">
-        <div class="input-group-append" id="chgm">
-          <div class="input-group-text">%</div>
-        </div>
-      </div>
-    </div>
   </div>
   <div class="row mb-3">
     <div class="col">
@@ -327,17 +318,6 @@
     })
     $('#chgf').remove()
   }
-  function revertMarkup() {
-    $('#markup').val($('#markup').attr('old'))
-    $('#chgm').html(`<div class="input-group-text">%</div>`)
-  }
-  function submitMarkup() {
-    var id = $('#bid').val()
-    $.post(`/api/set/${id}`, { key: "markup", val: $('#markup').val() }, function (e) {
-      getBillInfo()
-    })
-    $('#chgm').html(`<div class="input-group-text">%</div>`)
-  }
   function setMemoHeight() {
     var memo = $('#memo')
     memo.css('overflow', 'hidden')
@@ -418,7 +398,6 @@
   }
   function getBillInfo() {
     $('#fee').attr("disabled", false)
-    $('#markup').attr("disabled", false)
     $('#memo').attr("disabled", false)
     $('#requester').attr("disabled", false)
     $('#act').attr("disabled", true)
@@ -435,7 +414,6 @@
       $('#courier').text(bill.courier)
       $('#memo').val(bill.memo)
       $('#requester').val(bill.user)
-      $('#markup').val(bill.markup)
       $('#fee').val(bill.fee)
       $('#itemcount').text(bill.count)
       var markup = (100 + parseInt(bill.markup)) / 100
@@ -462,7 +440,6 @@
         break
       case 3: //已经收款
         $('#fee').attr("disabled", true)
-        $('#markup').attr("disabled", true)
         $('#memo').attr("disabled", true)
         $('#requester').attr("disabled", true)
         $('#setbol').css({'pointer-events':'none', 'cursor':'default'})
@@ -539,23 +516,6 @@
         $('#setm').css('border-bottom-right-radius', "0.25rem")
       }
       $('#setm').css('height', bh)
-    })
-    $('#markup').focus(function (e) {
-      $('#markup').attr('old', $('#markup').val())
-    })
-    $('#markup').keyup(function (e) {
-      var txt = $('#markup').val().trim()
-      if (txt == '') {
-        $('#chgm').html(`<div class="input-group-text">%</div>`)
-        return
-      }
-      if (txt.match(/^\d+$/)) {
-        $('#chgm').html(`<button onclick="submitMarkup()" class="btn btn-outline-success border-left-0 border" type="button">
-        <i class="fas fa-check"></i></button>`)
-      } else {
-        $('#chgm').html(`<button onclick="revertMarkup()" class="btn btn-outline-danger border-left-0 border"
-        type="button"><i class="fas fa-times"></i></button>`)
-      }
     })
     $('#fee').focus(function (e) {
       $('#fee').attr('old', $('#fee').val())

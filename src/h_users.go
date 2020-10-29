@@ -13,6 +13,7 @@ type UserInfo struct {
 	ID      int
 	Name    string
 	Login   string
+	Markup  float64
 	Memo    string
 	Client  int
 	AccList []db.User
@@ -73,6 +74,7 @@ func users(w http.ResponseWriter, r *http.Request) {
 				Name:    u.Name,
 				Login:   u.Login,
 				Client:  u.Client,
+				Markup:  u.Markup,
 				Memo:    u.Memo,
 				Created: u.Created.Format("2006-01-02"),
 			}
@@ -102,11 +104,16 @@ func users(w http.ResponseWriter, r *http.Request) {
 		assert(r.ParseForm())
 		id, _ := strconv.Atoi(r.FormValue("id"))
 		cli, _ := strconv.Atoi(r.FormValue("client"))
+		mark, err := strconv.Atoi(r.FormValue("markup"))
+		if err != nil {
+			mark = -1
+		}
 		u := db.User{
 			ID:     id,
 			Name:   strings.TrimSpace(r.FormValue("name")),
 			Login:  strings.ToLower(strings.TrimSpace(r.FormValue("login"))),
 			Client: cli,
+			Markup: float64(mark),
 			Memo:   r.FormValue("memo"),
 		}
 		resp := chkUser(&u)

@@ -14,7 +14,7 @@
 <div class="container" style="padding-top:1em">
   <input type="hidden" id="bid" />
   <input type="hidden" id="uid" />
-  <div class="row">
+  <div class="row" style="margin-right:0">
     <div class="col" style="padding-right:0">
       <label for="requester"><b>用户</b></label>
       <select class="form-control" id="requester"></select>
@@ -463,12 +463,7 @@
           } else if (Math.abs(it.request * bill.sets - it.in_stock) >= 0.1) {
             bg = "lightpink"
           }
-          if (bill.status > 0) {
-            item = `${item}${total}/${it.request}克`
-          } else {
-            item = `${item}${it.request}克`
-            bg = "white"
-          }
+          item = `${item}${total}/${it.request}克`
           if (extra)
             item = `[自备]${item}`
           else if (it.rack != '' && bill.status > 0)

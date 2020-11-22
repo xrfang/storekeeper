@@ -101,11 +101,6 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 		mode, _ := strconv.Atoi(r.FormValue("mode"))
 		switch mode {
 		case 0:
-			_, nu := db.AnalyzeGoodsUsage()
-			stock := make(map[string]int)
-			for _, u := range nu {
-				stock[u.Name] = u.Amount
-			}
 			for i, p := range ps {
 				if len(p.Items) == 1 && p.Weight > 0 {
 					if db.SetBillItem(db.BillItem{
@@ -120,19 +115,6 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 			}
-			var unused []db.UsageInfo
-			_, items := db.GetBill(id, 0)
-			for _, it := range items {
-				amt := stock[it.GoodsName]
-				if amt > 0 {
-					unused = append(unused, db.UsageInfo{
-						Name:   it.GoodsName,
-						Amount: amt,
-						Batch:  1,
-					})
-				}
-			}
-			res["unused"] = unused
 		default:
 			_, items := db.GetBill(id, 0)
 			itm := make(map[string]*db.BillItem)

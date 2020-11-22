@@ -18,12 +18,14 @@ func SetPackFee(large, small float64) {
 }
 
 /*
-入库单状态：0=未完成；1=已完成
+入库单状态：0=未完成；1=已锁单；2=已支付；3=已入库
 出库单状态：0=未完成；1=已锁库；2=已出库；3=已收款
+盘点单状态：0=进行中；1=已完成
+总账单状态：0=进行中；1=已完成
 */
 type Bill struct {
 	ID      int       `json:"id"`
-	Type    byte      `json:"type"` //1=入库；2=出库；3=盘点
+	Type    byte      `json:"type"` //1=入库；2=出库；3=盘点；4=总帐
 	User    int       `json:"user" db:"user_id"`
 	Markup  float64   `json:"markup"`
 	Fee     float64   `json:"fee"`
@@ -35,6 +37,7 @@ type Bill struct {
 	Status  int       `json:"status"`
 	Paid    float64   `json:"paid"`
 	Courier string    `json:"courier"`
+	Ledger  int       `json:"ledger"`  //非总账单所属的总账单ID，若为0表示尚未计入总账单
 	Changed int64     `json:"changed"` //status最后变化时间戳，注意：除status以外的属性变化不管！
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
@@ -311,6 +314,8 @@ func SetBill(b Bill) (id int) {
 		props["memo"] = b.Memo
 		props["courier"] = b.Courier
 		props["paid"] = b.Paid
+	case 3: //理论上说，处于此状态的订单可以修改ledger属性（即所属总账单ID）
+		//但是，因为有专门的流程做总账单生成，因此不允许在此设置
 	default:
 		panic(fmt.Errorf("not changeable: status(#%v)=%v", b.ID, currentStatus))
 	}

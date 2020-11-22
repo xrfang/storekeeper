@@ -92,6 +92,7 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
+		res["unused"] = db.GetUnused(id)
 		jsonReply(w, res)
 	case "POST":
 		assert(r.ParseForm())

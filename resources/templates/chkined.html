@@ -30,14 +30,6 @@
 	<div class="card-header">
 	  <div class="row">
 		<div class="col"><b>药材清单</b></div>
-		<div class="op col">
-		  <i class="fas fa-cog float-right" style="padding-top:0.25rem" data-toggle="dropdown"></i>
-		  <div class="dropdown-menu dropdown-menu-right">
-			<a class="dropdown-item" href="#" id="showprice" value="0" onclick="showPrice()">显示价格</a>
-			<div class="dropdown-divider"></div>
-			<a class="dropdown-item" href="#" id="docheckin" value="0" onclick="switchCI()">到货入库</a>
-		  </div>
-		</div>  
 	  </div>
 	</div>
 	<div class="card-body">
@@ -60,8 +52,8 @@
 	  <p id="wait" style="font-family:monospace;font-size:large"></p>
 	  <p id="wip" style="font-family:monospace;font-size:large"></p>
 	  <p id="done" style="font-family:monospace;font-size:large"></p>
-	  <p id="chkin" style="display:none;text-align:center;margin-top:2rem">
-		<button onclick="doneCheckIn()" class="btn btn-info">&nbsp;完成入库&nbsp;</button>
+	  <p style="text-align:center;margin-top:2rem">
+		<button id="chkin" onclick="proceedCheckIn()" class="btn btn-success"></button>
 	  </p>
       <div id='diff' style="display:none">
         <p><b><u><span id="dfcnt"></span>种药材收货数量有差异，总计差额 <span id="dfamt"></span> 元</u></b></p>
@@ -147,46 +139,6 @@ function editItem(gid) {
 	$('#editem #gid').val(gid)
     $('#editem').modal('show')
 }
-function showPrice() {
-	var sp = parseInt($('#showprice').attr('value'))
-	if(sp == 0) {
-	  $('#showprice').attr('value', '1')
-	  $('#showprice').text('隐藏价格信息')
-	} else {
-	  $('#showprice').attr('value', '0')
-      $('#showprice').text('显示价格信息')
-	}
-	getBillInfo()
-}
-function switchCI() {
-	$('#unused').css("display", "none")
-	switch($('#docheckin').attr('value')) {
-	case "0":
-      $('#docheckin').attr('value', '1')
-	  $('#docheckin').text('暂停入库')
-	  $('#act').val("入  库")
-	  $('#act').removeClass('btn-success')
-	  $('#act').addClass('btn-info')
-	  break
-	case "1":
-	  $('#docheckin').attr('value', '0')
-      $('#docheckin').text('到货入库')
-	  $('#act').val('添  加')
-	  $('#act').removeClass('btn-info')
-	  $('#act').addClass('btn-success')
-	  break
-	case "2":
-	  toast("错误", "尚有药材未设置价格，无法执行入库操作", "error")
-	  return
-	case "3":
-      toast("错误", "该订单已经完成入库", "error")
-	  return
-	case "":
-	  toast("错误", "没有添加药材，无法执行入库操作", "error")
-	  return
-	}
-	getBillInfo()
-}
 function pick(ti, ii) {
     var t = $('body').data("rx_items")[ti]
     var ps = `${t.items[ii].name} ${t.weight}`
@@ -203,6 +155,7 @@ function addGoods() {
     $('#choice').empty()
     var memo = $('#memo').val()
     var id = $('#bid').val()
+	//TODO: remove ci!!!
 	var ci = $('#docheckin').attr('value')
 	if (ci == 2) ci = 0 //服务端API不认识ci=2
     $.post(`/chkin/item/${id}`, {mode:ci, rx: rx}, function(e) {
@@ -239,16 +192,6 @@ function addGoods() {
       })
 	  $('body').data("multi_rx", rxCnt > 1)
       getBillInfo()
-	  if (typeof(e.unused) == 'object' && e.unused != null && e.unused.length > 0) {
-		  var list = ""
-		  $.each(e.unused, function(_, u) {
-			  list += `${u.name} ${u.amount}克&nbsp; &nbsp;`
-		  })	  
-		  $('#unused #list').html(list)
-		  $('#unused').css("display", "")
-	  } else {
-		  $('#unused').css("display", "none")
-	  }
       if ($('#choice').is(':empty')) {
         $('#choice').css('display', 'none')
       } else { 
@@ -257,107 +200,169 @@ function addGoods() {
       act.html(`添加`)
     })
 }
+
+function showCart(items, status) {
+	$('#cart').empty()
+	if (typeof(items) == 'undefined' || items == null || items.length <= 0) return
+	$.each(items, function(_, it) {
+	  var cap = `${it.gname} ${it.request.toFixed(0)}克`
+	  var cost = (it.request.toFixed(0) * it.cost).toFixed(0)
+	  var bg = cost > 0 ? "white" : "lightpink"
+	  var amt = cost > 0 ? `<span style="color:darkgray">（${cost}元） </span>` : `&nbsp; `
+	  switch(parseInt(status)) {
+	  case 0:
+	  case 1: //这两种状态可以编辑单品价格
+	    $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${it.gid})"
+          >${cap}</a>${amt} `)
+	    break
+	  default: //其他状态不可以修改
+	    $('#cart').append(`<span style="background:${bg}">${cap}</span>${amt} `)
+	  }
+	})
+}
+
+function showSummary(bill) {
+	var summary =`<span style="text-decoration:underline">${bill.count}种药材，
+	    总价${bill.cost.toFixed(2)}元</span>`
+	if (parseInt(bill.status) == 1) 
+		summary += `<a class="btn btn-link fas fa-copy" onclick="copyItems()"
+		   id="clip" data-toggle="tooltip" data-placement="top"></a>`
+	$('#summary').html(summary)
+}
+
+function showCheckInProcess(items, status) {
+	$('#wait').empty()
+	$('#wip').empty()
+	$('#done').empty()
+	if (parseInt(status) < 2) return
+	$.each(items, function(i, it) {
+		var req = it.request.toFixed(0)
+		var cfm = it.confirm.toFixed(0)
+		var name = it.gname
+		if (typeof(it.rack) != 'undefined' && it.rack != null && it.rack.length > 0)
+			name = `[${it.rack}]${name}`
+		if (Math.abs(cfm) < 0.01) {
+			$('#wait').append(`${name} ${req}克 &nbsp; `)
+		} else if (Math.abs(cfm - req) < 0.01) {
+			$('#done').append(`${name} ${req}克 &nbsp; `)
+		} else {
+			$('#wip').append(`${name} ${req}克（入库${cfm}克） &nbsp; `)
+		}
+	})
+	if (!$('#wait').is(':empty')) {
+		$('#wait').prepend(`<p><b>未入库药材</b></p>`)
+	}
+	if (!$('#wip').is(':empty')) {
+		$('#wip').prepend(`<p><b>部分入库药材</b></p>`)
+	}
+	if (!$('#done').is(':empty')) {
+		$('#done').prepend(`<p><b>全部入库药材</b></p>`)
+	}
+}
+
+function showCheckInResult(items, status) {
+	$('#diff').css('display', 'none')
+	if (parseInt(status) < 3) return
+	var lack = []
+	var dfcnt = 0
+	var dfamt = 0
+	$.each(items, function(_, it) {
+	  var diff = it.request - it.confirm
+	  if (Math.abs(diff) >= 0.01) {
+		  lack.push({"name": it.gname, "diff": diff, "cost": it.cost})
+		  dfcnt++
+		  dfamt += diff * it.cost
+	  }
+	})
+	if (lack.length > 0) {
+	  $('#dfcnt').text(dfcnt)
+	  $('#dfamt').text(dfamt)
+	  $('#dfitems').empty()
+      $.each(lack, function(_, l) {
+      	var diff = (l["diff"] > 0) ? `缺${l["diff"]}` : `多${-l["diff"]}`
+      	$('#dfitems').append(`<span>${l["name"]} ${diff}克 &nbsp; </span>`)
+      })
+	  $('#diff').css('display', '')
+	}
+    var upd = new Date(bill.changed * 1000)
+    $('#finfo').text(`入库时间：${upd.toLocaleString()}`)
+}
+
+function showOrderSuggestion(unused, status) {
+	$('#unused').css("display", "none")
+	if (parseInt(status) > 0 || typeof(unused) == 'undefined' || 
+	    unused == null || unused.length == 0) return
+	var list = ""
+	$.each(unused, function(_, u) {
+		list += `${u.name} ${u.amount}克&nbsp; &nbsp;`
+	})	  
+	$('#unused #list').html(list)
+	$('#unused').css("display", "")
+}
+
 function getBillInfo() {
   var bid = $('#bid').val()
-  var sp = parseInt($('#showprice').attr('value'))
-  var ci = $('#docheckin').attr('value')
-  $('#chkin').css('display', 'none')
-  $('#act').attr("disabled", false)
-  $('#goods').attr("disabled", false)
+  $('#act').attr("disabled", true)
+  $('#goods').attr("disabled", true)
   $('#memo').attr("disabled", false)
   $('#finfo').text('')
   $.get(`/api/chkin/${bid}?order=2`, function(e) {
 	items = e.items
-	if (e.bill.status == 1) {
-		$('#title').text('进货单')
-		var lack = []
-		var dfcnt = 0
-		var dfamt = 0
-		$.each(e.items, function(_, it) {
-		  var diff = it.request - it.confirm
-		  if (Math.abs(diff) >= 0.01) {
-			  lack.push({"name": it.gname, "diff": diff, "cost": it.cost})
-			  dfcnt++
-			  dfamt += diff * it.cost
-		  }
-		})
-		if (lack.length > 0) {
-		  $('#dfcnt').text(dfcnt)
-		  $('#dfamt').text(dfamt)
-		  $('#dfitems').empty()
-          $.each(lack, function(_, l) {
-          	var diff = (l["diff"] > 0) ? `缺${l["diff"]}` : `多${-l["diff"]}`
-          	$('#dfitems').append(`<span>${l["name"]} ${diff}克 &nbsp; </span>`)
-          })
-		  $('#diff').css('display', '')
-		}
-		ci = 3 //表示订单已经完成，checkin菜单不可再用
-		$('#act').attr("disabled", true)
-		$('#goods').attr("disabled", true)
-		$('#memo').attr("disabled", true)
-		var upd = new Date(e.bill.changed * 1000)
-		$('#finfo').text(`完成时间：${upd.toLocaleString()}`)
-	}
 	$('#goods').val('')
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)
-	$('#cart').empty()
-	$('#wait').empty()
-	$('#wip').empty()
-	$('#done').empty()
-	$('#summary').text('')
-	if (e.items != null && e.items.length > 0) {
-	  if (ci != "1") {
-		if (ci != 3) ci = "0"
-		$('#summary').html(`<span style="text-decoration:underline"
-		  >${e.bill.count}种药材，总价${e.bill.cost.toFixed(2)}元</span>
-		  <a class="btn btn-link fas fa-copy" id="clip" onclick="copyItems()"
-		  data-toggle="tooltip" data-placement="top"></a>`)
-	    $.each(e.items, function(_, it) {
-		  var cap = `${it.gname} ${it.request.toFixed(0)}克`
-		  if (sp) cap += `（${it.cost}元/克）`
-		  if (e.bill.status == 0) {
-		    var bg =  'white'
-			if (it.cost == 0) {
-			  bg = 'lightpink'
-			  ci = '2'
-			}
-			$('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${it.gid})"
-              >${cap}</a> &nbsp; `)
-		  } else {
-		    $('#cart').append(`${cap} &nbsp; `)  
-		  }
-	    })
-	    $('#docheckin').attr('value', ci)
-	  } else {
-		$('#chkin').css('display', '')
-		$.each(e.items, function(i, it) {
-			var req = it.request.toFixed(0)
-			var cfm = it.confirm.toFixed(0)
-			var name = it.gname
-			if (typeof(it.rack) != 'undefined' && it.rack != null && it.rack.length > 0)
-			  name = `[${it.rack}]${name}`
-			if (Math.abs(cfm) < 0.01) {
-				$('#wait').append(`${name} ${req}克 &nbsp; `)
-			} else if (Math.abs(cfm - req) < 0.01) {
-				$('#done').append(`${name} ${req}克 &nbsp; `)
-			} else {
-				$('#wip').append(`${name} ${req}克（入库${cfm}克） &nbsp; `)
-			}
-		})
-		if (!$('#wait').is(':empty')) {
-			$('#wait').prepend(`<p><b>未入库药材</b></p>`)
-		}
-		if (!$('#wip').is(':empty')) {
-			$('#wip').prepend(`<p><b>部分入库药材</b></p>`)
-		}
-		if (!$('#done').is(':empty')) {
-			$('#done').prepend(`<p><b>全部入库药材</b></p>`)
-		}
-	  }
-	} else {
-	  $('#docheckin').attr('value', "")	
-	}
+	showSummary(e.bill)
+	showCart(e.items, e.bill.status)
+	showOrderSuggestion(e.unused, e.bill.status)
+	showCheckInProcess(e.items, e.bill.status)
+	showCheckInResult(e.items, e.bill.status)
+	switch(e.bill.status) {
+    case 0: //编辑中
+      $('#act').attr("disabled", false)
+      $('#goods').attr("disabled", false)
+      $('#chkin').text('锁定订单')
+      break
+    case 1: //订单锁定
+      $('#chkin').text('完成支付')
+      break
+    case 2: //已经支付
+      $('#chkin').text('完成入库')
+      break
+    case 3: //收货入库
+	  $('#memo').attr("disabled", true)
+      $('#chkin').css('display', 'none')
+    }
+	//--
+	//if (e.bill.status == 1) {
+		//$('#title').text('进货单')
+		//var lack = []
+		//var dfcnt = 0
+		//var dfamt = 0
+		//$.each(e.items, function(_, it) {
+		//  var diff = it.request - it.confirm
+		//  if (Math.abs(diff) >= 0.01) {
+			//  lack.push({"name": it.gname, "diff": diff, "cost": it.cost})
+			//  dfcnt++
+			//  dfamt += diff * it.cost
+		//  }
+		//})
+		//if (lack.length > 0) {
+		//  $('#dfcnt').text(dfcnt)
+		//  $('#dfamt').text(dfamt)
+		//  $('#dfitems').empty()
+        //  $.each(lack, function(_, l) {
+          	//var diff = (l["diff"] > 0) ? `缺${l["diff"]}` : `多${-l["diff"]}`
+          	//$('#dfitems').append(`<span>${l["name"]} ${diff}克 &nbsp; </span>`)
+        //  })
+		//  $('#diff').css('display', '')
+		//}
+		//ci = 3 //表示订单已经完成，checkin菜单不可再用
+		//$('#act').attr("disabled", true)
+		//$('#goods').attr("disabled", true)
+		//$('#memo').attr("disabled", true)
+		//var upd = new Date(e.bill.changed * 1000)
+		//$('#finfo').text(`完成时间：${upd.toLocaleString()}`)
+	//}
   })
 }
 function submitMemo() {
@@ -374,11 +379,24 @@ function setCheckInDone() {
 		getBillInfo()
 	})
 }
-function doneCheckIn() {
-	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
-		$('#cfmdone').modal('show')
-		return
-	}
+function proceedCheckIn() {
+    //switch(bill.status) {
+    //case 0:
+    //  $('#cfmlock').modal('show')
+    //  break
+    //case 1:
+    //  var bid = $('#bid').val()
+    //  $.post(`/api/set/${bid}`, { key: "ship" }, function (e) {
+        //getBillInfo()
+    //  })
+    //  break
+    //case 2:
+    //  $('#paybill').modal('show')
+    //}	
+	//if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
+		//$('#cfmdone').modal('show')
+		//return
+	//}
 	setCheckInDone()
 }
 $(document).ready(function () {

@@ -111,6 +111,27 @@ func GetPSItems(text string) PSItems {
 	return ps
 }
 
+func GetUnused(bid int) []UsageInfo {
+	_, nu := AnalyzeGoodsUsage()
+	stock := make(map[string]int)
+	for _, u := range nu {
+		stock[u.Name] = u.Amount
+	}
+	var unused []UsageInfo
+	_, items := GetBill(bid, 0)
+	for _, it := range items {
+		amt := stock[it.GoodsName]
+		if amt > 0 {
+			unused = append(unused, UsageInfo{
+				Name:   it.GoodsName,
+				Amount: amt,
+				Batch:  1,
+			})
+		}
+	}
+	return unused
+}
+
 func GetPrevRx(ps PSItems) []Prescription {
 	var ids []interface{}
 	for _, p := range ps {

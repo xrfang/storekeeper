@@ -96,8 +96,9 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		jsonReply(w, res)
 	case "POST":
 		assert(r.ParseForm())
-		status, _ := strconv.Atoi(r.FormValue("status"))
-		if status > 0 { //修改进货单状态
+		//若status非空，修改进货单状态，目标状态根据当前状态确定，status的值无关紧要
+		if r.FormValue("status") != "" {
+			//TODO...
 			db.SetInventoryByBill(id) //标记为完成并修改库存数量
 			return
 		}

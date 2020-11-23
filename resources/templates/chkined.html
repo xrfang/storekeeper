@@ -332,37 +332,6 @@ function getBillInfo() {
 	  $('#memo').attr("disabled", true)
       $('#chkin').css('display', 'none')
     }
-	//--
-	//if (e.bill.status == 1) {
-		//$('#title').text('进货单')
-		//var lack = []
-		//var dfcnt = 0
-		//var dfamt = 0
-		//$.each(e.items, function(_, it) {
-		//  var diff = it.request - it.confirm
-		//  if (Math.abs(diff) >= 0.01) {
-			//  lack.push({"name": it.gname, "diff": diff, "cost": it.cost})
-			//  dfcnt++
-			//  dfamt += diff * it.cost
-		//  }
-		//})
-		//if (lack.length > 0) {
-		//  $('#dfcnt').text(dfcnt)
-		//  $('#dfamt').text(dfamt)
-		//  $('#dfitems').empty()
-        //  $.each(lack, function(_, l) {
-          	//var diff = (l["diff"] > 0) ? `缺${l["diff"]}` : `多${-l["diff"]}`
-          	//$('#dfitems').append(`<span>${l["name"]} ${diff}克 &nbsp; </span>`)
-        //  })
-		//  $('#diff').css('display', '')
-		//}
-		//ci = 3 //表示订单已经完成，checkin菜单不可再用
-		//$('#act').attr("disabled", true)
-		//$('#goods').attr("disabled", true)
-		//$('#memo').attr("disabled", true)
-		//var upd = new Date(e.bill.changed * 1000)
-		//$('#finfo').text(`完成时间：${upd.toLocaleString()}`)
-	//}
   })
 }
 function submitMemo() {
@@ -373,32 +342,22 @@ function submitMemo() {
   })
   $('#chgm').remove()
 }
-function setCheckInDone() {
+
+function setCheckInStatus() {
 	var bid = $('#bid').val()
-	$.post(`/api/chkin/${bid}`, {status: 1}, function(e) {
+	$.post(`/api/chkin/${bid}`, {status: stat}, function(e) {
 		getBillInfo()
 	})
 }
+
 function proceedCheckIn() {
-    //switch(bill.status) {
-    //case 0:
-    //  $('#cfmlock').modal('show')
-    //  break
-    //case 1:
-    //  var bid = $('#bid').val()
-    //  $.post(`/api/set/${bid}`, { key: "ship" }, function (e) {
-        //getBillInfo()
-    //  })
-    //  break
-    //case 2:
-    //  $('#paybill').modal('show')
-    //}	
-	//if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
-		//$('#cfmdone').modal('show')
-		//return
-	//}
-	setCheckInDone()
+	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
+	    $('#cfmdone').modal('show')
+	    return
+	}
+	setCheckInStatus()
 }
+
 $(document).ready(function () {
   $('#uid').val(arg.user.id)
   $('#bid').val(Math.abs(arg.bill))

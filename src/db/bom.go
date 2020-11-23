@@ -425,8 +425,14 @@ func DeleteBillItem(bid, gid int) {
 	assert(err)
 }
 
-//请注意：不论是什么类型的Bill，只有在状态0转变为1的时候才会去修改库存！
-//其它的状态修改可以调用SetBill，不能用这个函数。
+/*
+针对不同类型单据，本函数适用性如下：
+- 进货单在状态2=>3的时候变更库存，因此，只能设置状态为2的进货单
+- 出货单再状态0=>1的时候变更库存，因此，只能设置状态为0的出货单
+- 盘点单与出货单相同状态条件
+- 总账单不适用本函数
+【请注意】其它的状态修改可以调用SetBill，不能用这个函数。
+*/
 func SetInventoryByBill(bid int) {
 	tx, err := db.Beginx()
 	assert(err)
@@ -439,19 +445,22 @@ func SetInventoryByBill(bid int) {
 	}()
 	var b Bill
 	assert(tx.Get(&b, `SELECT * FROM bom WHERE id=?`, bid))
-	if b.Status != 0 {
-		panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
-	}
 	now := time.Now().Unix()
 	tx.MustExec(`UPDATE bom SET status=?,changed=? WHERE id=?`, 1, now, b.ID)
 	switch b.Type {
 	case 1:
+		if b.Status != 2 {
+			panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
+		}
 		var bis []BillItem
 		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, b.ID))
 		for _, bi := range bis {
 			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, bi.Confirm, bi.GoodsID)
 		}
 	case 2:
+		if b.Status != 0 {
+			panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
+		}
 		type billReq struct {
 			ID        int
 			Stock     float64
@@ -478,6 +487,9 @@ func SetInventoryByBill(bid int) {
 			}
 		}
 	case 3:
+		if b.Status != 0 {
+			panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
+		}
 		tx.MustExec(`DELETE FROM bom_item WHERE flag=0 AND bom_id=?`, bid)
 		var bis []BillItem
 		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, bid))

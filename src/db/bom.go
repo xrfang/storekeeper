@@ -446,12 +446,12 @@ func SetInventoryByBill(bid int) {
 	var b Bill
 	assert(tx.Get(&b, `SELECT * FROM bom WHERE id=?`, bid))
 	now := time.Now().Unix()
-	tx.MustExec(`UPDATE bom SET status=?,changed=? WHERE id=?`, 1, now, b.ID)
 	switch b.Type {
 	case 1:
 		if b.Status != 2 {
 			panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
 		}
+		tx.MustExec(`UPDATE bom SET status=?,changed=? WHERE id=?`, 3, now, b.ID)
 		var bis []BillItem
 		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, b.ID))
 		for _, bi := range bis {
@@ -461,6 +461,7 @@ func SetInventoryByBill(bid int) {
 		if b.Status != 0 {
 			panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
 		}
+		tx.MustExec(`UPDATE bom SET status=?,changed=? WHERE id=?`, 1, now, b.ID)
 		type billReq struct {
 			ID        int
 			Stock     float64
@@ -490,6 +491,7 @@ func SetInventoryByBill(bid int) {
 		if b.Status != 0 {
 			panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
 		}
+		tx.MustExec(`UPDATE bom SET status=?,changed=? WHERE id=?`, 1, now, b.ID)
 		tx.MustExec(`DELETE FROM bom_item WHERE flag=0 AND bom_id=?`, bid)
 		var bis []BillItem
 		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, bid))

@@ -98,8 +98,17 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		assert(r.ParseForm())
 		//若status非空，修改进货单状态，目标状态根据当前状态确定，status的值无关紧要
 		if r.FormValue("status") != "" {
-			//TODO...
-			db.SetInventoryByBill(id) //标记为完成并修改库存数量
+			b, _ := db.GetBill(id, -1)
+			switch b.Status {
+			case 0:
+				b.Status = 1
+			case 1:
+				b.Status = 2
+			case 2:
+				db.SetInventoryByBill(id) //标记为完成并修改库存数量
+				return
+			}
+			db.SetBill(b)
 			return
 		}
 		gid, _ := strconv.Atoi(r.FormValue("gid"))

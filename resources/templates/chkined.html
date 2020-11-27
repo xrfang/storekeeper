@@ -155,10 +155,7 @@ function addGoods() {
     $('#choice').empty()
     var memo = $('#memo').val()
     var id = $('#bid').val()
-	//TODO: remove ci!!!
-	var ci = $('#docheckin').attr('value')
-	if (ci == 2) ci = 0 //服务端API不认识ci=2
-    $.post(`/chkin/item/${id}`, {mode:ci, rx: rx}, function(e) {
+    $.post(`/chkin/item/${id}`, {rx: rx}, function(e) {
 	  $('body').data("rx_items", e.rx_items)
       var rxCnt = 0		
       $.each(e.rx_items, function(ti, rx) {
@@ -170,9 +167,9 @@ function addGoods() {
           break
         case 1:
 		  var it = rx.items[0]
-          if (rx.weight<0 && ci == 0) {
+          if (rx.weight<0 && e.status == 0) {
             $('#choice').append(`<p><span style='color:red'>${it.name}</span> 已经添加了</p>`)
-          } else if (ci == 1) {
+          } else if (e.status == 2) {
 			if (typeof(it.rack) != "undefined" && it.rack != null && it.rack.length > 0)
 			  $('#choice').append(`<p><span style="color:purple">${it.name}</span>请放置于货架<span style="color:red">[${it.rack}]</span></p>`)
 			else
@@ -203,11 +200,17 @@ function addGoods() {
 
 function showCart(items, status) {
 	$('#cart').empty()
-	if (typeof(items) == 'undefined' || items == null || items.length <= 0) return
+	if (typeof(items) == 'undefined' || items == null || items.length <= 0) 
+	  return false
+	var ready = true
 	$.each(items, function(_, it) {
 	  var cap = `${it.gname} ${it.request.toFixed(0)}克`
 	  var cost = (it.request.toFixed(0) * it.cost).toFixed(0)
-	  var bg = cost > 0 ? "white" : "lightpink"
+	  var bg = "white"
+	  if (cost <= 0) {
+		bg = "lightpink"
+		ready = false
+	  } 
 	  var amt = cost > 0 ? `<span style="color:darkgray">（${cost}元） </span>` : `&nbsp; `
 	  switch(parseInt(status)) {
 	  case 0:
@@ -219,6 +222,7 @@ function showCart(items, status) {
 	    $('#cart').append(`<span style="background:${bg}">${cap}</span>${amt} `)
 	  }
 	})
+	return ready
 }
 
 function showSummary(bill) {
@@ -260,9 +264,9 @@ function showCheckInProcess(items, status) {
 	}
 }
 
-function showCheckInResult(items, status) {
+function showCheckInResult(bill, items) {
 	$('#diff').css('display', 'none')
-	if (parseInt(status) < 3) return
+	if (parseInt(bill.status) < 3) return
 	var lack = []
 	var dfcnt = 0
 	var dfamt = 0
@@ -276,7 +280,7 @@ function showCheckInResult(items, status) {
 	})
 	if (lack.length > 0) {
 	  $('#dfcnt').text(dfcnt)
-	  $('#dfamt').text(dfamt)
+	  $('#dfamt').text(dfamt.toFixed(2))
 	  $('#dfitems').empty()
       $.each(lack, function(_, l) {
       	var diff = (l["diff"] > 0) ? `缺${l["diff"]}` : `多${-l["diff"]}`
@@ -312,10 +316,10 @@ function getBillInfo() {
 	$('#creator').val(e.user)
 	$('#memo').val(e.bill.memo)
 	showSummary(e.bill)
-	showCart(e.items, e.bill.status)
+	$('#chkin').prop('disabled', !showCart(e.items, e.bill.status))
 	showOrderSuggestion(e.unused, e.bill.status)
 	showCheckInProcess(e.items, e.bill.status)
-	showCheckInResult(e.items, e.bill.status)
+	showCheckInResult(e.bill, e.items)
 	switch(e.bill.status) {
     case 0: //编辑中
       $('#act').attr("disabled", false)
@@ -326,6 +330,8 @@ function getBillInfo() {
       $('#chkin').text('完成支付')
       break
     case 2: //已经支付
+	  $('#act').attr("disabled", false)
+      $('#goods').attr("disabled", false)
       $('#chkin').text('完成入库')
       break
     case 3: //收货入库
@@ -345,7 +351,8 @@ function submitMemo() {
 
 function setCheckInStatus() {
 	var bid = $('#bid').val()
-	$.post(`/api/chkin/${bid}`, {status: stat}, function(e) {
+	//status的值只需要是非空的就可以了
+	$.post(`/api/chkin/${bid}`, {status: "set"}, function(e) {
 		getBillInfo()
 	})
 }
@@ -426,7 +433,7 @@ $(document).ready(function () {
   $('#cfmdone').on('hide.bs.modal', function(e) {
     var btn = $(document.activeElement)
     if (btn.hasClass("btn-success"))
-		setCheckInDone()
+		setCheckInStatus()
   })
 })
 </script>

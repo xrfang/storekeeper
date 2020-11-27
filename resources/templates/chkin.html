@@ -79,7 +79,20 @@ function listBills(data) {
         </tr></thead><tbody>`
       $.each(data.list, function(_, b) {
         var t = new Date(b.changed * 1000)
-        var clr = (b.status == 0) ? "red" : "black"
+        var clr = ""
+        switch(b.status) {
+        case 0:
+          clr = "red"
+          break
+        case 1:
+          clr = "purple"
+          break
+        case 2:
+          clr = "black"
+          break
+        case 3:
+          clr = "darkgray"
+        }
         var when = `${t.getMonth()+1}/${t.getDate()}`
         list += `
           <tr style="color:${clr};cursor:pointer" onclick="openBill(${b.id})">

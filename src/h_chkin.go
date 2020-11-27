@@ -98,9 +98,12 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 		assert(r.ParseForm())
 		rx := r.FormValue("rx")
 		ps := db.GetPSItems(rx)
-		mode, _ := strconv.Atoi(r.FormValue("mode"))
-		switch mode {
-		case 0:
+		b, items := db.GetBill(id, 0)
+		if b.Type != 1 {
+			panic(fmt.Errorf("chkInEditItem(%d): invalid bill type %d", id, b.Type))
+		}
+		switch b.Status {
+		case 0: //未完成，修改订单
 			for i, p := range ps {
 				if len(p.Items) == 1 && p.Weight > 0 {
 					if db.SetBillItem(db.BillItem{
@@ -115,8 +118,7 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 			}
-		default:
-			_, items := db.GetBill(id, 0)
+		case 2: //已支付，到货入库
 			itm := make(map[string]*db.BillItem)
 			for i, it := range items {
 				itm[it.GoodsName] = &items[i]
@@ -130,7 +132,10 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 				}
 				ps[i] = p
 			}
+		default: //其他状态不允许修改
+			panic(fmt.Errorf("chkInEditItem(%d): invalid status %d", id, b.Status))
 		}
+		res["status"] = b.Status
 		res["rx_items"] = ps
 		jsonReply(w, res)
 	default:

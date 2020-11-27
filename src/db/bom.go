@@ -144,20 +144,28 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 		b := bm[bi.BomID]
 		b.Count++
 		x := xp[bi.BomID]
-		if b.Type == 3 { //盘点单
-			//TODO: 计算盘点单成本
-		} else { //非盘点单
+		switch b.Type {
+		case 1: //入库单
+			if b.Status == 3 { //已入库
+				b.Cost += math.Abs(bi.Cost * float64(bi.Confirm))
+			} else { //未入库
+				b.Cost += math.Abs(bi.Cost * float64(bi.Request))
+			}
+		case 2: //出库单
 			if strings.Contains(bi.Memo, "先煎") {
 				x[0] = pf[1]
 			}
 			if strings.Contains(bi.Memo, "后下") {
 				x[1] = pf[1]
 			}
-			if b.Status == 0 {
+			if b.Status == 0 { //未锁库
 				b.Cost += math.Abs(bi.Cost * float64(bi.Request))
-			} else {
+			} else { //已锁库
 				b.Cost += math.Abs(bi.Cost * float64(bi.Confirm))
 			}
+		case 3: //盘点单
+			//TODO: 计算盘点单成本
+		case 4: //总账单
 		}
 		bm[bi.BomID] = b
 		xp[bi.BomID] = x
@@ -209,10 +217,10 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 	for i, it := range items {
 		switch bill.Type {
 		case 1: //入库单
-			if bill.Status == 0 {
-				bill.Cost += math.Abs(it.Cost * float64(it.Request))
-			} else {
+			if bill.Status == 3 { //已入库
 				bill.Cost += math.Abs(it.Cost * float64(it.Confirm))
+			} else { //未入库
+				bill.Cost += math.Abs(it.Cost * float64(it.Request))
 			}
 		case 2: //出库单
 			if strings.Contains(it.Memo, "先煎") {

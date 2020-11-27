@@ -85,11 +85,28 @@
 		</div>
 	    </div>
 	    <div class="modal-footer" style="padding-right:0;padding-bottom:0">
-		<button type="button" class="btn btn-danger" data-dismiss="modal">删 除</button>
+		<button type="button" class="btn btn-danger" id="del" data-dismiss="modal">删 除</button>
 		<button type="button" class="btn btn-success" data-dismiss="modal">保 存</button>
 	    </div>
 	  </div>
 	</div>
+  </div>
+</div>
+<div class="modal fade" id="cfmlock" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+  	  <div class="modal-header">
+  	    <h5 class="modal-title">锁定订单</h5>
+  	    <button type="button" class="close" data-dismiss="modal">&times;</button>
+  	  </div>
+  	  <div class="modal-body">
+  	    <p>订单锁定后不能增删药材，但可以修改现有药材的价格或订单备注。</p>
+  	    <div class="modal-footer" style="padding-right:0;padding-bottom:0">
+  	  	<button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+  	  	<button type="button" class="btn btn-success" data-dismiss="modal">确定</button>
+  	    </div>
+  	  </div>
+    </div>
   </div>
 </div>
 <div class="modal fade" id="cfmdone" tabindex="-1" role="dialog">
@@ -360,6 +377,10 @@ function setCheckInStatus() {
 }
 
 function proceedCheckIn() {
+	if ($('#chkin').text() == '锁定订单') {
+		$('#cfmlock').modal('show')
+		return
+	}
 	if (!$('#wait').is(':empty') || !$('#wip').is(':empty')) {
 	    $('#cfmdone').modal('show')
 	    return
@@ -400,6 +421,7 @@ $(document).ready(function () {
   $('#editem').on('show.bs.modal', function(e) {
 	var bid = $('#bid').val()
 	var gid = $('#editem #gid').val()
+	$('#editem #del').attr("disabled", $('#chkin').text() != "锁定订单")
 	$.get(`/api/chkin/${bid}?item=${gid}`, function(e) {
 		$('#editem #gname').text(e.gname)
 		$('#editem #count').val(e.request)
@@ -432,10 +454,16 @@ $(document).ready(function () {
         })
 	}
   })
+  $('#cfmlock').on('hide.bs.modal', function (e) {
+    var btn = $(document.activeElement)
+    if (btn.hasClass("btn-success")) {
+	  setCheckInStatus()
+    }
+  })
   $('#cfmdone').on('hide.bs.modal', function(e) {
     var btn = $(document.activeElement)
     if (btn.hasClass("btn-success"))
-		setCheckInStatus()
+	  setCheckInStatus()
   })
 })
 </script>

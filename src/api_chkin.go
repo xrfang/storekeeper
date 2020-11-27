@@ -136,6 +136,10 @@ func apiChkIn(w http.ResponseWriter, r *http.Request) {
 		if bid <= 0 {
 			panic(errors.New("invalid bom id"))
 		}
+		b, _ := db.GetBill(bid, -1)
+		if b.Status > 0 {
+			return
+		}
 		gid := 0
 		if len(ids) == 2 && len(ids[1]) > 0 {
 			gid, _ = strconv.Atoi(ids[1])

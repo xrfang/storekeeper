@@ -320,6 +320,7 @@ function getBillInfo() {
 	showOrderSuggestion(e.unused, e.bill.status)
 	showCheckInProcess(e.items, e.bill.status)
 	showCheckInResult(e.bill, e.items)
+	$('#act').text("添加")
 	switch(e.bill.status) {
     case 0: //编辑中
       $('#act').attr("disabled", false)
@@ -330,6 +331,7 @@ function getBillInfo() {
       $('#chkin').text('完成支付')
       break
     case 2: //已经支付
+	  $('#act').text("入库")
 	  $('#act').attr("disabled", false)
       $('#goods').attr("disabled", false)
       $('#chkin').text('完成入库')

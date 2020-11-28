@@ -40,7 +40,7 @@ func setupSchema() {
     )`)
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS "bom" (            -- 单据表
         "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
-        "type"    INTEGER NOT NULL,                            -- 单据类型（1=入库；2=出库；3=盘点）
+        "type"    INTEGER NOT NULL,                            -- 单据类型（1=入库；2=出库；3=盘点；4=总帐）
         "user_id" INTEGER NOT NULL,                            -- 操作用户ID
         "markup"  NUMERIC NOT NULL DEFAULT 0,                  -- 加价百分比
         "fee"     NUMERIC NOT NULL DEFAULT 0,                  -- 额外费用（如运费、外购费）

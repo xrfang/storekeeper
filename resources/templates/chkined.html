@@ -229,7 +229,8 @@ function showCart(items, status) {
 		ready = false
 	  } 
 	  var amt = cost > 0 ? `<span style="color:darkgray">（${cost}元） </span>` : `&nbsp; `
-	  switch(parseInt(status)) {
+	  var st = parseInt(status)
+	  switch(st) {
 	  case 0:
 	  case 1: //这两种状态可以编辑单品价格
 	    $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${it.gid})"
@@ -239,7 +240,7 @@ function showCart(items, status) {
 	    $('#cart').append(`<span style="background:${bg}">${cap}</span>${amt} `)
 	  }
 	})
-	return ready
+	return ready || st == 0
 }
 
 function showSummary(bill) {

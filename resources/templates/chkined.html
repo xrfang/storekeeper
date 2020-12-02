@@ -244,12 +244,9 @@ function showCart(items, status) {
 }
 
 function showSummary(bill) {
-	var summary =`<span style="text-decoration:underline">${bill.count}种药材，
-	    总价${bill.cost.toFixed(2)}元</span>`
-	if (parseInt(bill.status) == 1) 
-		summary += `<a class="btn btn-link fas fa-copy" onclick="copyItems()"
-		   id="clip" data-toggle="tooltip" data-placement="top"></a>`
-	$('#summary').html(summary)
+	$('#summary').html(`<span style="text-decoration:underline">${bill.count}种药材，
+	    总价${bill.cost.toFixed(2)}元</span> <a class="btn btn-link fas fa-copy"
+		onclick="copyItems()" id="clip" data-toggle="tooltip" data-placement="top"></a>`)
 }
 
 function showCheckInProcess(items, status) {

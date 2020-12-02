@@ -220,6 +220,7 @@ function showCart(items, status) {
 	if (typeof(items) == 'undefined' || items == null || items.length <= 0) 
 	  return false
 	var ready = true
+	status = parseInt(status)
 	$.each(items, function(_, it) {
 	  var cap = `${it.gname} ${it.request.toFixed(0)}克`
 	  var cost = (it.request.toFixed(0) * it.cost).toFixed(0)
@@ -229,8 +230,7 @@ function showCart(items, status) {
 		ready = false
 	  } 
 	  var amt = cost > 0 ? `<span style="color:darkgray">（${cost}元） </span>` : `&nbsp; `
-	  var st = parseInt(status)
-	  switch(st) {
+	  switch(status) {
 	  case 0:
 	  case 1: //这两种状态可以编辑单品价格
 	    $('#cart').append(`<a style="background:${bg}" href="#" onclick="editItem(${it.gid})"
@@ -240,7 +240,7 @@ function showCart(items, status) {
 	    $('#cart').append(`<span style="background:${bg}">${cap}</span>${amt} `)
 	  }
 	})
-	return ready || st == 0
+	return ready || status == 0
 }
 
 function showSummary(bill) {

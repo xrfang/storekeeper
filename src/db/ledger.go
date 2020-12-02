@@ -8,12 +8,12 @@ import (
 type Ledger struct {
 }
 
-func GetLedger(lid int) Ledger {
-
+func GetLedger(lid int) *Ledger {
+	return nil //TODO
 }
 
 //创建一个新的总账单，将当前完成而又没有加入总账单的订单加入该账单
-func LedgerBills() int {
+func LedgerBills() int64 {
 	tx, err := db.Beginx()
 	assert(err)
 	defer func() {

@@ -1,2 +1,5 @@
 ---
 # 默认配置文件
+off_duty: helloworld
+org_name: HerbLab
+debug: true

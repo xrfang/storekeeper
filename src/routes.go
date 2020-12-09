@@ -16,6 +16,7 @@ func setupRoutes() {
 	http.HandleFunc("/api/invchk", apiInvChkList)
 	http.HandleFunc("/api/invstat", apiInvStat)
 	http.HandleFunc("/api/goods", apiSkuFind)
+	http.HandleFunc("/api/ledger", apiLedger)
 	http.HandleFunc("/api/sku", apiSkuSearch)
 	http.HandleFunc("/api/sku/", apiSkuEdit)
 	http.HandleFunc("/api/users", apiUsers)

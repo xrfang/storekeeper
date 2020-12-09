@@ -5,7 +5,15 @@ import (
 	"time"
 )
 
-type Ledger struct {
+type (
+	chkinSummary struct {
+	}
+	Ledger struct {
+	}
+)
+
+func ListLedgers() interface{} { //TODO
+	return nil
 }
 
 func GetLedger(lid int) *Ledger {

@@ -223,7 +223,8 @@ function showCart(items, status) {
 	status = parseInt(status)
 	$.each(items, function(_, it) {
 	  var cap = `${it.gname} ${it.request.toFixed(0)}克`
-	  var cost = (it.request.toFixed(0) * it.cost).toFixed(0)
+	  var cost = it.request.toFixed(0) * it.cost
+	  cost = cost >= 1 ? cost.toFixed(0) : cost.toFixed(2)
 	  var bg = "white"
 	  if (cost <= 0) {
 		bg = "lightpink"

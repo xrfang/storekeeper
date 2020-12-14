@@ -34,10 +34,14 @@ func apiLedger(w http.ResponseWriter, r *http.Request) {
 		jsonReply(w, map[string]interface{}{"stat": true, "data": data})
 	case "POST":
 		id := db.LedgerBills()
-		jsonReply(w, map[string]interface{}{"stat": true, "data": id})
+		if id > 0 {
+			jsonReply(w, map[string]interface{}{"stat": true, "data": id})
+		} else {
+			jsonReply(w, map[string]interface{}{"stat": false})
+		}
 	case "DELETE":
 		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
-		db.UnledgerBills(id)
-		jsonReply(w, map[string]interface{}{"stat": true})
+		deleted := db.UnledgerBills(id)
+		jsonReply(w, map[string]interface{}{"stat": deleted})
 	}
 }

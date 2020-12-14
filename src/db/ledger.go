@@ -35,13 +35,18 @@ func LedgerBills() int64 {
 	    VALUES (4,0,?)`, time.Now().Unix()) //总账单的user_id一律设为0
 	lid, err := res.LastInsertId()
 	assert(err)
-	tx.MustExec(`UPDATE bom SET ledger=? WHERE type IN (1,2) AND 
-	    status>=2 AND ledger=0`, lid)
-	return lid
+	res = tx.MustExec(`UPDATE bom SET ledger=? WHERE type IN (1,2) AND 
+		status>=2 AND ledger=0`, lid)
+	ra, _ := res.RowsAffected()
+	if ra > 0 {
+		return lid
+	}
+	tx.MustExec(`DELETE FROM bom WHERE id=?`, lid)
+	return 0
 }
 
 //删除一个总账单（只有未关闭的总账单，即status=0时才可以删除）
-func UnledgerBills(lid int) {
+func UnledgerBills(lid int) bool {
 	tx, err := db.Beginx()
 	assert(err)
 	defer func() {
@@ -56,5 +61,7 @@ func UnledgerBills(lid int) {
 	if status > 0 {
 		panic(errors.New("cannot delete closed ledger"))
 	}
-	tx.MustExec(`UPDATE bom SET ledger=0 WHERE ledger=?`, lid)
+	res := tx.MustExec(`UPDATE bom SET ledger=0 WHERE ledger=?`, lid)
+	ra, _ := res.RowsAffected()
+	return ra > 0
 }

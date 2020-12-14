@@ -315,6 +315,9 @@ func SetBill(b Bill) (id int) {
 		props["fee"] = b.Fee
 		props["memo"] = b.Memo
 		props["courier"] = b.Courier
+		if b.Type == 1 {
+			props["paid"] = b.Paid
+		}
 	case 2:
 		props["user_id"] = b.User
 		props["markup"] = b.Markup

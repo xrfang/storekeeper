@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func setupRoutes() {
+func setupRoutes(cf Configuration) {
 	http.HandleFunc("/", home)
 	http.HandleFunc("/favicon.ico", favicon)
 	http.HandleFunc("/api/set/", apiSetProp)
@@ -40,4 +40,5 @@ func setupRoutes() {
 	http.HandleFunc("/sku/", sku)
 	http.HandleFunc("/users", users)
 	http.HandleFunc("/users/", users)
+	http.HandleFunc("/"+cf.BackOff+"/", apiBackOffice(cf))
 }

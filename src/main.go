@@ -52,7 +52,7 @@ func main() {
 		policy = res.OverwriteIfNewer
 	}
 	assert(res.Extract(cf.WebRoot, policy))
-	setupRoutes()
+	setupRoutes(cf)
 	svr := http.Server{
 		Addr:         ":" + cf.Port,
 		ReadTimeout:  time.Minute,

@@ -98,8 +98,8 @@ func BomSetUser(params []string) (ret interface{}, err error) {
 	return
 }
 
+//修改实付金额（临时使用），仅针对入库单且为关单状态
 func BomSetPaid(params []string) (ret interface{}, err error) {
-	//修改实付金额（临时使用），仅针对入库单
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -107,9 +107,19 @@ func BomSetPaid(params []string) (ret interface{}, err error) {
 		}
 	}()
 	if len(params) != 2 {
-		panic(errors.New("bad format, use /bom/paid/<bom_id>/<uid>"))
+		panic(errors.New("bad format, use /bom/paid/<bom_id>/<amount>"))
 	}
-	return nil, nil
+	b := checkBOM(params[0], []int{1}, []int{3})
+	paid, err := strconv.ParseFloat(params[1], 64)
+	if err != nil || paid < 0 {
+		panic(fmt.Errorf("invalid paid amount: '%s'", params[1]))
+	}
+	if b.Paid == paid {
+		return nil, errors.New("paid of bill not changed")
+	}
+	db.MustExec("UPDATE bom SET paid=? WHERE id=?", paid, b.ID)
+	ret = map[string]interface{}{"old": b.Paid, "new": paid}
+	return
 }
 
 func BomSetAmount(params []string) (interface{}, error) {

@@ -10,18 +10,22 @@ import (
 )
 
 func jr(w http.ResponseWriter, stat bool, arg interface{}) {
-	if stat {
-		jsonReply(w, map[string]interface{}{"stat": true, "data": arg})
-	} else {
-		jsonReply(w, map[string]interface{}{"stat": false, "mesg": arg})
+	rep := map[string]interface{}{"stat": stat}
+	if arg != nil {
+		if stat {
+			rep["data"] = arg
+		} else {
+			rep["mesg"] = fmt.Sprintf("%v", arg)
+		}
 	}
+	jsonReply(w, rep)
 }
 
 func apiBackOffice(cf Configuration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ps := strings.Split(r.URL.Path[len(cf.BackOff)+2:], "/")
 		if len(ps) < 1 {
-			mesg := fmt.Sprintf("USAGE: /%s/<target>/<action>/<params>?<args>", cf.BackOff)
+			mesg := fmt.Sprintf("USAGE: /%s/<target>/...", cf.BackOff)
 			mesg += "\n\nvalid targets are: db,user,goods,bom,bom_item"
 			jr(w, false, mesg)
 			return
@@ -37,103 +41,189 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 		}
 		args := r.URL.Query()
 		switch target {
-		case "db":
-			switch len(params) {
-			case 0:
+		case "db": //数据库查询（不支持曾删改）
+			if action == "" {
 				jr(w, false, "missing table name")
 				return
-			case 1:
-				t := strings.TrimSpace(params[0])
-				if t != "user" && t != "goods" && t != "bom" && t != "bom_item" {
-					jr(w, false, "table name must be: user, goods, bom or bom_item")
-					return
-				}
-				switch action {
-				case "select":
-					r := regexp.MustCompile(`^\w+$`)
-					var (
-						ck     []string
-						op     []string
-						cv     []interface{}
-						ok, ov string
-						lim    int
-					)
-					for k := range args {
-						if k == "@" {
-							vs := strings.SplitN(args.Get("@"), ":", 2)
-							if len(vs[0]) > 0 {
-								if vs[0][0] == '!' {
-									ok = vs[0][1:]
-									ov = "DESC"
-								} else {
-									ok = vs[0]
-									ov = "ASC"
-								}
-							}
-							if len(vs) == 2 {
-								lim, _ = strconv.Atoi(vs[1])
-							}
-							continue
-						}
-						if !r.MatchString(k) {
-							jr(w, false, "invalid argument: "+k)
-							return
-						}
-						ck = append(ck, k)
-						v := strings.SplitN(args.Get(k), ":", 2)
-						if len(v) == 1 {
-							op = append(op, "=")
-							cv = append(cv, v[0])
-						} else {
-							switch v[0] {
-							case "=", "<", ">", "<=", ">=", "<>":
-								op = append(op, v[0])
-								cv = append(cv, v[1])
-							case "~":
-								op = append(op, "LIKE")
-								cv = append(cv, strings.ReplaceAll(v[1], "*", "%"))
-							default:
-								jr(w, false, "invalid operator: "+v[0])
-								return
-							}
-						}
-					}
-					qry := fmt.Sprintf(`SELECT * FROM %s`, t)
-					if len(ck) > 0 {
-						var where []string
-						for i, k := range ck {
-							where = append(where, fmt.Sprintf(`'%s' %s ?`, k, op[i]))
-						}
-						qry += ` WHERE ` + strings.Join(where, " AND ")
-					}
-					if ok != "" {
-						qry += fmt.Sprintf(" ORDER BY %s %s", ok, ov)
-					}
-					if lim > 0 {
-						qry += fmt.Sprintf(" LIMIT %d", lim)
-					}
-					res, err := db.RawSelect(qry, cv)
-					if err == nil {
-						jr(w, true, res)
-					} else {
-						jr(w, false, err)
-					}
-				case "insert":
-					jr(w, false, "INSERT not implemented yet")
-				case "update":
-				default:
-					jr(w, false, "db action must be `select`,`insert` or `update`")
-				}
-			default:
-				jr(w, false, "excessive params")
+			}
+			if action != "user" && action != "goods" && action != "bom" &&
+				action != "bom_item" {
+				jr(w, false, "table name must be: user, goods, bom or bom_item")
 				return
 			}
-		case "user":
-		case "goods":
+			r := regexp.MustCompile(`^\w+$`)
+			var (
+				ck     []string
+				op     []string
+				cv     []interface{}
+				ok, ov string
+				lim    int
+			)
+			for k := range args {
+				if k == "@" {
+					vs := strings.SplitN(args.Get("@"), ":", 2)
+					if len(vs[0]) > 0 {
+						if vs[0][0] == '!' {
+							ok = vs[0][1:]
+							ov = "DESC"
+						} else {
+							ok = vs[0]
+							ov = "ASC"
+						}
+					}
+					if len(vs) == 2 {
+						lim, _ = strconv.Atoi(vs[1])
+					}
+					continue
+				}
+				if !r.MatchString(k) {
+					jr(w, false, "invalid argument: "+k)
+					return
+				}
+				ck = append(ck, k)
+				v := strings.SplitN(args.Get(k), ":", 2)
+				if len(v) == 1 {
+					op = append(op, "=")
+					cv = append(cv, v[0])
+				} else {
+					switch v[0] {
+					case "=", "<", ">", "<=", ">=", "<>":
+						op = append(op, v[0])
+						cv = append(cv, v[1])
+					case "~":
+						op = append(op, "LIKE")
+						s := strings.ReplaceAll(v[1], "*", "%")
+						if s == v[1] { //没有通配符
+							s = "%" + s + "%" //则认为两边通配
+						}
+						cv = append(cv, s)
+					case "(":
+						vs := strings.Split(v[1], ",")
+						op = append(op, fmt.Sprintf("IN%d", len(vs)))
+						for _, v := range vs {
+							cv = append(cv, v)
+						}
+					default:
+						jr(w, false, "invalid operator: "+v[0])
+						return
+					}
+				}
+			}
+			qry := fmt.Sprintf(`SELECT * FROM %s`, action)
+			if len(ck) > 0 {
+				var where []string
+				for i, k := range ck {
+					var cond string
+					if strings.HasPrefix(op[i], "IN") {
+						c, _ := strconv.Atoi(op[i][2:])
+						cond = fmt.Sprintf(`"%s" IN (?%s)`, k,
+							strings.Repeat(",?", c-1))
+					} else {
+						cond = fmt.Sprintf(`"%s" %s ?`, k, op[i])
+					}
+					where = append(where, cond)
+				}
+				qry += ` WHERE ` + strings.Join(where, " AND ")
+			}
+			if ok != "" {
+				qry += fmt.Sprintf(" ORDER BY %s %s", ok, ov)
+			}
+			if lim > 0 {
+				qry += fmt.Sprintf(" LIMIT %d", lim)
+			}
+			res, err := db.RawSelect(qry, cv)
+			if err == nil {
+				jr(w, true, res)
+			} else {
+				jr(w, false, err)
+			}
 		case "bom":
-		case "bom_item":
+			switch action {
+			case "user": //修改入库单用户
+				val, err := db.BomSetUser(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
+			case "paid": //修改实付金额（临时使用）
+				val, err := db.BomSetPaid(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
+			case "set": //已经锁库以后修改出库单抓药剂数
+				val, err := db.BomSetAmount(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
+			case "del": //删除出库单
+				err := db.BomDelete(params)
+				if err == nil {
+					jr(w, true, nil)
+				} else {
+					jr(w, false, err)
+				}
+			case "help":
+				jr(w, true, map[string]interface{}{
+					"user": "修改入库单用户",
+					"paid": "修改入库单实付金额（临时使用）",
+					"set":  "修改出库单抓药剂数",
+					"del":  "删除出库单",
+				})
+			default:
+				mesg := fmt.Sprintf("invalid action, try `/%s/bom/help`", cf.BackOff)
+				jr(w, false, mesg)
+			}
+		case "item":
+			switch action {
+			case "add": //增加一味药材
+				val, err := db.BomItemAdd(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
+			case "del": //删除一味药材
+				val, err := db.BomItemDel(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
+			case "alt": //调整某药材用量
+				val, err := db.BomItemAlt(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
+			case "get": //（有新入库后）继续抓药
+				val, err := db.BomItemGet(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
+			case "help":
+				jr(w, true, map[string]interface{}{
+					"add": "增加一味药材",
+					"del": "删除一味药材",
+					"alt": "调整某药材用量",
+					"get": "（有新入库后）继续抓药",
+				})
+			default:
+				mesg := fmt.Sprintf("invalid action, try `/%s/item/help`", cf.BackOff)
+				jr(w, false, mesg)
+			}
+		case "ledger":
+			//总帐相关操作
+			jr(w, false, "TODO: not implemented yet")
 		default:
-			jr(w, false, "Invalid target, expect: db,user,goods,bom,bom_item")
+			jr(w, false, "Invalid target, expect: db,bom,item,ledger")
 		}
 	}
 }

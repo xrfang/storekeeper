@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net/url"
 	"strconv"
 )
 
@@ -163,6 +164,22 @@ func BomSetAmount(params []string) (ret interface{}, err error) {
 	return
 }
 
+func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	if len(params) < 2 || len(params) > 4 {
+		panic(errors.New("bad format, use /bom/item/<bom_id>/<gid,gname or pinyin>/request[/confirm][?cost,flag,memo=...]"))
+	}
+	b := checkBOM(params[0], []int{2}, []int{1, 2, 3})
+	_ = b
+	//注意：在状态3的时候只能修改memo
+	ret = "TODO..."
+	return
+}
+
 func BomDelete(params []string) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -191,26 +208,4 @@ func BomDelete(params []string) (err error) {
 	}
 	tx.MustExec("DELETE FROM bom WHERE id=?", b.ID)
 	return
-}
-
-func BomItemAdd(parms []string) (ret interface{}, err error) { //增加一味药材
-	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
-			//err = trace("%v", e)
-		}
-	}()
-	return nil, nil
-}
-
-func BomItemDel(parms []string) (interface{}, error) { //删除一味药材
-	return nil, nil
-}
-
-func BomItemAlt(parms []string) (interface{}, error) { //调整某药材用量
-	return nil, nil
-}
-
-func BomItemGet(parms []string) (interface{}, error) { //（有新入库后）继续抓药
-	return nil, nil
 }

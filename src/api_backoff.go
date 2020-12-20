@@ -167,63 +167,30 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 				} else {
 					jr(w, false, err)
 				}
+			case "item":
+				val, err := db.BomSetItem(params, args)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
 			case "help":
 				jr(w, true, map[string]interface{}{
 					"user": "修改入库单用户",
 					"paid": "修改入库单实付金额（临时使用）",
 					"set":  "修改出库单抓药剂数",
+					"item": "曾删出库单条目",
 					"del":  "删除出库单",
 				})
 			default:
 				mesg := fmt.Sprintf("invalid action, try `/%s/bom/help`", cf.BackOff)
 				jr(w, false, mesg)
 			}
-		case "item":
-			switch action {
-			case "add": //增加一味药材
-				val, err := db.BomItemAdd(params)
-				if err == nil {
-					jr(w, true, val)
-				} else {
-					jr(w, false, err)
-				}
-			case "del": //删除一味药材
-				val, err := db.BomItemDel(params)
-				if err == nil {
-					jr(w, true, val)
-				} else {
-					jr(w, false, err)
-				}
-			case "alt": //调整某药材用量、备注或自备标志
-				val, err := db.BomItemAlt(params)
-				if err == nil {
-					jr(w, true, val)
-				} else {
-					jr(w, false, err)
-				}
-			case "get": //（有新入库后）继续抓药
-				val, err := db.BomItemGet(params)
-				if err == nil {
-					jr(w, true, val)
-				} else {
-					jr(w, false, err)
-				}
-			case "help":
-				jr(w, true, map[string]interface{}{
-					"add": "增加一味药材",
-					"del": "删除一味药材",
-					"alt": "调整某药材用量、备注或是否自备",
-					"get": "（有新入库后）继续抓药",
-				})
-			default:
-				mesg := fmt.Sprintf("invalid action, try `/%s/item/help`", cf.BackOff)
-				jr(w, false, mesg)
-			}
 		case "ledger":
 			//总帐相关操作
 			jr(w, false, "TODO: not implemented yet")
 		default:
-			jr(w, false, "Invalid target, expect: db,bom,item,ledger")
+			jr(w, false, "Invalid target, expect: db,bom,ledger")
 		}
 	}
 }

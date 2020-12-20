@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 )
 
@@ -103,7 +104,6 @@ func BomSetPaid(params []string) (ret interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
-			//err = trace("%v", e)
 		}
 	}()
 	if len(params) != 2 {
@@ -122,24 +122,84 @@ func BomSetPaid(params []string) (ret interface{}, err error) {
 	return
 }
 
-func BomSetAmount(params []string) (interface{}, error) {
-	/*
-	   已经锁库以后修改抓药剂数
-	   - 仅针对出库单
-	   - 状态为锁库、出货（不能是未锁库或已关闭）
-	*/
-	return nil, nil
+func BomSetAmount(params []string) (ret interface{}, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	if len(params) != 2 {
+		panic(errors.New("bad format, use /bom/set/<bom_id>/<sets>"))
+	}
+	b := checkBOM(params[0], []int{2}, []int{1, 2})
+	sets, err := strconv.Atoi(params[1])
+	if err != nil || sets <= 0 || sets > 20 {
+		panic(fmt.Errorf("invalid sets '%s' (must between 1~20)", params[1]))
+	}
+	if sets == b.Sets {
+		return nil, errors.New("sets of bill not changed")
+	}
+	items := GetBillItems(b.ID)
+	tx := db.MustBegin()
+	defer func() {
+		if e := recover(); e != nil {
+			tx.Rollback()
+			panic(e)
+		}
+		assert(tx.Commit())
+		SetInventoryByBill(b.ID)
+		if b.Status == 2 {
+			db.MustExec(`UPDATE bom SET status=2 WHERE id=?`, b.ID)
+		}
+	}()
+	for _, it := range items {
+		c := math.Abs(it.Confirm) * float64(b.Sets)
+		if c > 0 {
+			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, c, it.GoodsID)
+		}
+		tx.MustExec(`UPDATE bom_item SET confirm=0 WHERE id=?`, it.ID)
+	}
+	tx.MustExec(`UPDATE bom SET status=0,sets=? WHERE id=?`, sets, b.ID)
+	return
 }
 
-func BomDelete(params []string) error {
-	/*
-	  - 仅针对出库单
-	  - 状态为锁库
-	*/
-	return nil
+func BomDelete(params []string) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	if len(params) != 1 {
+		panic(errors.New("bad format, use /bom/del/<bom_id>"))
+	}
+	b := checkBOM(params[0], []int{2}, []int{1})
+	items := GetBillItems(b.ID)
+	tx := db.MustBegin()
+	defer func() {
+		if e := recover(); e != nil {
+			tx.Rollback()
+			panic(e)
+		}
+		assert(tx.Commit())
+	}()
+	for _, it := range items {
+		c := math.Abs(it.Confirm) * float64(b.Sets)
+		if c > 0 {
+			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, c, it.GoodsID)
+		}
+		tx.MustExec(`DELETE FROM bom_item WHERE id=?`, it.ID)
+	}
+	tx.MustExec("DELETE FROM bom WHERE id=?", b.ID)
+	return
 }
 
-func BomItemAdd(parms []string) (interface{}, error) { //增加一味药材
+func BomItemAdd(parms []string) (ret interface{}, err error) { //增加一味药材
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+			//err = trace("%v", e)
+		}
+	}()
 	return nil, nil
 }
 

@@ -266,12 +266,13 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 }
 
 func GetBillItems(bid int, gid ...interface{}) (items []BillItem) {
-	if len(gid) == 0 {
-		return nil
+	ids := []interface{}{bid}
+	qry := `SELECT * FROM bom_item WHERE bom_id=?`
+	if len(gid) > 0 {
+		ids = append(ids, gid...)
+		qry += ` AND gid IN (?` + strings.Repeat(`,?`, len(gid)-1) + `)`
 	}
-	ids := append([]interface{}{bid}, gid...)
-	assert(db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=? AND 
-	    gid IN (?`+strings.Repeat(`,?`, len(gid)-1)+`)`, ids...))
+	assert(db.Select(&items, qry, ids...))
 	return
 }
 

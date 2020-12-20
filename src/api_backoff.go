@@ -194,7 +194,7 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 				} else {
 					jr(w, false, err)
 				}
-			case "alt": //调整某药材用量
+			case "alt": //调整某药材用量、备注或自备标志
 				val, err := db.BomItemAlt(params)
 				if err == nil {
 					jr(w, true, val)
@@ -212,7 +212,7 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 				jr(w, true, map[string]interface{}{
 					"add": "增加一味药材",
 					"del": "删除一味药材",
-					"alt": "调整某药材用量",
+					"alt": "调整某药材用量、备注或是否自备",
 					"get": "（有新入库后）继续抓药",
 				})
 			default:

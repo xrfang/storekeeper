@@ -171,11 +171,68 @@ func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
 		}
 	}()
 	if len(params) < 2 || len(params) > 4 {
-		panic(errors.New("bad format, use /bom/item/<bom_id>/<gid,gname or pinyin>/request[/confirm][?cost,flag,memo=...]"))
+		panic(errors.New("bad format, use /bom/item/<bom_id>/<gname or pinyin>/request[/confirm][?cost,flag,memo=...]"))
 	}
+	//检查BOM
 	b := checkBOM(params[0], []int{2}, []int{1, 2, 3})
-	_ = b
-	//注意：在状态3的时候只能修改memo
+	its := FindBillItem(b.ID, params[1])
+	if len(its) != 1 {
+		panic(fmt.Errorf("bom#%d: '%s' no match or ambiguous", b.ID, params[1]))
+	}
+	bi := its[0]
+	//收集需要设置的参数
+	props := make(map[string]interface{})
+	if len(params) > 2 {
+		req, err := strconv.ParseFloat(params[2], 64)
+		if err != nil || req < 0 {
+			panic(fmt.Errorf("invalid request amount '%s'", params[2]))
+		}
+		props["request"] = req
+	}
+	if len(props) > 3 {
+		cfm, err := strconv.ParseFloat(params[3], 64)
+		if err != nil || cfm < 0 {
+			panic(fmt.Errorf("invalid confirm '%s'", params[3]))
+		}
+		props["confirm"] = cfm
+	}
+	v, ok := args["cost"]
+	if ok {
+		props["cost"] = -1
+		if len(v) > 0 {
+			cost, err := strconv.Atoi(v[0])
+			if err != nil || cost < 0 {
+				panic(fmt.Errorf("invalid cost '%s'", v[0]))
+			}
+			props["cost"] = cost
+		}
+	}
+	v, ok = args["flag"]
+	if ok {
+		props["flag"] = ""
+		if len(v) > 0 {
+			props["flag"] = v[0]
+		}
+		if props["flag"] != "0" && props["flag"] != "1" {
+			panic(fmt.Errorf("invalid flag '%s'", props["flag"]))
+		}
+	}
+	v, ok = args["memo"]
+	if ok {
+		props["memo"] = ""
+		if len(v) > 0 {
+			props["memo"] = v[0]
+		}
+	}
+	//按照BOM状态处理修改工作
+	if b.Status == 3 { //在状态3的时候只能修改memo
+		if props["memo"] == nil {
+			panic(fmt.Errorf("bom#%d: status=3, memo not provided", b.ID))
+		}
+		db.MustExec(`UPDATE bom_item SET memo=? WHERE id=?`, props["memo"], bi.ID)
+		ret = map[string]interface{}{"old": bi.Memo, "new": props["memo"]}
+		return
+	}
 	ret = "TODO..."
 	return
 }

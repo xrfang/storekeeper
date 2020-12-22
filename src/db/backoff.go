@@ -173,15 +173,32 @@ func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
 	if len(params) < 2 || len(params) > 4 {
 		panic(errors.New("bad format, use /bom/item/<bom_id>/<gname or pinyin>/request[/confirm][?cost,flag,memo=...]"))
 	}
+	props := make(map[string]interface{})
 	//检查BOM
 	b := checkBOM(params[0], []int{2}, []int{1, 2, 3})
+	var bi *BillItem
 	its := FindBillItem(b.ID, params[1])
-	if len(its) != 1 {
-		panic(fmt.Errorf("bom#%d: '%s' no match or ambiguous", b.ID, params[1]))
+	switch len(its) {
+	case 0:
+		var gs []Goods
+		assert(db.Select(&gs, `SELECT * FROM goods WHERE name=? OR pinyin=?`, params[1], params[1]))
+		switch len(gs) {
+		case 0:
+			panic(fmt.Errorf("no goods named '%s'", params[1]))
+		case 1:
+			props["gid"] = gs[0].ID
+			props["gname"] = gs[0].Name
+		default:
+			panic(fmt.Errorf("'%s' ambiguous", params[1]))
+		}
+	case 1:
+		bi = &its[0]
+		props["gid"] = bi.GoodsID
+		props["gname"] = bi.GoodsName
+	default:
+		panic(fmt.Errorf("bom#%d: '%s' ambiguous", b.ID, params[1]))
 	}
-	bi := its[0]
 	//收集需要设置的参数
-	props := make(map[string]interface{})
 	if len(params) > 2 {
 		req, err := strconv.ParseFloat(params[2], 64)
 		if err != nil || req < 0 {
@@ -233,7 +250,29 @@ func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
 		ret = map[string]interface{}{"old": bi.Memo, "new": props["memo"]}
 		return
 	}
-	ret = "TODO..."
+	tx := db.MustBegin()
+	defer func() {
+		if e := recover(); e != nil {
+			tx.Rollback()
+			panic(e)
+		}
+		assert(tx.Commit())
+	}()
+	if bi.Flag == 0 {
+		amt := math.Abs(bi.Confirm) * float64(b.Sets)
+		if amt > 0 {
+			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, amt, bi.GoodsID)
+		}
+	}
+	//TODO...
+	tx.MustExec(`DELETE FROM bom_item WHERE id=?`, bi.ID)
+	res := tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,flag,memo)`)
+	/*
+	       "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
+	       "confirm" NUMERIC NOT NULL,                            -- 确认数量
+	   )
+	*/
+	ret = map[string]interface{}{"old": bi, "new": props}
 	return
 }
 

@@ -189,14 +189,14 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 		case "ledger": //总帐相关操作
 			switch action {
 			case "list": //列出所有总帐
-				val, err := db.LedgerLis(params)
+				val, err := db.LedgerList(params)
 				if err == nil {
 					jr(w, true, val)
 				} else {
 					jr(w, false, err)
 				}
 			case "new": //新建总帐
-				val, err := db.LedgerNew(params)
+				val, err := db.LedgerNew()
 				if err == nil {
 					jr(w, true, val)
 				} else {
@@ -210,16 +210,16 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 					jr(w, false, err)
 				}
 			case "del": //删除指定总帐
-				val, err := db.LedgerDel(params)
+				err := db.LedgerDel(params)
 				if err == nil {
-					jr(w, true, val)
+					jr(w, true, nil)
 				} else {
 					jr(w, false, err)
 				}
 			case "cls": //关闭指定总帐（结帐）
-				val, err := db.LedgerCls(params)
+				err := db.LedgerCls(params)
 				if err == nil {
-					jr(w, true, val)
+					jr(w, true, nil)
 				} else {
 					jr(w, false, err)
 				}

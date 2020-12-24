@@ -186,8 +186,14 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 				mesg := fmt.Sprintf("invalid action, try `/%s/bom/help`", cf.BackOff)
 				jr(w, false, mesg)
 			}
-		case "ledger":
-			//总帐相关操作
+		case "ledger": //总帐相关操作
+			switch action {
+			case "list": //列出所有总帐
+			case "new": //新建总帐
+			case "get": //获取指定总帐内容
+			case "del": //删除指定总帐
+			case "cls": //关闭总帐（结帐）
+			}
 			jr(w, false, "TODO: not implemented yet")
 		default:
 			jr(w, false, "Invalid target, expect: db,bom,ledger")

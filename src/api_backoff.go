@@ -81,7 +81,7 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 					return
 				}
 				ck = append(ck, k)
-				v := strings.SplitN(args.Get(k), ":", 2)
+				v := strings.SplitN(strings.ToUpper(args.Get(k)), ":", 2)
 				if len(v) == 1 {
 					op = append(op, "=")
 					cv = append(cv, v[0])
@@ -179,7 +179,7 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 					"user": "修改入库单用户",
 					"paid": "修改入库单实付金额（临时使用）",
 					"set":  "修改出库单抓药剂数",
-					"item": "曾删出库单条目",
+					"item": "增删改出库单条目",
 					"del":  "删除出库单",
 				})
 			default:
@@ -189,12 +189,52 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 		case "ledger": //总帐相关操作
 			switch action {
 			case "list": //列出所有总帐
+				val, err := db.LedgerLis(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
 			case "new": //新建总帐
+				val, err := db.LedgerNew(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
 			case "get": //获取指定总帐内容
+				val, err := db.LedgerGet(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
 			case "del": //删除指定总帐
-			case "cls": //关闭总帐（结帐）
+				val, err := db.LedgerDel(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
+			case "cls": //关闭指定总帐（结帐）
+				val, err := db.LedgerCls(params)
+				if err == nil {
+					jr(w, true, val)
+				} else {
+					jr(w, false, err)
+				}
+			case "help":
+				jr(w, true, map[string]interface{}{
+					"list": "列出所有总帐",
+					"new":  "新建总帐",
+					"get":  "获取指定总帐内容",
+					"cls":  "关闭指定总帐（结帐）",
+					"del":  "删除指定总帐",
+				})
+			default:
+				mesg := fmt.Sprintf("invalid action, try `/%s/ledger/help`", cf.BackOff)
+				jr(w, false, mesg)
 			}
-			jr(w, false, "TODO: not implemented yet")
 		default:
 			jr(w, false, "Invalid target, expect: db,bom,ledger")
 		}

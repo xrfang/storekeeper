@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 func RawSelect(qry string, args []interface{}) (res []map[string]interface{}, err error) {
@@ -171,83 +172,83 @@ func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
 		}
 	}()
 	if len(params) < 2 || len(params) > 4 {
-		panic(errors.New("bad format, use /bom/item/<bom_id>/<gname or pinyin>/request[/confirm][?cost,flag,memo=...]"))
+		panic(errors.New("bad format, use /bom/item/<bom_id>/<gname or pinyin>[/request][?flag,memo=...]"))
 	}
-	props := make(map[string]interface{})
+	var (
+		act   bool //是否需要执行动作
+		bi    *BillItem
+		g     *Goods
+		cost  float64
+		gid   int
+		gname string
+		flag  *int
+		memo  *string
+		req   *float64
+	)
 	//检查BOM
 	b := checkBOM(params[0], []int{2}, []int{1, 2, 3})
-	var bi *BillItem
 	its := FindBillItem(b.ID, params[1])
 	switch len(its) {
-	case 0:
-		var gs []Goods
-		assert(db.Select(&gs, `SELECT * FROM goods WHERE name=? OR pinyin=?`, params[1], params[1]))
+	case 0: //输入的药材是本方中没有的：需要增加该药材
+		var gs []*Goods
+		term := strings.ToUpper(params[1])
+		assert(db.Select(&gs, `SELECT * FROM goods WHERE name=? OR pinyin=?`, term, term))
 		switch len(gs) {
 		case 0:
 			panic(fmt.Errorf("no goods named '%s'", params[1]))
 		case 1:
-			props["gid"] = gs[0].ID
-			props["gname"] = gs[0].Name
+			g = gs[0]
 		default:
-			panic(fmt.Errorf("'%s' ambiguous", params[1]))
+			var ns []string
+			for _, g := range gs {
+				ns = append(ns, g.Name)
+			}
+			panic(fmt.Errorf("'%s' ambiguous: %s", params[1], strings.Join(ns, ", ")))
 		}
-	case 1:
+	case 1: //输入的药材在本方中找到了：需要修改或删除该药材
 		bi = &its[0]
-		props["gid"] = bi.GoodsID
-		props["gname"] = bi.GoodsName
+		gid = bi.GoodsID
+		gname = bi.GoodsName
 	default:
 		panic(fmt.Errorf("bom#%d: '%s' ambiguous", b.ID, params[1]))
 	}
 	//收集需要设置的参数
 	if len(params) > 2 {
-		req, err := strconv.ParseFloat(params[2], 64)
-		if err != nil || req < 0 {
+		req = new(float64)
+		*req, err = strconv.ParseFloat(params[2], 64)
+		if err != nil || *req < 0 {
 			panic(fmt.Errorf("invalid request amount '%s'", params[2]))
 		}
-		props["request"] = req
+		*req = -math.Abs(*req)
+		act = true
 	}
-	if len(props) > 3 {
-		cfm, err := strconv.ParseFloat(params[3], 64)
-		if err != nil || cfm < 0 {
-			panic(fmt.Errorf("invalid confirm '%s'", params[3]))
+	v, ok := args["flag"]
+	if ok && len(v) > 0 {
+		flag = new(int)
+		*flag, err = strconv.Atoi(v[0])
+		if err != nil || *flag < 0 || *flag > 1 {
+			panic(fmt.Errorf("invalid flag '%s'", v[0]))
 		}
-		props["confirm"] = cfm
-	}
-	v, ok := args["cost"]
-	if ok {
-		props["cost"] = -1
-		if len(v) > 0 {
-			cost, err := strconv.Atoi(v[0])
-			if err != nil || cost < 0 {
-				panic(fmt.Errorf("invalid cost '%s'", v[0]))
-			}
-			props["cost"] = cost
-		}
-	}
-	v, ok = args["flag"]
-	if ok {
-		props["flag"] = ""
-		if len(v) > 0 {
-			props["flag"] = v[0]
-		}
-		if props["flag"] != "0" && props["flag"] != "1" {
-			panic(fmt.Errorf("invalid flag '%s'", props["flag"]))
-		}
+		act = true
 	}
 	v, ok = args["memo"]
 	if ok {
-		props["memo"] = ""
+		memo = new(string)
 		if len(v) > 0 {
-			props["memo"] = v[0]
+			*memo = v[0]
 		}
+		act = true
+	}
+	if !act {
+		panic(errors.New("nothing to do"))
 	}
 	//按照BOM状态处理修改工作
 	if b.Status == 3 { //在状态3的时候只能修改memo
-		if props["memo"] == nil {
+		if memo == nil {
 			panic(fmt.Errorf("bom#%d: status=3, memo not provided", b.ID))
 		}
-		db.MustExec(`UPDATE bom_item SET memo=? WHERE id=?`, props["memo"], bi.ID)
-		ret = map[string]interface{}{"old": bi.Memo, "new": props["memo"]}
+		db.MustExec(`UPDATE bom_item SET memo=? WHERE id=?`, *memo, bi.ID)
+		ret = map[string]interface{}{"old": bi.Memo, "new": *memo}
 		return
 	}
 	tx := db.MustBegin()
@@ -258,21 +259,66 @@ func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
 		}
 		assert(tx.Commit())
 	}()
-	if bi.Flag == 0 {
-		amt := math.Abs(bi.Confirm) * float64(b.Sets)
-		if amt > 0 {
-			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, amt, bi.GoodsID)
+	var keys []string
+	var vals []interface{}
+	if bi == nil { //增加新药材
+		if req == nil {
+			panic(fmt.Errorf("bom#%d: invalid request amount for '%s'", b.ID, g.Name))
 		}
+		if flag == nil {
+			flag = new(int)
+			*flag = 0
+		}
+		gid = g.ID
+		gname = g.Name
+		cost = g.Cost
+	} else { //修改或删除药材
+		if req == nil { //没有提供request，使用原来的值
+			req = new(float64)
+			*req = bi.Request
+		}
+		if flag == nil {
+			flag = new(int)
+			*flag = bi.Flag
+		}
+		gid = bi.GoodsID
+		gname = bi.GoodsName
+		cost = bi.Cost
+		c := math.Abs(bi.Confirm) * float64(b.Sets)
+		if c > 0 {
+			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, c, bi.GoodsID)
+		}
+		tx.MustExec(`DELETE FROM bom_item WHERE id=?`, bi.ID)
 	}
-	//TODO...
-	tx.MustExec(`DELETE FROM bom_item WHERE id=?`, bi.ID)
-	res := tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,flag,memo)`)
-	/*
-	       "id"      INTEGER PRIMARY KEY AUTOINCREMENT,
-	       "confirm" NUMERIC NOT NULL,                            -- 确认数量
-	   )
-	*/
-	ret = map[string]interface{}{"old": bi, "new": props}
+	keys = []string{"bom_id", "gid", "gname", "cost", "request", "confirm", "flag"}
+	vals = []interface{}{b.ID, gid, gname, cost, *req, 0, *flag}
+	if memo != nil {
+		keys = append(keys, "memo")
+		vals = append(vals, *memo)
+	}
+	ret = map[string]interface{}{"old": bi, "new": map[string]interface{}{
+		"keys": keys, "vals": vals}}
+	cmd := fmt.Sprintf(`INSERT INTO bom_item (%s) VALUES (%s)`,
+		strings.Join(keys, ","), `?`+strings.Repeat(`,?`, len(keys)-1))
+	res := tx.MustExec(cmd, vals...)
+	lid, err := res.LastInsertId()
+	assert(err)
+	if *flag == 0 { //非自备，需要扣减库存
+		want := math.Abs(*req * float64(b.Sets))
+		var have float64
+		assert(tx.Get(&have, `SELECT stock FROM goods WHERE id=?`, gid))
+		if have < want {
+			want = have
+			*req = -have / float64(b.Sets)
+		}
+		tx.MustExec(`UPDATE bom_item SET confirm=? WHERE id=?`, *req, lid)
+		tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, want, gid)
+		assert(tx.Get(&have, `SELECT stock FROM goods WHERE id=?`, gid))
+		if have < 0 {
+			panic(errors.New("concurrent stock modification, try again"))
+		}
+		vals[5] = *req //设置一下confirm，仅供返回数据使用
+	}
 	return
 }
 

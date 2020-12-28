@@ -5,12 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
 )
 
-var pf [2]float64 //包装费用，全系统公用且运行时不可更改
+var (
+	pf [2]float64 //包装费用，全系统公用且运行时不可更改
+	//是否需要小包装袋
+	rp *regexp.Regexp = regexp.MustCompile(`先煎|后下|烊化|包煎`)
+)
 
 func SetPackFee(large, small float64) {
 	pf[0] = large
@@ -139,7 +144,7 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 	var bis []BillItem
 	assert(db.Select(&bis, `SELECT * FROM bom_item WHERE bom_id IN (?`+
 		strings.Repeat(`,?`, len(ids)-1)+`)`, ids...))
-	xp := make(map[int][2]float64) //先煎/后下药材的额外包装费用
+	xp := make(map[int]float64) //先煎/后下药材的额外包装费用
 	for _, bi := range bis {
 		b := bm[bi.BomID]
 		b.Count++
@@ -152,11 +157,8 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 				b.Cost += math.Abs(bi.Cost * float64(bi.Request))
 			}
 		case 2: //出库单
-			if strings.Contains(bi.Memo, "先煎") {
-				x[0] = pf[1]
-			}
-			if strings.Contains(bi.Memo, "后下") {
-				x[1] = pf[1]
+			if rp.MatchString(bi.Memo) {
+				x = pf[1]
 			}
 			if b.Status == 0 { //未锁库
 				b.Cost += math.Abs(bi.Cost * float64(bi.Request))
@@ -172,9 +174,9 @@ func ListBills(billType, uid int, month string) (bills []Bill) {
 	}
 	bills = nil
 	for _, b := range bm {
-		b.Cost = float64(int(b.Cost*10000)) / float64(10000)
+		b.Cost = float64(int(b.Cost*1000)) / float64(1000)
 		x := xp[b.ID]
-		b.PackFee = float64(b.Sets) * (pf[0] + x[0] + x[1])
+		b.PackFee = float64(b.Sets) * (pf[0] + x)
 		bills = append(bills, b)
 	}
 	sort.Slice(bills, func(i, j int) (res bool) {
@@ -212,7 +214,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 	var gs []Goods
 	assert(db.Select(&gs, `SELECT id,stock FROM goods WHERE id IN (
 		SELECT gid FROM bom_item WHERE bom_id=?)`, id))
-	var xp [2]float64 //先煎/后下药材的额外包装费用，仅用于出库单
+	var xp float64 //先煎/后下药材的额外包装费用，仅用于出库单
 	bill.Count = len(items)
 	for i, it := range items {
 		switch bill.Type {
@@ -223,11 +225,11 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 				bill.Cost += math.Abs(it.Cost * float64(it.Request))
 			}
 		case 2: //出库单
-			if strings.Contains(it.Memo, "先煎") {
-				xp[0] = pf[1]
+			if rp.MatchString(it.Memo) {
+				xp = pf[1]
 			}
 			if strings.Contains(it.Memo, "后下") {
-				xp[1] = pf[1]
+				xp = pf[1]
 			}
 			it.Request = -it.Request
 			it.Confirm = -it.Confirm
@@ -260,7 +262,7 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 			bill.Cost += math.Abs(it.Cost * float64(it.Request))
 		}
 	}
-	bill.PackFee = float64(bill.Sets) * (pf[0] + xp[0] + xp[1]) //仅用于出库单
+	bill.PackFee = float64(bill.Sets) * (pf[0] + xp) //仅用于出库单
 	bill.Cost = float64(int(bill.Cost*10000)) / float64(10000)
 	return
 }

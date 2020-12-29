@@ -3,15 +3,42 @@ package db
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 )
 
-type ledgerInfo struct {
-	ID      int   `json:"id"`
-	Status  int   `json:"status"`
-	Created int64 `json:"created"`
-	Changed int64 `json:"changed"`
+type (
+	ledgerInfo struct {
+		ID      int   `json:"id"`
+		Status  int   `json:"status"`
+		Created int64 `json:"created"`
+		Changed int64 `json:"changed"`
+	}
+	bInfo struct {
+		BID    int
+		UID    int
+		Client int
+		Markup float64
+		Extra  float64
+		Cost   float64
+		Pack   float64
+		Paid   float64
+		Status int
+	}
+	bSummary struct {
+		Goods float64 `json:"goods"`
+		Extra float64 `json:"fees"`
+		Pack  float64 `json:"package"`
+		Items []int   `json:"items"`
+	}
+)
+
+func (s bSummary) Round() bSummary {
+	s.Extra = math.Round(s.Extra*100) / 100
+	s.Goods = math.Round(s.Goods*100) / 100
+	s.Pack = math.Round(s.Pack*100) / 100
+	return s
 }
 
 func (li ledgerInfo) Export() map[string]interface{} {
@@ -95,43 +122,72 @@ func ledgerGetCheckin(id int) (ret interface{}) {
 	return
 }
 
-func ledgerGetCheckout(id int) (ret interface{}) {
-	// row := db.QueryRowx(`SELECT COUNT(id) AS cnt,SUM(paid) AS paid FROM bom WHERE
-	// type=2 AND status=3 AND ledger=?`, id)
-	// done := make(map[string]interface{})
-	// assert(row.MapScan(done))
-	type bInfo struct {
-		BID    int
-		UID    int
-		Client int
-		Markup int
-		Extra  float64
-		Cost   float64
-		Pack   float64
-		Paid   float64
-		Status int
+func summarize(bis []bInfo) bSummary {
+	var bs bSummary
+	for _, bi := range bis {
+		bs.Items = append(bs.Items, bi.BID)
+		bs.Extra += bi.Extra
+		bi.Paid -= bi.Extra
+		cost := bi.Cost
+		if bi.Markup < 0 {
+			cost *= sm
+		} else {
+			cost *= 1 + bi.Markup/100
+		}
+		bs.Goods += cost
+		bi.Paid -= cost
+		if bi.Paid > 0 {
+			bs.Pack += bi.Paid
+		} else {
+			bs.Goods -= bi.Paid
+		}
 	}
+	return bs.Round()
+}
+
+func ledgerGetCheckout(id int) (ret interface{}) {
 	var us []User
 	assert(db.Select(&us, `SELECT * FROM user`))
+	um := make(map[int]string)
+	for _, u := range us {
+		um[u.ID] = u.Name
+	}
 	var bis []bInfo
 	assert(db.Select(&bis, `SELECT b.id AS bid,u.id AS uid,u.client,u.markup,
 		b.paid,b.status,b.fee AS extra FROM bom b, user u WHERE u.id=b.user_id
 		AND type=2 AND status IN (2,3) AND ledger=?`, id))
-	var todo, done []bInfo
+	var done []bInfo
+	todo := make(map[string][]bInfo)
 	for _, bi := range bis {
 		b, _ := GetBill(bi.BID, 0)
 		cost := b.Cost * float64(b.Sets)
 		bi.Cost = cost
 		bi.Pack = b.PackFee
 		if bi.Status == 2 {
-			todo = append(todo, bi)
+			uid := bi.UID
+			if bi.Client != 0 {
+				if bi.Markup == 0 {
+					uid = bi.Client //主账号
+				} else {
+					uid = 0 //其他人
+				}
+			}
+			if uid == 0 {
+				todo["其他人"] = append(todo["其他人"], bi)
+			} else {
+				todo[um[uid]] = append(todo[um[uid]], bi)
+			}
 		} else {
 			done = append(done, bi)
 		}
 	}
+	pending := make(map[string]bSummary)
+	for name, bis := range todo {
+		pending[name] = summarize(bis)
+	}
 	return map[string]interface{}{
-		"received": done,
-		"pending":  todo,
+		"received": summarize(done),
+		"pending":  pending,
 	}
 }
 
@@ -203,6 +259,7 @@ func LedgerCls(params []string) (err error) {
 		panic(errors.New("bad format, use /ledger/cls/<ledger_id>"))
 	}
 	lid, _ := strconv.Atoi(params[0])
+	panic(errors.New("TODO: 设置paid属性")) //仅对内部订单，检查不允许有未关闭的外部订单
 	res := db.MustExec(`UPDATE bom SET status=1,changed=? WHERE type=4 
 	    AND status=0 AND id=?`, time.Now().Unix(), lid)
 	ra, err := res.RowsAffected()

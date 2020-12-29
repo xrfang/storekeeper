@@ -12,12 +12,14 @@ import (
 )
 
 var (
+	sm float64    //系统默认溢价率，折算为乘数（即1+mark/100）
 	pf [2]float64 //包装费用，全系统公用且运行时不可更改
 	//是否需要小包装袋
 	rp *regexp.Regexp = regexp.MustCompile(`先煎|后下|烊化|包煎`)
 )
 
-func SetPackFee(large, small float64) {
+func SetSysParams(markup, large, small float64) {
+	sm = 1 + markup/100
 	pf[0] = large
 	pf[1] = small
 }

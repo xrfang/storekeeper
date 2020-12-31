@@ -146,7 +146,7 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 				} else {
 					jr(w, false, err)
 				}
-			case "paid": //修改实付金额（临时使用）
+			case "paid": //修改入库单实付金额
 				val, err := db.BomSetPaid(params)
 				if err == nil {
 					jr(w, true, val)
@@ -177,7 +177,7 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 			case "help":
 				jr(w, true, map[string]interface{}{
 					"user": "修改入库单用户",
-					"paid": "修改入库单实付金额（临时使用）",
+					"paid": "修改入库单实付金额",
 					"set":  "修改出库单抓药剂数",
 					"item": "增删改出库单条目",
 					"del":  "删除出库单",

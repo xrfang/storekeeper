@@ -46,7 +46,11 @@ func checkBOM(id string, btypes []int, stats []int) Bill {
 		panic(fmt.Errorf("bom#%s: invalid status %v", id, b.Status))
 	}
 	if b.Ledger != 0 {
-		panic(fmt.Errorf("bom#%s: added to ledger#%d", id, b.Ledger))
+		var ls int
+		assert(db.Get(&ls, `SELECT status FROM bom WHERE type=4 AND id=?`, b.Ledger))
+		if ls != 0 {
+			panic(fmt.Errorf("bom#%s: added to ledger#%d, which is closed", id, b.Ledger))
+		}
 	}
 	return b
 }
@@ -85,7 +89,7 @@ func BomSetUser(params []string) (ret interface{}, err error) {
 	return
 }
 
-//修改实付金额（临时使用），仅针对入库单且为关单状态
+//修改实付金额，仅针对入库单且为关单状态
 func BomSetPaid(params []string) (ret interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {

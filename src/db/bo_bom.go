@@ -387,3 +387,17 @@ func BomDelete(params []string) (err error) {
 	tx.MustExec("DELETE FROM bom WHERE id=?", b.ID)
 	return
 }
+
+func BomSetMemo(params []string) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	if len(params) != 2 {
+		panic(errors.New("bad format, use /bom/memo/<bom_id>/<memo>"))
+	}
+	b := checkBOM(params[0], []int{1, 2}, []int{3})
+	db.MustExec(`UPDATE bom SET memo=? WHERE id=?`, params[1], b.ID)
+	return
+}

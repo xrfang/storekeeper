@@ -174,12 +174,20 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 				} else {
 					jr(w, false, err)
 				}
+			case "memo":
+				err := db.BomSetMemo(params)
+				if err == nil {
+					jr(w, true, nil)
+				} else {
+					jr(w, false, err)
+				}
 			case "help":
 				jr(w, true, map[string]interface{}{
 					"user": "修改入库单用户",
 					"paid": "修改入库单实付金额",
 					"set":  "修改出库单抓药剂数",
 					"item": "增删改出库单条目",
+					"memo": "修改已关订单备注",
 					"del":  "删除出库单",
 				})
 			default:

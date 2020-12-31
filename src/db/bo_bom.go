@@ -149,92 +149,16 @@ func BomSetAmount(params []string) (ret interface{}, err error) {
 	return
 }
 
-func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
-		}
-	}()
-	if len(params) < 2 || len(params) > 4 {
-		panic(errors.New("bad format, use /bom/item/<bom_id>/<gname or pinyin>[/request][?flag,memo=...]"))
-	}
-	var (
-		act   bool //是否需要执行动作
-		bi    *BillItem
-		g     *Goods
-		cost  float64
-		gid   int
-		gname string
-		flag  *int
-		memo  *string
-		req   *float64
-	)
-	//检查BOM
-	b := checkBOM(params[0], []int{2}, []int{1, 2, 3})
-	its := FindBillItem(b.ID, params[1])
-	switch len(its) {
-	case 0: //输入的药材是本方中没有的：需要增加该药材
-		var gs []*Goods
-		term := strings.ToUpper(params[1])
-		assert(db.Select(&gs, `SELECT * FROM goods WHERE name=? OR pinyin=?`, term, term))
-		switch len(gs) {
-		case 0:
-			panic(fmt.Errorf("no goods named '%s'", params[1]))
-		case 1:
-			g = gs[0]
-		default:
-			var ns []string
-			for _, g := range gs {
-				ns = append(ns, g.Name)
-			}
-			panic(fmt.Errorf("'%s' ambiguous: %s", params[1], strings.Join(ns, ", ")))
-		}
-	case 1: //输入的药材在本方中找到了：需要修改或删除该药材
-		bi = &its[0]
-		gid = bi.GoodsID
-		gname = bi.GoodsName
-	default:
-		panic(fmt.Errorf("bom#%d: '%s' ambiguous", b.ID, params[1]))
-	}
-	//收集需要设置的参数
-	if len(params) > 2 {
-		req = new(float64)
-		*req, err = strconv.ParseFloat(params[2], 64)
-		if err != nil || *req < 0 {
-			panic(fmt.Errorf("invalid request amount '%s'", params[2]))
-		}
-		*req = -math.Abs(*req)
-		act = true
-	}
-	v, ok := args["flag"]
-	if ok && len(v) > 0 {
-		flag = new(int)
-		*flag, err = strconv.Atoi(v[0])
-		if err != nil || *flag < 0 || *flag > 1 {
-			panic(fmt.Errorf("invalid flag '%s'", v[0]))
-		}
-		act = true
-	}
-	v, ok = args["memo"]
-	if ok {
-		memo = new(string)
-		if len(v) > 0 {
-			*memo = v[0]
-		}
-		act = true
-	}
-	if !act {
-		panic(errors.New("nothing to do"))
-	}
-	//按照BOM状态处理修改工作
-	if b.Status == 3 { //在状态3的时候只能修改memo
-		if memo == nil {
-			panic(fmt.Errorf("bom#%d: status=3, memo not provided", b.ID))
-		}
-		db.MustExec(`UPDATE bom_item SET memo=? WHERE id=?`, *memo, bi.ID)
-		ret = map[string]interface{}{"old": bi.Memo, "new": *memo}
-		return
-	}
+type itemProps struct {
+	gid   int
+	gname string
+	cost  float64
+	flag  *int
+	memo  *string
+	req   *float64
+}
+
+func bomSetCheckoutItem(b Bill, bi *BillItem, ip itemProps) (ret interface{}) {
 	tx := db.MustBegin()
 	defer func() {
 		if e := recover(); e != nil {
@@ -245,40 +169,22 @@ func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
 	}()
 	var keys []string
 	var vals []interface{}
-	if bi == nil { //增加新药材
-		if req == nil {
-			panic(fmt.Errorf("bom#%d: invalid request amount for '%s'", b.ID, g.Name))
-		}
-		if flag == nil {
-			flag = new(int)
-			*flag = 0
-		}
-		gid = g.ID
-		gname = g.Name
-		cost = g.Cost
-	} else { //修改或删除药材
-		if req == nil { //没有提供request，使用原来的值
-			req = new(float64)
-			*req = bi.Request
-		}
-		if flag == nil {
-			flag = new(int)
-			*flag = bi.Flag
-		}
-		gid = bi.GoodsID
-		gname = bi.GoodsName
-		cost = bi.Cost
+	if bi != nil { //修改或删除药材
 		c := math.Abs(bi.Confirm) * float64(b.Sets)
 		if c > 0 {
-			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, c, bi.GoodsID)
+			tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, c, ip.gid)
 		}
 		tx.MustExec(`DELETE FROM bom_item WHERE id=?`, bi.ID)
 	}
+	if *ip.req == 0 {
+		ret = map[string]interface{}{"old": bi, "new": nil}
+		return
+	}
 	keys = []string{"bom_id", "gid", "gname", "cost", "request", "confirm", "flag"}
-	vals = []interface{}{b.ID, gid, gname, cost, *req, 0, *flag}
-	if memo != nil {
+	vals = []interface{}{b.ID, ip.gid, ip.gname, ip.cost, *ip.req, 0, *ip.flag}
+	if ip.memo != nil {
 		keys = append(keys, "memo")
-		vals = append(vals, *memo)
+		vals = append(vals, *ip.memo)
 	}
 	ret = map[string]interface{}{"old": bi, "new": map[string]interface{}{
 		"keys": keys, "vals": vals}}
@@ -287,21 +193,163 @@ func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
 	res := tx.MustExec(cmd, vals...)
 	lid, err := res.LastInsertId()
 	assert(err)
-	if *flag == 0 { //非自备，需要扣减库存
-		want := math.Abs(*req * float64(b.Sets))
+	if *ip.flag == 0 { //非自备，需要扣减库存
+		want := math.Abs(*ip.req * float64(b.Sets))
 		var have float64
-		assert(tx.Get(&have, `SELECT stock FROM goods WHERE id=?`, gid))
+		assert(tx.Get(&have, `SELECT stock FROM goods WHERE id=?`, ip.gid))
 		if have < want {
 			want = have
-			*req = -have / float64(b.Sets)
+			*ip.req = -have / float64(b.Sets)
 		}
-		tx.MustExec(`UPDATE bom_item SET confirm=? WHERE id=?`, *req, lid)
-		tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, want, gid)
-		assert(tx.Get(&have, `SELECT stock FROM goods WHERE id=?`, gid))
+		tx.MustExec(`UPDATE bom_item SET confirm=? WHERE id=?`, *ip.req, lid)
+		tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, want, ip.gid)
+		assert(tx.Get(&have, `SELECT stock FROM goods WHERE id=?`, ip.gid))
 		if have < 0 {
 			panic(errors.New("concurrent stock modification, try again"))
 		}
-		vals[5] = *req //设置一下confirm，仅供返回数据使用
+		vals[5] = *ip.req //设置一下confirm，仅供返回数据使用
+	}
+	return
+}
+
+func bomSetCheckinItem(b Bill, bi *BillItem, ip itemProps) (ret interface{}) {
+	tx := db.MustBegin()
+	defer func() {
+		if e := recover(); e != nil {
+			tx.Rollback()
+			panic(e)
+		}
+		assert(tx.Commit())
+	}()
+	var keys []string
+	var vals []interface{}
+	if bi != nil { //修改或删除药材
+		if bi.Confirm > 0 {
+			tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, bi.Confirm, ip.gid)
+		}
+		tx.MustExec(`DELETE FROM bom_item WHERE id=?`, bi.ID)
+	}
+	if *ip.req == 0 {
+		ret = map[string]interface{}{"old": bi, "new": nil}
+		return
+	}
+	confirm := 0.0
+	if b.Status == 3 {
+		confirm = *ip.req
+	}
+	keys = []string{"bom_id", "gid", "gname", "cost", "request", "confirm"}
+	vals = []interface{}{b.ID, ip.gid, ip.gname, ip.cost, *ip.req, confirm}
+	if ip.memo != nil {
+		keys = append(keys, "memo")
+		vals = append(vals, *ip.memo)
+	}
+	ret = map[string]interface{}{"old": bi, "new": map[string]interface{}{
+		"keys": keys, "vals": vals}}
+	cmd := fmt.Sprintf(`INSERT INTO bom_item (%s) VALUES (%s)`,
+		strings.Join(keys, ","), `?`+strings.Repeat(`,?`, len(keys)-1))
+	tx.MustExec(cmd, vals...)
+	tx.MustExec(`UPDATE goods SET stock=stock+? WHERE id=?`, confirm, ip.gid)
+	return
+}
+
+func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
+	if len(params) < 2 || len(params) > 4 {
+		panic(errors.New("bad format, use /bom/item/<bom_id>/<gname or pinyin>[/request][?flag,memo=...]"))
+	}
+	var (
+		act bool //是否需要执行动作
+		bi  *BillItem
+		ip  itemProps
+	)
+	//检查BOM
+	b := checkBOM(params[0], []int{1, 2}, []int{1, 2, 3})
+	its := FindBillItem(b.ID, params[1])
+	switch len(its) {
+	case 0: //输入的药材是本方中没有的：需要增加该药材
+		var gs []*Goods
+		term := strings.ToUpper(params[1])
+		assert(db.Select(&gs, `SELECT * FROM goods WHERE name=? OR pinyin=?`, term, term))
+		switch len(gs) {
+		case 0:
+			panic(fmt.Errorf("no goods named '%s'", params[1]))
+		case 1:
+			ip.gid = gs[0].ID
+			ip.gname = gs[0].Name
+			ip.cost = gs[0].Cost
+		default:
+			var ns []string
+			for _, g := range gs {
+				ns = append(ns, g.Name)
+			}
+			panic(fmt.Errorf("'%s' ambiguous: %s", params[1], strings.Join(ns, ", ")))
+		}
+	case 1: //输入的药材在本方中找到了：需要修改或删除该药材
+		bi = &its[0]
+		ip.gid = bi.GoodsID
+		ip.gname = bi.GoodsName
+		ip.cost = bi.Cost
+	default:
+		panic(fmt.Errorf("bom#%d: '%s' ambiguous", b.ID, params[1]))
+	}
+	//收集需要设置的参数
+	if len(params) > 2 {
+		ip.req = new(float64)
+		*ip.req, err = strconv.ParseFloat(params[2], 64)
+		if err != nil || *ip.req < 0 {
+			panic(fmt.Errorf("invalid request amount '%s'", params[2]))
+		}
+		act = true
+	}
+	v, ok := args["flag"]
+	if ok && len(v) > 0 {
+		ip.flag = new(int)
+		*ip.flag, err = strconv.Atoi(v[0])
+		if err != nil || *ip.flag < 0 || *ip.flag > 1 {
+			panic(fmt.Errorf("invalid flag '%s'", v[0]))
+		}
+		act = true
+	}
+	v, ok = args["memo"]
+	if ok {
+		ip.memo = new(string)
+		if len(v) > 0 {
+			*ip.memo = v[0]
+		}
+		act = true
+	}
+	if !act {
+		panic(errors.New("nothing to do"))
+	}
+	if bi == nil { //增加新药材
+		if ip.req == nil {
+			panic(fmt.Errorf("bom#%d: invalid request amount for '%s'", b.ID, ip.gname))
+		}
+		if ip.flag == nil {
+			ip.flag = new(int)
+			*ip.flag = 0
+		}
+	} else { //修改或删除药材
+		if ip.req == nil { //没有提供request，使用原来的值
+			ip.req = new(float64)
+			*ip.req = bi.Request
+		}
+		if ip.flag == nil {
+			ip.flag = new(int)
+			*ip.flag = bi.Flag
+		}
+	}
+	*ip.req = math.Abs(*ip.req) //先确保request是正的
+	switch b.Type {
+	case 1: //进货单
+		ret = bomSetCheckinItem(b, bi, ip)
+	case 2: //出货单
+		*ip.req = -*ip.req //出货单的request是负的
+		ret = bomSetCheckoutItem(b, bi, ip)
 	}
 	return
 }

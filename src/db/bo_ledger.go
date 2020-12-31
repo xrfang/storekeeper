@@ -259,7 +259,13 @@ func LedgerCls(params []string) (err error) {
 		panic(errors.New("bad format, use /ledger/cls/<ledger_id>"))
 	}
 	lid, _ := strconv.Atoi(params[0])
-	panic(errors.New("TODO: 设置paid属性")) //仅对内部订单，检查不允许有未关闭的外部订单
+	var cnt int
+	assert(db.Get(&cnt, `SELECT COUNT(*) FROM bom WHERE type=2 AND status=2 
+		AND NOT (user_id IN (SELECT id FROM user WHERE client=0 OR markup=0))
+		AND ledger=?`, lid))
+	if cnt > 0 { //仅对内部订单，检查不允许有未关闭的外部订单
+		panic(fmt.Errorf("ledger#%d: %d pending external orders", lid, cnt))
+	}
 	res := db.MustExec(`UPDATE bom SET status=1,changed=? WHERE type=4 
 	    AND status=0 AND id=?`, time.Now().Unix(), lid)
 	ra, err := res.RowsAffected()

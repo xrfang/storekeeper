@@ -69,10 +69,11 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "输入错误", http.StatusBadRequest)
 			return
 		}
-		errItems := db.PSItems{}
+		pick := db.PSItems{}
+		done := db.PSItems{}
 		for _, p := range ps {
 			if len(p.Items) != 1 {
-				errItems = append(errItems, p)
+				pick = append(pick, p)
 				continue
 			}
 			bis := db.GetBillItems(id, p.Items[0].ID)
@@ -87,8 +88,9 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 			if p.Rack != "" {
 				db.UpdateRack(bis[0].GoodsID, p.Rack)
 			}
+			done = append(done, p)
 		}
-		jsonReply(w, errItems)
+		jsonReply(w, map[string]interface{}{"done": done, "pick": pick})
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}

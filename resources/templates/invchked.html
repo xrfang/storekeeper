@@ -106,10 +106,17 @@ function addGoods() {
   $('#choice').empty()
   var id = $('#bid').val()
   $.post(`/invchk/item/${id}`, {item:item}, function(e) {
-	if (e.length > 0) {
-		$('body').data("rx_items", e)
+	if (e.done.length > 0) {
+		var done = []
+		$.each(e.done, function(_, it) {
+			done.push(it.items[0].name)
+		})
+		$('#choice').append(`<p>已处理</span>：${done.join("，")}</p>`)
+	}
+	if (e.pick.length > 0) {
+		$('body').data("rx_items", e.pick)
 		var rxCnt = 0
-		$.each(e, function(ti, it) {
+		$.each(e.pick, function(ti, it) {
 			if (it.items != null && it.items.length > 0) {
   	            var choice = `<p><span style="color:red">${it.term}</span> 是指`
   	            $.each(it.items, function(i, t) {

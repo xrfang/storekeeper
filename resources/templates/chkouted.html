@@ -455,20 +455,22 @@
         $.each(e.items, function (_, it) {
           var total = it.in_stock
           var item = `${it.gname}&nbsp;`
-          var bg = "white"
+		  var bg = "white"
           var extra = false
           if (it.flag != 0) {
             total = it.request * bill.sets
             extra = true
           } else if (Math.abs(it.request * bill.sets - it.in_stock) >= 0.1) {
             bg = "lightpink"
-          }
+		  }
           item = `${item}${total}/${it.request}克`
-          if (extra)
-            item = `[自备]${item}`
-          else if (it.rack != '')
-            item = `[${it.rack}]${item}`
           if (it.memo != "") item += `（${it.memo}）`
+		  if (extra)
+            item = `[自备]${item}`
+		  else {
+			if (it.rack != '') item = `[${it.rack}]${item}`
+			if (it.cost == 0) item = `<span style="color:red">${item}</span>`
+		  }
           if (bill.status == 0) {
             $('#cart').append(`<a href="#" style="background:${bg}" onclick="editItem(${it.gid},
             '${it.gname}', ${it.request}, '${it.memo}', ${extra})">${item}</a> &nbsp; `)

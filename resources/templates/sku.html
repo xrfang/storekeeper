@@ -14,6 +14,32 @@
 <div class="container" style="padding-top:1rem">
   <div class="accordion" id="goodsMgmt">
     <div class="card">
+	  <div class="card-header" style="padding-left:0" id="hchk">
+		  <h2 class="mb-0">
+			<button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#cchk">
+			  通过拼音查询（看单价/库存）
+			</button>
+		  </h2>
+	  </div>
+	  <div id="cchk" class="collapse show" data-parent="#goodsMgmt">
+		  <div class="card-body">
+			<div class="input-group mb-2 mr-sm-2">
+			  <input type="text" class="form-control" id="pinyins" />
+			  <div class="input-group-append">
+				<div class="input-group-text">
+				  <i id="find" style="cursor:pointer" onclick="doFind()" class="fas fa-search"></i>
+				</div>
+			  </div>
+			</div>
+			<small class="form-text text-muted">输入药材拼音首字母，多个用空格隔开</small>
+			<div id="view">
+			  <p style="margin-top:1rem;color:#555555">请在上方搜索框中输入需要查看的药材名称拼音首字母
+				（允许部分匹配），系统会返回匹配药材的库存和单价信息。</p> 
+			</div>
+		  </div>
+	  </div>
+	</div>
+	<div class="card">
       <div class="card-header" style="padding-left:0" id="hadd">
         <h2 class="mb-0">
           <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#cadd">
@@ -21,7 +47,7 @@
           </button>
         </h2>
       </div>
-      <div id="cadd" class="collapse show" data-parent="#goodsMgmt">
+      <div id="cadd" class="collapse" data-parent="#goodsMgmt">
         <div class="card-body">
           <div class="input-group mb-2 mr-sm-2">
             <input type="text" class="form-control" id="terms" />
@@ -38,32 +64,6 @@
             <p style="margin-top:1rem;color:#555555">目前共有<span style="color:red;font-weight:bold">
               {{.Total}} </span>种药材（直接点击搜索按钮可查看全部）。</p>    
           </div>          
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header" style="padding-left:0" id="hchk">
-        <h2 class="mb-0">
-          <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#cchk">
-            通过拼音查询（看单价/库存）
-          </button>
-        </h2>
-      </div>
-      <div id="cchk" class="collapse" data-parent="#goodsMgmt">
-        <div class="card-body">
-          <div class="input-group mb-2 mr-sm-2">
-            <input type="text" class="form-control" id="pinyins" />
-            <div class="input-group-append">
-              <div class="input-group-text">
-                <i id="find" style="cursor:pointer" onclick="doFind()" class="fas fa-search"></i>
-              </div>
-            </div>
-          </div>
-          <small class="form-text text-muted">输入药材拼音首字母，多个用空格隔开</small>
-          <div id="view">
-            <p style="margin-top:1rem;color:#555555">请在上方搜索框中输入需要查看的药材名称拼音首字母
-              （允许部分匹配），系统会返回匹配药材的库存和单价信息。</p> 
-          </div>
         </div>
       </div>
     </div>
@@ -203,7 +203,7 @@ function doFind() {
       var name = g.rack ? `${g.name}[${g.rack}]` : g.name
       tbl += `
           <tr style="cursor:pointer">
-            <td>${name}</td>
+            <td><a href="#" id="${g.id}" onclick="editSku(this)">${name}</a></td>
             <td>${g.cost}</td>
             <td>${g.stock}</td>
           </tr>`

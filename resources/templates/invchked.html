@@ -96,8 +96,6 @@ function pick(ti, ii) {
   if (t.rack != '') ps += `:${t.rack} `
   var g = $('#goods')
   g.val(`${g.val()} ${ps}`)
-  if (!$('body').data('multi_rx'))
-    addGoods() //当只有一个选项时，直接提交
 }
 function addGoods() {
   var item = $('#goods').val().trim()

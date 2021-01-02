@@ -246,6 +246,14 @@ func UpdateSKUs(skus []Goods) {
 	return
 }
 
+func UpdateRack(gid int, rack string) {
+	res := db.MustExec(`UPDATE goods SET rack=? WHERE id=?`, rack, gid)
+	ra, _ := res.RowsAffected()
+	if ra <= 0 {
+		panic(fmt.Errorf(`UpdateRack(%d, %s): no rows affected`, gid, rack))
+	}
+}
+
 func GetSKUs(ids ...interface{}) (goods []Goods) {
 	if len(ids) == 0 {
 		assert(db.Select(&goods, `SELECT * FROM goods`))

@@ -90,8 +90,10 @@ function editItem(gid) {
 }
 function pick(ti, ii) {
   var t = $('body').data("rx_items")[ti]
-  var ps = `${t.items[ii].name} ${t.weight}`
+  var ps = t.items[ii].name
+  if (t.weight != null) ps += `${t.weight}`
   if (t.memo != '') ps += `(${t.memo})`
+  if (t.rack != '') ps += `:${t.rack} `
   var g = $('#goods')
   g.val(`${g.val()} ${ps}`)
   if (!$('body').data('multi_rx'))

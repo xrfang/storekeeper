@@ -34,14 +34,14 @@ func apiInvStat(w http.ResponseWriter, r *http.Request) {
 	}
 	ps := db.GetPSItems(rx)
 	for _, p := range ps {
-		if len(p.Items) == 1 && p.Weight > 0 {
+		if len(p.Items) == 1 && p.Weight != nil && *p.Weight > 0 {
 			db.SetBillItem(db.BillItem{
 				BomID:     id,
 				Cost:      p.Items[0].Cost,
 				GoodsID:   p.Items[0].ID,
 				GoodsName: p.Items[0].Name,
 				Memo:      p.Memo,
-				Request:   p.Weight,
+				Request:   *p.Weight,
 			}, 0)
 		}
 	}

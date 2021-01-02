@@ -79,9 +79,14 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 			if len(bis) != 1 {
 				panic(fmt.Errorf("GetBillItems failed: bid=%v; gid=%v", id, p.Items[0].ID))
 			}
-			bis[0].Confirm = p.Weight
-			bis[0].Flag = 1
-			db.SetBillItem(bis[0], 1)
+			if p.Weight != nil {
+				bis[0].Confirm = *p.Weight
+				bis[0].Flag = 1
+				db.SetBillItem(bis[0], 1)
+			}
+			if p.Rack != "" {
+				db.UpdateRack(bis[0].GoodsID, p.Rack)
+			}
 		}
 		jsonReply(w, errItems)
 	default:

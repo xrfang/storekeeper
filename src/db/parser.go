@@ -16,16 +16,22 @@ type (
 		Rack string  `json:"rack"`
 	}
 	PSItem struct {
-		Term   string  `json:"term"`
-		Items  []item  `json:"items"`
-		Weight float64 `json:"weight"`
-		Memo   string  `json:"memo"`
+		Term   string   `json:"term"`
+		Items  []item   `json:"items"`
+		Weight *float64 `json:"weight"`
+		Memo   string   `json:"memo"`
+		Rack   string   `json:"rack"`
 	}
 	PSItems      []*PSItem
 	Prescription struct {
 		ID    int      `json:"id"`
 		Name  string   `json:"name"`
 		Items []string `json:"items"`
+	}
+	normalizer struct {
+		rm int //模式：0=直接替换；1=保留映射关系（可反向替换回来）
+		rx *regexp.Regexp
+		rv string
 	}
 )
 
@@ -40,9 +46,13 @@ func (pi *PSItem) MatchItems(itm map[string]*BillItem) {
 	pi.Items = its
 }
 
-var rs []*regexp.Regexp = []*regexp.Regexp{
-	regexp.MustCompile(`（\s*`),
-	regexp.MustCompile(`\s*）`),
+var norm = []normalizer{
+	{0, regexp.MustCompile(`\s*，\s*`), ","},
+	{0, regexp.MustCompile(`（\s*`), " ("},
+	{0, regexp.MustCompile(`\s*）`), ") "},
+	{0, regexp.MustCompile(`\s*：\s*`), " :"},
+	{1, regexp.MustCompile(`\(.*?\)`), ""},
+	{1, regexp.MustCompile(`:\S+`), ""},
 }
 
 func fetchItems(term string) []item {
@@ -58,14 +68,25 @@ func fetchItems(term string) []item {
 }
 
 func GetPSItems(text string) PSItems {
+	var subst []string
 	cclass := func(r rune) int {
 		if (r >= '0' && r <= '9') || r == '-' || r == '.' {
 			return 1
 		}
 		return -1
 	}
-	text = rs[0].ReplaceAllString(text, " (")
-	text = rs[1].ReplaceAllString(text, ") ")
+	for _, n := range norm {
+		switch n.rm {
+		case 0:
+			text = n.rx.ReplaceAllString(text, n.rv)
+		case 1:
+			text = n.rx.ReplaceAllStringFunc(text, func(s string) string {
+				no := len(subst)
+				subst = append(subst, s)
+				return " @" + string('A'+no) + " "
+			})
+		}
+	}
 	pc := 0 //前一字符种类：0=无前一字符；1=数字，-1=非数字
 	var sb strings.Builder
 	for _, r := range text {
@@ -86,11 +107,19 @@ func GetPSItems(text string) PSItems {
 		w, err := float(s)
 		if err == nil {
 			if p != nil {
-				p.Weight = w
+				p.Weight = new(float64)
+				*p.Weight = w
 			}
-		} else if s[0] == '(' && s[len(s)-1] == ')' {
-			if p != nil {
-				p.Memo = s[1 : len(s)-1]
+		} else if s[0] == '@' {
+			s = subst[s[1]-'A']
+			if s[0] == '(' {
+				if p != nil {
+					p.Memo = s[1 : len(s)-1]
+				}
+			} else if s[0] == ':' {
+				if p != nil {
+					p.Rack = strings.ToUpper(s[1:])
+				}
 			}
 		} else {
 			if p != nil {

@@ -105,16 +105,16 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 		switch b.Status {
 		case 0: //未完成，修改订单
 			for i, p := range ps {
-				if len(p.Items) == 1 && p.Weight > 0 {
+				if len(p.Items) == 1 && p.Weight != nil && *p.Weight > 0 {
 					if db.SetBillItem(db.BillItem{
 						BomID:     id,
 						Cost:      p.Items[0].Cost,
 						GoodsID:   p.Items[0].ID,
 						GoodsName: p.Items[0].Name,
 						Memo:      p.Memo,
-						Request:   p.Weight,
+						Request:   *p.Weight,
 					}, 0) {
-						ps[i].Weight = -p.Weight
+						*ps[i].Weight = -*p.Weight
 					}
 				}
 			}
@@ -125,9 +125,9 @@ func chkInEditItem(w http.ResponseWriter, r *http.Request) {
 			}
 			for i, p := range ps {
 				p.MatchItems(itm)
-				if len(p.Items) == 1 && p.Weight != 0 {
+				if len(p.Items) == 1 && *p.Weight != 0 {
 					it := itm[p.Items[0].Name]
-					it.Confirm += p.Weight
+					it.Confirm += *p.Weight
 					db.SetBillItem(*it, 1)
 				}
 				ps[i] = p

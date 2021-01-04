@@ -12,7 +12,6 @@ func setupRoutes(cf Configuration) {
 	http.HandleFunc("/api/chkin", apiChkInList)
 	http.HandleFunc("/api/chkin/", apiChkIn)
 	http.HandleFunc("/api/chkout", apiChkOutList)
-	http.HandleFunc("/api/finchk", apiFinChk)
 	http.HandleFunc("/api/invchk", apiInvChkList)
 	http.HandleFunc("/api/invstat", apiInvStat)
 	http.HandleFunc("/api/goods", apiSkuFind)

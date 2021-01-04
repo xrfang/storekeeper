@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"strconv"
 	"time"
 )
 
@@ -50,7 +49,7 @@ func (li ledgerInfo) Export() map[string]interface{} {
 	}
 }
 
-func LedgerList(params []string) (ret interface{}, err error) {
+func LedgerList() (ret interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -66,7 +65,7 @@ func LedgerList(params []string) (ret interface{}, err error) {
 	return res, nil
 }
 
-func LedgerNew() (id int64, err error) {
+func LedgerNew() (id int, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -82,8 +81,9 @@ func LedgerNew() (id int64, err error) {
 	}()
 	res := tx.MustExec(`INSERT INTO bom (type,user_id,changed) 
 	    VALUES (4,0,?)`, time.Now().Unix()) //总账单的user_id一律设为0
-	id, err = res.LastInsertId()
+	liid, err := res.LastInsertId()
 	assert(err)
+	id = int(liid)
 	res = tx.MustExec(`UPDATE bom SET ledger=? WHERE type IN (1,2) AND 
 		status>=2 AND ledger=0`, id)
 	if ra, _ := res.RowsAffected(); ra == 0 {
@@ -200,18 +200,15 @@ func ledgerGetInventory(id int) (ret interface{}) {
 	}
 }
 
-func LedgerGet(params []string) (ret interface{}, err error) {
+func LedgerGet(id int) (ret interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
 		}
 	}()
-	if len(params) != 1 {
-		panic(errors.New("bad format, use /ledger/get/<ledger_id>"))
-	}
 	var li ledgerInfo
 	assert(db.Get(&li, `SELECT id,status,strftime("%s",created) 
-		AS created,changed FROM bom WHERE type=4 AND id=?`, params[0]))
+		AS created,changed FROM bom WHERE type=4 AND id=?`, id))
 	return map[string]interface{}{
 		"ledger":    li.Export(),
 		"inventory": ledgerGetInventory(li.ID),
@@ -220,16 +217,12 @@ func LedgerGet(params []string) (ret interface{}, err error) {
 	}, nil
 }
 
-func LedgerDel(params []string) (err error) {
+func LedgerDel(id int) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
 		}
 	}()
-	if len(params) != 1 {
-		panic(errors.New("bad format, use /ledger/del/<ledger_id>"))
-	}
-	lid, _ := strconv.Atoi(params[0])
 	tx := db.MustBegin()
 	defer func() {
 		if e := recover(); e != nil {
@@ -239,39 +232,35 @@ func LedgerDel(params []string) (err error) {
 		assert(tx.Commit())
 	}()
 	var status int
-	assert(tx.Get(&status, `SELECT status FROM bom WHERE type=4 AND id=?`, lid))
+	assert(tx.Get(&status, `SELECT status FROM bom WHERE type=4 AND id=?`, id))
 	if status > 0 {
 		panic(errors.New("cannot delete closed ledger"))
 	}
-	tx.MustExec(`DELETE FROM bom_item WHERE bom_id=?`, lid)
-	tx.MustExec(`UPDATE bom SET ledger=0 WHERE ledger=?`, lid)
-	tx.MustExec(`DELETE FROM bom WHERE id=?`, lid)
+	tx.MustExec(`DELETE FROM bom_item WHERE bom_id=?`, id)
+	tx.MustExec(`UPDATE bom SET ledger=0 WHERE ledger=?`, id)
+	tx.MustExec(`DELETE FROM bom WHERE id=?`, id)
 	return
 }
 
-func LedgerCls(params []string) (err error) {
+func LedgerCls(id int) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
 		}
 	}()
-	if len(params) != 1 {
-		panic(errors.New("bad format, use /ledger/cls/<ledger_id>"))
-	}
-	lid, _ := strconv.Atoi(params[0])
 	var cnt int
 	assert(db.Get(&cnt, `SELECT COUNT(*) FROM bom WHERE type=2 AND status=2 
 		AND NOT (user_id IN (SELECT id FROM user WHERE client=0 OR markup=0))
-		AND ledger=?`, lid))
+		AND ledger=?`, id))
 	if cnt > 0 { //仅对内部订单，检查不允许有未关闭的外部订单
-		panic(fmt.Errorf("ledger#%d: %d pending external orders", lid, cnt))
+		panic(fmt.Errorf("ledger#%d: %d pending external orders", id, cnt))
 	}
 	res := db.MustExec(`UPDATE bom SET status=1,changed=? WHERE type=4 
-	    AND status=0 AND id=?`, time.Now().Unix(), lid)
+	    AND status=0 AND id=?`, time.Now().Unix(), id)
 	ra, err := res.RowsAffected()
 	assert(err)
 	if ra == 0 {
-		panic(fmt.Errorf("ledger#%d: not found or already closed", lid))
+		panic(fmt.Errorf("ledger#%d: not found or already closed", id))
 	}
 	return
 }

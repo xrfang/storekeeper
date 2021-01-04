@@ -194,57 +194,8 @@ func apiBackOffice(cf Configuration) http.HandlerFunc {
 				mesg := fmt.Sprintf("invalid action, try `/%s/bom/help`", cf.BackOff)
 				jr(w, false, mesg)
 			}
-		case "ledger": //总帐相关操作
-			switch action {
-			case "list": //列出所有总帐
-				val, err := db.LedgerList(params)
-				if err == nil {
-					jr(w, true, val)
-				} else {
-					jr(w, false, err)
-				}
-			case "new": //新建总帐
-				val, err := db.LedgerNew()
-				if err == nil {
-					jr(w, true, val)
-				} else {
-					jr(w, false, err)
-				}
-			case "get": //获取指定总帐内容
-				val, err := db.LedgerGet(params)
-				if err == nil {
-					jr(w, true, val)
-				} else {
-					jr(w, false, err)
-				}
-			case "del": //删除指定总帐
-				err := db.LedgerDel(params)
-				if err == nil {
-					jr(w, true, nil)
-				} else {
-					jr(w, false, err)
-				}
-			case "cls": //关闭指定总帐（结帐）
-				err := db.LedgerCls(params)
-				if err == nil {
-					jr(w, true, nil)
-				} else {
-					jr(w, false, err)
-				}
-			case "help":
-				jr(w, true, map[string]interface{}{
-					"list": "列出所有总帐",
-					"new":  "新建总帐",
-					"get":  "获取指定总帐内容",
-					"cls":  "关闭指定总帐（结帐）",
-					"del":  "删除指定总帐",
-				})
-			default:
-				mesg := fmt.Sprintf("invalid action, try `/%s/ledger/help`", cf.BackOff)
-				jr(w, false, mesg)
-			}
 		default:
-			jr(w, false, "Invalid target, expect: db,bom,ledger")
+			jr(w, false, "Invalid target, expect: db,bom")
 		}
 	}
 }

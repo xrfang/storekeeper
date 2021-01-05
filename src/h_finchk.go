@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"storekeeper/db"
 	"strconv"
@@ -35,14 +36,17 @@ func finChkEdit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if db.InventoryWIP() != 0 {
+		http.Error(w, "当前有未结束的盘点", http.StatusConflict)
+		return
+	}
+	//_probe参数表示客户端使用jquery测试本页面是否可以跳转，如果盘点进行中则不允许访问
+	if r.URL.Query().Get("_probe") != "" {
+		fmt.Fprintln(w, "OK") //可以继续访问
+		return
+	}
 	id, _ := strconv.Atoi(r.URL.Path[8:])
-	//TODO：以下代码是从invchk中copy过来的，需要修改，并创建finchked.html
-	if id == 0 {
-		id = db.InventoryWIP()
-	}
-	if id == 0 {
-		id = db.CreateInventory(uid)
-	}
-	u := db.GetUser(uid)
-	renderTemplate(w, "finchked.html", map[string]interface{}{"user": u, "bill": id})
+	_, err := db.LedgerGet(id)
+	assert(err)
+	renderTemplate(w, "finchked.html", map[string]interface{}{"lid": id})
 }

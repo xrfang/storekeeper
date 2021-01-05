@@ -1,0 +1,76 @@
+{{define "body"}} {{template "header"}}
+<nav class="navbar navbar-expand navbar-dark bg-dark">
+  <a class="navbar-brand" href="#"><img src="/imgs/nav_title.png"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMenu">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarMenu">
+    <a class="navbar-brand" href="#" id="title">总账单 #<span id="lid">{{.lid}}</span></a>
+    <ul class="navbar-nav ml-auto">
+      <a class="nav-link" href="/chkout?user={{.user}}"><i class="fas fa-chevron-circle-left"></i></a>
+    </ul>
+  </div>
+</nav>
+<div class="container" style="padding-top:1em">
+  <div class="alert alert-info" id="summary"></div>
+  <div class="card mb-3">
+	<div class="card-header">进货</div>
+	<div class="card-body" id="purchase"></div>
+  </div>
+  <div class="card mb-3">
+	<div class="card-header">出货</div>
+	<div class="card-body" id="sales"></div>
+  </div>
+  <div class="card mb-1">
+	<div class="card-header">库存</div>
+	<div class="card-body" id="inventory"></div>
+  </div>
+  <p style="font-size:14px"><i class="fas fa-info-circle"></i> 未结算的总账单可以随时删除</p>
+  <p style="text-align:center;margin-top:2rem">
+	<button class="btn btn-primary">结算</button> &nbsp;
+	&nbsp; <button class="btn btn-danger">删除</button>
+  </p>    
+</div>
+<script>
+  $(document).ready(function () {
+	  var id = $('#lid').text()
+	  $.get(`/api/ledger?id=${id}`, function(e) {
+		if (!e.stat) {
+			toast("错误", e.mesg, "error")
+			return
+		}
+		var ledger = e.data.ledger
+		var created = ledger.created.split("T")[0]
+		var changed = ledger.changed.split("T")[0]
+		var summary = ledger.status ? `创建于${created}，`: 
+		    `创建于${created}，未结算`
+		$('#summary').text(summary)
+		var total = 0
+		var purchase = []
+		$.each(e.data.checkin.total, function(n, v) {
+			total += v
+			purchase.push(`${n}支付${v}元`) 
+		})
+		$('#purchase').text(`总计${total}元，其中${purchase.join("；")}`)
+		var sales = e.data.checkout
+		var recv = sales.received
+		$('#sales').append(`<p>银货两讫${recv.items.length}单，货款${recv.goods}元，补货与运费${recv.fees}元，包装费${recv.package}元</p>`)
+		var pend = sales.pending
+		var owner = []
+		var cnt = 0, amt = 0, fee = 0, pkg = 0
+		$.each(pend, function(k, v) {
+			amt += v.goods
+			cnt += v.items.length
+			fee += v.fees
+			pkg += v.package
+			owner.push(`<li>${k}：${v.items.length}单，货款${v.goods}元，补货与运费${v.fees}元，包装费${v.package}元</li>`)
+		})
+		$('#sales').append(`<p style="margin-bottom:3px">应收${cnt}单，货款${amt}元，补货与运费${fee}元，包装费${pkg}元。其中：</p>`)
+		$('#sales').append(`<ul style="margin-bottom:1px">${owner.join("\n")}</ul>`)
+		var inv = e.data.inventory
+		$('#inventory').text(`库存${inv.count}种药材，价值${inv.cost}元`)
+		console.log(e)
+	  })
+  })
+</script>
+{{template "footer"}} {{end}}

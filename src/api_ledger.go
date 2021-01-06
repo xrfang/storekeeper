@@ -39,7 +39,13 @@ func apiLedger(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
 		if id > 0 {
-			err := db.LedgerCls(id)
+			del := r.URL.Query()["delete"]
+			var err error
+			if del != nil {
+				err = db.LedgerDel(id)
+			} else {
+				err = db.LedgerCls(id)
+			}
 			if err == nil {
 				jsonReply(w, map[string]interface{}{"stat": true})
 			} else {
@@ -52,13 +58,6 @@ func apiLedger(w http.ResponseWriter, r *http.Request) {
 			jsonReply(w, map[string]interface{}{"stat": true, "data": id})
 		} else {
 			jsonReply(w, map[string]interface{}{"stat": false, "mesg": err.Error()})
-		}
-	case "DELETE":
-		id, _ := strconv.Atoi(r.URL.Query().Get("id"))
-		if err := db.LedgerDel(id); err != nil {
-			jsonReply(w, map[string]interface{}{"stat": false, "mesg": err.Error()})
-		} else {
-			jsonReply(w, map[string]interface{}{"stat": true})
 		}
 	}
 }

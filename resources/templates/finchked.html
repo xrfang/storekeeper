@@ -7,7 +7,7 @@
   <div class="collapse navbar-collapse" id="navbarMenu">
     <a class="navbar-brand" href="#" id="title">总账单 #<span id="lid">{{.lid}}</span></a>
     <ul class="navbar-nav ml-auto">
-      <a class="nav-link" href="/chkout?user={{.user}}"><i class="fas fa-chevron-circle-left"></i></a>
+      <a class="nav-link" href="/finchk"><i class="fas fa-chevron-circle-left"></i></a>
     </ul>
   </div>
 </nav>
@@ -27,50 +27,70 @@
   </div>
   <p style="font-size:14px"><i class="fas fa-info-circle"></i> 未结算的总账单可以随时删除</p>
   <p style="text-align:center;margin-top:2rem">
-	<button class="btn btn-primary">结算</button> &nbsp;
-	&nbsp; <button class="btn btn-danger">删除</button>
+	<button onclick="closeLedger({{.lid}})" class="btn btn-primary">结算</button> &nbsp;
+	&nbsp; <button onclick="deleteLedger({{.lid}})" class="btn btn-danger">删除</button>
   </p>    
 </div>
 <script>
-  $(document).ready(function () {
-	  var id = $('#lid').text()
-	  $.get(`/api/ledger?id=${id}`, function(e) {
-		if (!e.stat) {
-			toast("错误", e.mesg, "error")
-			return
-		}
-		var ledger = e.data.ledger
-		var created = ledger.created.split("T")[0]
-		var changed = ledger.changed.split("T")[0]
-		var summary = ledger.status ? `创建于${created}，`: 
-		    `创建于${created}，未结算`
-		$('#summary').text(summary)
-		var total = 0
-		var purchase = []
-		$.each(e.data.checkin.total, function(n, v) {
-			total += v
-			purchase.push(`${n}支付${v}元`) 
-		})
-		$('#purchase').text(`总计${total}元，其中${purchase.join("；")}`)
-		var sales = e.data.checkout
-		var recv = sales.received
-		$('#sales').append(`<p>银货两讫${recv.items.length}单，货款${recv.goods}元，补货与运费${recv.fees}元，包装费${recv.package}元</p>`)
-		var pend = sales.pending
-		var owner = []
-		var cnt = 0, amt = 0, fee = 0, pkg = 0
-		$.each(pend, function(k, v) {
-			amt += v.goods
-			cnt += v.items.length
-			fee += v.fees
-			pkg += v.package
-			owner.push(`<li>${k}：${v.items.length}单，货款${v.goods}元，补货与运费${v.fees}元，包装费${v.package}元</li>`)
-		})
-		$('#sales').append(`<p style="margin-bottom:3px">应收${cnt}单，货款${amt}元，补货与运费${fee}元，包装费${pkg}元。其中：</p>`)
-		$('#sales').append(`<ul style="margin-bottom:1px">${owner.join("\n")}</ul>`)
-		var inv = e.data.inventory
-		$('#inventory').text(`库存${inv.count}种药材，价值${inv.cost}元`)
-		console.log(e)
-	  })
+function closeLedger(id) {
+  $.post(`/api/ledger?id=${id}`, function(e) {
+	console.log(e)
+	if (e.stat) {
+	  location.href = `/finchk`
+	  return 
+	}
+	toast("错误", e.mesg, "error")
   })
+}
+function deleteLedger(id) {
+  $.post(`/api/ledger?id=${id}&delete`, function(e) {
+	console.log(e)
+	if (e.stat) {
+	  location.href = `/finchk`
+	  return 
+	}
+	toast("错误", e.mesg, "error")
+  })
+}
+$(document).ready(function () {
+  var id = $('#lid').text()
+  $.get(`/api/ledger?id=${id}`, function(e) {
+  if (!e.stat) {
+  	toast("错误", e.mesg, "error")
+  	return
+  }
+  var ledger = e.data.ledger
+  var created = ledger.created.split("T")[0]
+  var changed = ledger.changed.split("T")[0]
+  var summary = ledger.status ? `创建于${created}，`: 
+  	`创建于${created}，未结算`
+  $('#summary').text(summary)
+  var total = 0
+  var purchase = []
+  $.each(e.data.checkin.total, function(n, v) {
+  	total += v
+  	purchase.push(`${n}支付${v}元`) 
+  })
+  $('#purchase').text(`总计${total}元，其中${purchase.join("；")}`)
+  var sales = e.data.checkout
+  var recv = sales.received
+  $('#sales').append(`<p>银货两讫${recv.items.length}单，货款${recv.goods}元，补货与运费${recv.fees}元，包装费${recv.package}元</p>`)
+  var pend = sales.pending
+  var owner = []
+  var cnt = 0, amt = 0, fee = 0, pkg = 0
+  $.each(pend, function(k, v) {
+  	amt += v.goods
+  	cnt += v.items.length
+  	fee += v.fees
+  	pkg += v.package
+  	owner.push(`<li>${k}：${v.items.length}单，货款${v.goods.toFixed(2)}元，补货与运费${v.fees.toFixed(2)}元，包装费${v.package.toFixed(2)}元</li>`)
+  })
+  $('#sales').append(`<p style="margin-bottom:3px">应收${cnt}单，货款${amt.toFixed(2)}元，补货与运费${fee.toFixed(2)}元，包装费${pkg.toFixed(2)}元。其中：</p>`)
+  $('#sales').append(`<ul style="margin-bottom:1px">${owner.join("\n")}</ul>`)
+  var inv = e.data.inventory
+  $('#inventory').text(`库存${inv.count}种药材，价值${inv.cost.toFixed(2)}元`)
+  console.log(e)
+})
+})
 </script>
 {{template "footer"}} {{end}}

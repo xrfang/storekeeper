@@ -21,14 +21,18 @@
 			<button class="btn btn-success" type="button" style="float:right"
 			  onclick="createLedger()">新建</button>
 		</div>
-		<div class="card-body" id="ledgers">
-			TODO: 进货记录
-		</div>
+		<div class="card-body" id="ledgers"></div>
 	</div>
 </div>
 <script>
 function createLedger() {
-	console.log("TODO: create ledger...")
+	$.post("/api/ledger", function(e) {
+		if (e.stat) {
+			location.href = `/finchk/${e.data}`
+			return 
+		}
+		toast("错误", e.mesg, "error")
+	})
 }
 function listLedgers() {
     $.get("/api/ledger", function (e) {
@@ -62,7 +66,6 @@ function listLedgers() {
     })	
 }
 function openLedger(id) {
-  console.log("openLedger", id)
   $.get(`/finchk/${id}?_probe=1`, function() {
     window.location.href = `/finchk/${id}`
   })

@@ -113,17 +113,22 @@ function listBills(data) {
           clr = "darkgray"
           summary = `收${b.paid.toFixed(2)}元`
           if(b.courier) summary += ` <i bol="${b.courier}" class="fas fa-shipping-fast"></i>`
-        }
+		}
+		var u = data.users[b.user]
+		var isExtU = (u.markup == -1) || (u.markup > 0)
+		if (b.ledger > 0 && b.status != 3 && isExtU) {
+			summary += ` <i class="fas fa-funnel-dollar"></i>`
+		}
         list += `
           <tr bid="${b.id}" style="line-height:23px;color:${clr};cursor:pointer" onclick="viewBill(event)">
             <td>${when}</td>
-            <td>${data.users[b.user]}</td>
+            <td>${data.users[b.user].name}</td>
             <td>${summary}</td>
-          </tr>`
-      })
+		  </tr>`
+	  })
       list += "</tbody></table>"
     }
-    card = card.replace(/_BILLLIST_/, list)
+	card = card.replace(/_BILLLIST_/, list)
     $('#monthlyBills').append(card)
   })
 }

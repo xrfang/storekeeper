@@ -24,16 +24,16 @@ func uuid(L int) string {
 
 type User struct {
 	ID      int        `json:"id"`
-	Name    string     `json:"name,omitempty"`
-	Login   string     `json:"login,omitempty"`
+	Name    string     `json:"name"`
+	Login   string     `json:"login"`
 	Markup  float64    `json:"markup"`
 	OTPKey  string     `json:"-"`
-	Client  int        `json:"client,omitempty"`
-	Memo    string     `json:"memo,omitempty"`
+	Client  int        `json:"client"`
+	Memo    string     `json:"memo"`
 	Paid    float64    `json:"paid"`
 	Due     float64    `json:"due"`
-	Created *time.Time `json:"created,omitempty"`
-	Updated *time.Time `json:"updated,omitempty"`
+	Created *time.Time `json:"created"`
+	Updated *time.Time `json:"updated"`
 }
 
 var (

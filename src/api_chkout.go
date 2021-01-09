@@ -19,9 +19,9 @@ func apiChkOutList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bu, _ := strconv.Atoi(r.URL.Query().Get("user"))
-	um := make(map[int]string)
-	for _, u := range db.ListUsers(1, "id", "name") {
-		um[u.ID] = u.Name
+	um := make(map[int]db.User)
+	for _, u := range db.ListUsers(1, "*") {
+		um[u.ID] = u
 	}
 	thisMonth := time.Now().Format("2006-01")
 	month := r.URL.Query().Get("month")
@@ -35,7 +35,7 @@ func apiChkOutList(w http.ResponseWriter, r *http.Request) {
 	}
 	summary := db.ListBillSummary(2, bu)
 	if len(summary) == 0 || summary[0].Month != thisMonth {
-		summary = append([]db.BillSummary{db.BillSummary{Month: thisMonth}}, summary...)
+		summary = append([]db.BillSummary{{Month: thisMonth}}, summary...)
 	}
 	list := db.ListBills(2, bu, month)
 	if list == nil {

@@ -1,5 +1,46 @@
 {{define "body"}} {{template "header"}}
-<div class="container" style="padding-top:1rem">
-TODO...
+<style>
+.rx h1 {font-size:24px;font-weight:bold;margin:20 0 25 0}
+.rx h2 {font-size:22px;font-weight:bold;margin:15 0 20 0}
+.rx h3 {font-size:20px;font-weight:bold;margin:15 0 20 0}
+.rx h4 {font-size:18px;font-weight:bold;margin:10 0 15 0}
+.rx h5 {font-size:16px;font-weight:bold;margin:10 0 15 0}
+.rx h6 {font-size:14px;font-weight:bold;margin:10 0 15 0}
+.rx p {font-size:14px;margin:10 0 15 0}
+.rx li {font-size:14px}
+.rx table {width:100%;margin-bottom:1rem;color:#212529;border-collapse:collapse}
+.rx table th{font-size:14px;padding:.6rem;border-top:1px solid #dee2e6}
+.rx table td{font-size:14px;padding:.6rem;border-top:1px solid #dee2e6}
+.rx ol,.md ul {padding-inline-start:16px}    
+</style>
+<div class="container rx" style="padding-top:1rem">
+<h1 style="text-align:center;letter-spacing:9px">中药处方</h1>
+<table>
+<tr><th>患者：<span>路人甲</span></th><th style="text-align:right">日期：<span>2021-01-08</span></th></tr>
+<tr><td colspan=2 style="line-height:2rem">
+<nobr>生山药60</nobr>&nbsp;
+<nobr>肉桂9（后下）</nobr>&nbsp;
+<nobr>生山楂9</nobr>&nbsp;
+<nobr>神曲9</nobr>&nbsp;
+<nobr>生甘草30</nobr>&nbsp;
+<nobr>杜仲15</nobr>&nbsp;
+<nobr>酸枣仁15</nobr>&nbsp;
+<nobr>北沙参15</nobr>&nbsp;
+<nobr>麦冬30</nobr>&nbsp;
+<nobr>玄参12</nobr>&nbsp;
+<nobr>当归12</nobr>&nbsp;
+<nobr>茯苓12</nobr>&nbsp;
+<nobr>丹皮12</nobr>&nbsp;
+<nobr>山茱萸15</nobr>&nbsp;
+<nobr>熟地24</nobr>&nbsp;
+</td></tr>
+<tr><td colspan=2 style="text-align:right"><b>7剂</b></td></tr>
+</table>
+<h5>注意事项：</h5>
+<ol>
+  <li>事项 1</li>  
+  <li>事项 2</li>
+  <li>...</li>
+</ol>    
 </div>
 {{template "footer"}} {{end}}

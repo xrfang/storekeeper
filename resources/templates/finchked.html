@@ -21,10 +21,14 @@
 	<div class="card-header">出货</div>
 	<div class="card-body" id="sales"></div>
   </div>
-  <div class="card mb-1">
+  <div class="card mb-3">
 	<div class="card-header">库存</div>
 	<div class="card-body" id="inventory"></div>
   </div>
+  <div class="card mb-1">
+	<div class="card-header">利润</div>
+	<div class="card-body" id="profit"></div>
+  </div>  
   <p style="font-size:14px"><i class="fas fa-info-circle"></i>
 	<span id="hint">未结算的总账单可以随时删除</span></p>
   <p id="actions" style="text-align:center;margin-top:2rem">
@@ -76,6 +80,8 @@ $(document).ready(function () {
   $('#purchase').text(`总计${total}元，其中${purchase.join("；")}`)
   var sales = e.data.checkout
   var recv = sales.received
+  var prft = sales.profit
+  $('#profit').text(`外部订单${prft.count}张，总计利润${prft.amount.toFixed(2)}元`)
   $('#sales').append(`<p>银货两讫${recv.items.length}单，货款${recv.goods}元，补货与运费${recv.fees}元，包装费${recv.package}元</p>`)
   var pend = sales.pending
   var owner = []

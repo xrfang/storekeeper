@@ -126,20 +126,23 @@ func summarize(bis []bInfo) bSummary {
 	var bs bSummary
 	for _, bi := range bis {
 		bs.Items = append(bs.Items, bi.BID)
-		bs.Extra += bi.Extra
-		bi.Paid -= bi.Extra
-		cost := bi.Cost
-		if bi.Markup < 0 {
-			cost *= sm
+		if bi.Status == 3 {
+			bs.Extra += bi.Extra //首先计算额外费用，这是手工输入的一定是正确的
+			bi.Paid -= bi.Extra
+			bs.Goods += bi.Cost //其次扣减药物成本（这个成本包含了Markup）
+			bi.Paid -= bi.Cost
+			if bi.Paid < 0 { //实际支付的钱不足药物成本
+				bs.Goods += bi.Paid //扣减药物成本，包装费不再计算
+			} else if bi.Paid <= bi.Pack { //除药物成本外视为包装费
+				bs.Pack += bi.Paid
+			} else { //实际支付的钱扣除包装费还有剩余
+				bs.Pack += bi.Pack            //包装费照规则计算
+				bs.Goods += bi.Paid - bi.Pack //剩余部分算入药物成本
+			}
 		} else {
-			cost *= 1 + bi.Markup/100
-		}
-		bs.Goods += cost
-		bi.Paid -= cost
-		if bi.Paid > 0 {
-			bs.Pack += bi.Paid
-		} else {
-			bs.Goods -= bi.Paid
+			bs.Goods += bi.Cost
+			bs.Extra += bi.Extra
+			bs.Pack += bi.Pack
 		}
 	}
 	return bs.Round()
@@ -153,15 +156,28 @@ func ledgerGetCheckout(id int) (ret interface{}) {
 		um[u.ID] = u.Name
 	}
 	var bis []bInfo
-	assert(db.Select(&bis, `SELECT b.id AS bid,u.id AS uid,u.client,u.markup,
+	assert(db.Select(&bis, `SELECT b.id AS bid,u.id AS uid,u.client,b.markup,
 		b.paid,b.status,b.fee AS extra FROM bom b, user u WHERE u.id=b.user_id
 		AND type=2 AND status IN (2,3) AND ledger=?`, id))
 	var done []bInfo
 	todo := make(map[string][]bInfo)
+	var profits float64
+	var excnt int
 	for _, bi := range bis {
 		b, _ := GetBill(bi.BID, 0)
 		cost := b.Cost * float64(b.Sets)
-		bi.Cost = cost
+		var m float64
+		if bi.Markup < 0 {
+			m = sm
+		} else {
+			m = 1 + float64(bi.Markup)/100
+		}
+		bi.Cost = cost * m
+		profit := bi.Cost - cost
+		if profit >= 0.01 {
+			excnt++
+			profits += profit
+		}
 		bi.Pack = b.PackFee
 		if bi.Status == 2 {
 			uid := bi.UID
@@ -187,7 +203,12 @@ func ledgerGetCheckout(id int) (ret interface{}) {
 	}
 	return map[string]interface{}{
 		"received": summarize(done),
+		"recvraw":  done,
 		"pending":  pending,
+		"profit": map[string]interface{}{
+			"count":  excnt,
+			"amount": profits,
+		},
 	}
 }
 

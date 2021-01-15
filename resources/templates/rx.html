@@ -54,7 +54,7 @@ $(function() {
   $.get(`/api/get/${bid}?order=2`, function (e) {
     $('#user').text(e.user)
     var t = new Date(e.bill.created)
-    $('#created').text(`${t.getFullYear()}年${t.getMonth()}月${t.getDate()}日`)
+    $('#created').text(`${t.getFullYear()}年${t.getMonth()+1}月${t.getDate()}日`)
     var items = []
     var selfprep = false
     $.each(e.items, function(_, it) {

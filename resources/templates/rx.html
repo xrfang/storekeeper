@@ -7,17 +7,18 @@
 .rx h5 {font-size:16px;font-weight:bold;margin:10 0 15 0}
 .rx h6 {font-size:14px;font-weight:bold;margin:10 0 15 0}
 .rx p {font-size:14px;margin:10 0 15 0}
-.rx li {font-size:14px}
+.rx li {font-size:14px;padding-bottom:0.4rem}
 .rx table {width:100%;margin-bottom:1rem;color:#212529;border-collapse:collapse}
 .rx table th{font-size:14px;padding:.6rem;border-top:1px solid #dee2e6}
 .rx table td{font-size:14px;padding:.6rem;border-top:1px solid #dee2e6}
 .rx ol,.md ul {padding-inline-start:16px}    
 </style>
 <div class="container rx" style="padding-top:1rem">
+<input type="hidden" id="bid" value="{{.}}" />
 <h1 style="text-align:center;letter-spacing:9px">中药处方</h1>
 <table>
-<tr><th>患者：<span>路人甲</span></th><th style="text-align:right">日期：<span>2021-01-08</span></th></tr>
-<tr><td colspan=2 style="line-height:2rem">
+<tr><th>患者：<span id="user"></span></th><th style="text-align:right">日期：<span id="created"></span></th></tr>
+<tr><td colspan=2 style="line-height:2rem" id="items">
 <nobr>生山药60</nobr>&nbsp;
 <nobr>肉桂9（后下）</nobr>&nbsp;
 <nobr>生山楂9</nobr>&nbsp;
@@ -34,13 +35,44 @@
 <nobr>山茱萸15</nobr>&nbsp;
 <nobr>熟地24</nobr>&nbsp;
 </td></tr>
-<tr><td colspan=2 style="text-align:right"><b>7剂</b></td></tr>
+<tr><td colspan=2 style="text-align:right;font-weight:bold"><span id="sets"></span>&nbsp;剂</td></tr>
 </table>
 <h5>注意事项：</h5>
 <ol>
-  <li>事项 1</li>  
-  <li>事项 2</li>
-  <li>...</li>
+  <li id="selfprep"><b>请勿忘记添加自备药材！</b></li>  
+  <li>请使用砂锅煎药，勿使用金属器皿。</li>
+  <li>一份药材需煎煮两次。头煎一碗半的水煎成八分，二煎一碗水煎成五分。建议第一次煎煮前先浸泡药材30-60分钟。</li>
+  <li>两次煎煮的药汁混合一下，大约500-600ml，分成两份喝，每天早晚饭后半小时服药。</li>
+  <li id="先煎" style="display:none">标注<b>先煎</b>的请先煎半小时再放其他药材一起煮（一般为矿物质类、如生石膏、生牡蛎、石决明、灵磁石，或者骨头类、如龟板、鳖甲、龙骨、龙齿）。</li>
+  <li id="后下" style="display:none">标注<b>后下</b>的请在出锅前5-10分钟放入，搅拌一下（一般为含挥发油一类，如肉桂、薄荷、砂仁）。</li>
+  <li id="包煎" style="display:none">标注<b>包煎</b>的请连包装袋一起放入药锅煎煮（一般为细小轻浮的药材、如海金沙，或者是有细毛会刺激喉咙的药材、如辛夷、枇杷叶）。</li>
 </ol>    
 </div>
+<script>
+$(function() {
+  var bid = $('#bid').val()
+  $.get(`/api/get/${bid}?order=2`, function (e) {
+    $('#user').text(e.user)
+    var t = new Date(e.bill.created)
+    $('#created').text(t.toLocaleDateString("zh-CN"))
+    var items = []
+    var selfprep = false
+    $.each(e.items, function(_, it) {
+      var caption = `${it.gname}${it.request}`
+      if (it.memo) {
+        caption = `${caption}&nbsp;(${it.memo})`
+        $(`#${it.memo}`).css("display", "")
+      }
+      if (it.flag) {
+        caption = `<b>[自备]</b>&nbsp;${caption}`
+        selfprep = true
+      }
+      items.push(`<nobr>${caption}</nobr> &nbsp; `)
+    })
+    $('#items').html(items.join("\n"))
+    $('#selfprep').css("display", selfprep ? "" : "none")
+    $('#sets').text(e.bill.sets)
+  })
+})
+</script>
 {{template "footer"}} {{end}}

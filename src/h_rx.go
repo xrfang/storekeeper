@@ -16,5 +16,5 @@ func showRx(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	renderTemplate(w, "rx.html", nil)
+	renderTemplate(w, "rx.html", r.URL.Path[4:])
 }

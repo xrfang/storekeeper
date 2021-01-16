@@ -20,16 +20,19 @@ type (
 		Client int
 		Markup float64
 		Extra  float64
+		Profit float64
 		Cost   float64
 		Pack   float64
 		Paid   float64
 		Status int
 	}
 	bSummary struct {
-		Goods float64 `json:"goods"`
-		Extra float64 `json:"fees"`
-		Pack  float64 `json:"package"`
-		Items []int   `json:"items"`
+		Goods  float64 `json:"goods"`
+		Extra  float64 `json:"fees"`
+		Pack   float64 `json:"package"`
+		Items  []int   `json:"items"`
+		ExtCnt int     `json:"ext_cnt"`
+		Profit float64 `json:"profit"`
 	}
 )
 
@@ -129,17 +132,28 @@ func summarize(bis []bInfo) bSummary {
 		if bi.Status == 3 {
 			bs.Extra += bi.Extra //首先计算额外费用，这是手工输入的一定是正确的
 			bi.Paid -= bi.Extra
-			bs.Goods += bi.Cost //其次扣减药物成本（这个成本包含了Markup）
+			bs.Goods += bi.Cost //其次扣减药物成本（这个成本不包含Markup）
 			bi.Paid -= bi.Cost
-			if bi.Paid < 0 { //实际支付的钱不足药物成本
-				bs.Goods += bi.Paid //扣减药物成本，包装费不再计算
-			} else if bi.Paid <= bi.Pack { //除药物成本外视为包装费
-				bs.Pack += bi.Paid
-			} else { //实际支付的钱扣除包装费还有剩余
-				bs.Pack += bi.Pack            //包装费照规则计算
-				bs.Goods += bi.Paid - bi.Pack //剩余部分算入药物成本
+			if bi.Paid >= bi.Pack { //剩余已支付款项足够涵盖包装费
+				bs.Pack += bi.Pack
+				bi.Paid -= bi.Pack
+			}
+			if bi.Paid >= 0.01 { //剩余的差额都是利润
+				bs.Profit += bi.Paid
+				bs.ExtCnt++
 			}
 		} else {
+			var m float64
+			if bi.Markup < 0 {
+				m = sm - 1
+			} else {
+				m = float64(bi.Markup) / 100
+			}
+			profit := bi.Cost * m
+			if profit >= 0.01 {
+				bs.Profit += profit
+				bs.ExtCnt++
+			}
 			bs.Goods += bi.Cost
 			bs.Extra += bi.Extra
 			bs.Pack += bi.Pack
@@ -161,23 +175,9 @@ func ledgerGetCheckout(id int) (ret interface{}) {
 		AND type=2 AND status IN (2,3) AND ledger=?`, id))
 	var done []bInfo
 	todo := make(map[string][]bInfo)
-	var profits float64
-	var excnt int
 	for _, bi := range bis {
 		b, _ := GetBill(bi.BID, 0)
-		cost := b.Cost * float64(b.Sets)
-		var m float64
-		if bi.Markup < 0 {
-			m = sm
-		} else {
-			m = 1 + float64(bi.Markup)/100
-		}
-		bi.Cost = cost * m
-		profit := bi.Cost - cost
-		if profit >= 0.01 {
-			excnt++
-			profits += profit
-		}
+		bi.Cost = b.Cost * float64(b.Sets)
 		bi.Pack = b.PackFee
 		if bi.Status == 2 {
 			uid := bi.UID
@@ -203,12 +203,7 @@ func ledgerGetCheckout(id int) (ret interface{}) {
 	}
 	return map[string]interface{}{
 		"received": summarize(done),
-		"recvraw":  done,
 		"pending":  pending,
-		"profit": map[string]interface{}{
-			"count":  excnt,
-			"amount": profits,
-		},
 	}
 }
 

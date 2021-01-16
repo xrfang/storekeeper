@@ -80,14 +80,20 @@ $(document).ready(function () {
   $('#purchase').text(`总计${total}元，其中${purchase.join("；")}`)
   var sales = e.data.checkout
   var recv = sales.received
-  var prft = sales.profit
-  $('#profit').text(`外部订单${prft.count}张，总计利润${prft.amount.toFixed(2)}元`)
-  $('#sales').append(`<p>银货两讫${recv.items.length}单，货款${recv.goods}元，补货与运费${recv.fees}元，包装费${recv.package}元</p>`)
   var pend = sales.pending
+  var pcount = recv.ext_cnt
+  var profit = recv.profit
+  $.each(pend, function(_, p) {
+	  pcount += p.ext_cnt
+	  profit += p.profit
+  })
+  $('#profit').text(`外部订单${pcount}张，总计利润${profit.toFixed(2)}元`)
+  var gp = recv.goods+recv.profit
+  $('#sales').append(`<p>银货两讫${recv.items.length}单，货款${gp.toFixed(2)}元，补货与运费${recv.fees}元，包装费${recv.package}元</p>`)
   var owner = []
   var cnt = 0, amt = 0, fee = 0, pkg = 0
   $.each(pend, function(k, v) {
-  	amt += v.goods
+  	amt += v.goods+v.profit
   	cnt += v.items.length
   	fee += v.fees
   	pkg += v.package

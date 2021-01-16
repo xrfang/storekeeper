@@ -470,7 +470,8 @@
             item = `[自备]${item}`
 		  else {
 			if (it.rack != '') item = `[${it.rack}]${item}`
-			if (it.cost == 0) item = `<span style="color:red">${item}</span>`
+			if (it.cost == 0 && total != 0) 
+			  item = `<span style="color:red">${item}</span>`
 		  }
           if (bill.status == 0) {
             $('#cart').append(`<a href="#" style="background:${bg}" onclick="editItem(${it.gid},

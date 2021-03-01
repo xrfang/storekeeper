@@ -271,9 +271,9 @@ func GetBill(id int, itmOrd int) (bill Bill, items []BillItem) {
 
 func FindBillItem(bid int, item string) (items []BillItem) {
 	item = strings.ToUpper(item)
-	assert(db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=?
-		AND gid IN (SELECT id FROM goods WHERE name=? OR pinyin=?)`,
-		bid, item, item))
+	assert(db.Select(&items, `SELECT * FROM bom_item WHERE bom_id=? AND
+	    gid IN (SELECT id FROM goods WHERE name=? OR pinyin LIKE ?)`,
+		bid, item, "%"+item+"%"))
 	return
 }
 

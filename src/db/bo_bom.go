@@ -163,6 +163,13 @@ type itemProps struct {
 }
 
 func bomSetCheckoutItem(b Bill, bi *BillItem, ip itemProps) (ret interface{}) {
+	fmt.Printf("ip: %+v\n", ip)
+	if ip.flag != nil {
+		fmt.Printf("ip.flag=%v\n", *ip.flag)
+	}
+	if ip.req != nil {
+		fmt.Printf("ip.req=%v\n", *ip.req)
+	}
 	tx := db.MustBegin()
 	defer func() {
 		if e := recover(); e != nil {
@@ -194,17 +201,20 @@ func bomSetCheckoutItem(b Bill, bi *BillItem, ip itemProps) (ret interface{}) {
 		"keys": keys, "vals": vals}}
 	cmd := fmt.Sprintf(`INSERT INTO bom_item (%s) VALUES (%s)`,
 		strings.Join(keys, ","), `?`+strings.Repeat(`,?`, len(keys)-1))
+	fmt.Printf("sql: %s; args=%+v\n", cmd, vals)
 	res := tx.MustExec(cmd, vals...)
 	lid, err := res.LastInsertId()
 	assert(err)
 	if *ip.flag == 0 { //非自备，需要扣减库存
 		want := math.Abs(*ip.req * float64(b.Sets))
+		fmt.Printf("gid#%v: want=%v\n", ip.gid, want)
 		var have float64
 		assert(tx.Get(&have, `SELECT stock FROM goods WHERE id=?`, ip.gid))
 		if have < want {
 			want = have
 			*ip.req = -have / float64(b.Sets)
 		}
+		fmt.Printf("gid#%v: have=%v; want=%v; req=%v\n", ip.gid, have, want, *ip.req)
 		tx.MustExec(`UPDATE bom_item SET confirm=? WHERE id=?`, *ip.req, lid)
 		tx.MustExec(`UPDATE goods SET stock=stock-? WHERE id=?`, want, ip.gid)
 		assert(tx.Get(&have, `SELECT stock FROM goods WHERE id=?`, ip.gid))
@@ -277,7 +287,7 @@ func BomSetItem(params []string, args url.Values) (ret interface{}, err error) {
 	case 0: //输入的药材是本方中没有的：需要增加该药材
 		var gs []*Goods
 		term := strings.ToUpper(params[1])
-		assert(db.Select(&gs, `SELECT * FROM goods WHERE name=? OR pinyin=?`, term, term))
+		assert(db.Select(&gs, `SELECT * FROM goods WHERE name=? OR pinyin LIKE ?`, term, "%"+term+"%"))
 		switch len(gs) {
 		case 0:
 			panic(fmt.Errorf("no goods named '%s'", params[1]))

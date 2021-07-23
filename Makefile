@@ -2,7 +2,7 @@ GOMOD=storekeeper
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 HASH=$(shell git log -n1 --pretty=format:%h)
 REVS=$(shell git log --oneline|wc -l)
-build: release
+build: debug
 upx:
 	upx -9 bin/storekeeper
 debug: setver geneh compdbg pack

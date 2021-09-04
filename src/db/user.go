@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
+	"github.com/xrfang/pindex"
 )
 
 func uuid(L int) string {
@@ -133,6 +135,17 @@ func GetUser(id interface{}) *User {
 }
 
 func ListUsers(account int, props ...string) (users []User) {
+	defer func() {
+		py := make(map[string]string)
+		for _, u := range users {
+			py[u.Name] = pindex.Encode(u.Name)[0]
+		}
+		sort.Slice(users, func(i, j int) bool {
+			pi := py[users[i].Name]
+			pj := py[users[j].Name]
+			return pi < pj
+		})
+	}()
 	qry := `SELECT %s FROM user`
 	acc := len(props) == 0
 	if acc {

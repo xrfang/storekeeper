@@ -20,9 +20,6 @@ func otpGenKey(name string) (*otp.Key, error) {
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      cf.OrgName,
 		AccountName: name,
-		Period:      30,
-		Digits:      otp.DigitsSix,
-		Algorithm:   otp.AlgorithmSHA256,
 	})
 	if err != nil {
 		return nil, err

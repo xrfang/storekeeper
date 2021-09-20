@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"github.com/xrfang/pindex"
 )
@@ -89,13 +88,7 @@ func Login(login, code string) (string, error) {
 		}
 		return "", err
 	}
-	ok, err := totp.ValidateCustom(code, u.OTPKey, time.Now(), totp.ValidateOpts{
-		Period:    30,
-		Skew:      1,
-		Digits:    6,
-		Algorithm: otp.AlgorithmSHA256,
-	})
-	if !ok {
+	if !totp.Validate(code, u.OTPKey) {
 		return "", ErrInvalidOTP
 	}
 	return genToken(u)

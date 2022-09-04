@@ -429,6 +429,8 @@ func SetBillItem(bi BillItem, mode int) bool {
 		}
 	case 1: //update
 		tx.MustExec(`DELETE FROM bom_item WHERE bom_id=? AND gid=?`, bi.BomID, bi.GoodsID)
+	case 2: //2022/09/04：增加了处理盘点单的功能，约定其mode=2
+		//盘点单条目是可以重复添加的（与入库单类似）
 	}
 	tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm,flag,memo) VALUES 
 		(?,?,?,?,?,?,?,?)`, bi.BomID, bi.GoodsID, bi.GoodsName, bi.Cost, bi.Request, bi.Confirm,
@@ -452,7 +454,7 @@ func DeleteBillItem(bid, gid int) {
 /*
 针对不同类型单据，本函数适用性如下：
 - 进货单在状态2=>3的时候变更库存，因此，只能设置状态为2的进货单
-- 出货单再状态0=>1的时候变更库存，因此，只能设置状态为0的出货单
+- 出货单在状态0=>1的时候变更库存，因此，只能设置状态为0的出货单
 - 盘点单与出货单相同状态条件
 - 总账单不适用本函数
 【请注意】其它的状态修改可以调用SetBill，不能用这个函数。
@@ -515,13 +517,43 @@ func SetInventoryByBill(bid int) {
 		if b.Status != 0 {
 			panic(fmt.Errorf("bill#%d.status=%d, cannot set inventory", bid, b.Status))
 		}
-		tx.MustExec(`UPDATE bom SET status=?,changed=? WHERE id=?`, 1, now, b.ID)
-		tx.MustExec(`DELETE FROM bom_item WHERE flag=0 AND bom_id=?`, bid)
-		var bis []BillItem
-		assert(tx.Select(&bis, `SELECT gid,confirm FROM bom_item WHERE bom_id=?`, bid))
-		for _, bi := range bis {
-			tx.MustExec(`UPDATE goods SET stock=? WHERE id=?`, bi.Confirm, bi.GoodsID)
+		type (
+			stock struct {
+				ID    int
+				Name  string
+				Stock float64
+				Cost  float64
+			}
+			invchk struct {
+				GID     int
+				Request float64
+			}
+		)
+		//1.获取被盘点的货物的当前库存
+		var ss []stock //当前STOCK
+		assert(tx.Select(&ss, `SELECT id,name,stock,cost FROM goods WHERE id IN
+		    (SELECT DISTINCT gid FROM bom_item WHERE bom_id=?)`, bid))
+		sm := make(map[int]stock)
+		for _, s := range ss {
+			sm[s.ID] = s
 		}
+		//2.获取盘点单中货物的总数量
+		var ic []invchk
+		assert(tx.Select(&ic, `SELECT gid,SUM(request) AS request FROM bom_item 
+		    WHERE bom_id=? GROUP BY gid`, bid))
+		//3.删除盘点单中的（临时）条目
+		tx.MustExec(`DELETE FROM bom_item WHERE bom_id=?`, bid)
+		for _, c := range ic {
+			s := sm[c.GID]
+			//4.添加盘点单最终条目
+			tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm,
+				flag) VALUES (?,?,?,?,?,?,1)`, bid, c.GID, s.Name, s.Cost, s.Stock, 
+				c.Request)
+			//5.根据盘点单更改货物库存
+			tx.MustExec(`UPDATE goods SET stock=? WHERE id=?`, c.Request, c.GID)
+		}
+		//6.设置盘点单为已完成
+		tx.MustExec(`UPDATE bom SET status=?,changed=? WHERE id=?`, 1, now, bid)
 	default:
 		panic(fmt.Errorf("unsupported bill type %v", b.Type))
 	}
@@ -529,19 +561,5 @@ func SetInventoryByBill(bid int) {
 
 func CreateInventory(uid int) int {
 	id := SetBill(Bill{Type: 3, User: uid})
-	var gs []Goods
-	assert(db.Select(&gs, `SELECT id,name,stock,cost FROM goods`))
-	tx := db.MustBegin()
-	defer func() {
-		if e := recover(); e != nil {
-			tx.Rollback()
-			panic(e)
-		}
-		assert(tx.Commit())
-	}()
-	for _, g := range gs {
-		tx.MustExec(`INSERT INTO bom_item (bom_id,gid,gname,cost,request,confirm)
-			VALUES (?,?,?,?,?,?)`, id, g.ID, g.Name, g.Cost, g.Stock, g.Stock)
-	}
 	return id
 }

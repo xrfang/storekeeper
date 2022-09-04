@@ -35,7 +35,7 @@ type (
 	}
 )
 
-//MatchItems 将Items与参数itm匹配，没有出现在itm中的条目会被删除
+// MatchItems 将Items与参数itm匹配，没有出现在itm中的条目会被删除
 func (pi *PSItem) MatchItems(itm map[string]*BillItem) {
 	var its []item
 	for _, it := range pi.Items {
@@ -50,6 +50,7 @@ var norm = []normalizer{
 	{0, regexp.MustCompile(`\s*，\s*`), ","},
 	{0, regexp.MustCompile(`（\s*`), " ("},
 	{0, regexp.MustCompile(`\s*）`), ") "},
+	{0, regexp.MustCompile(`@`), ":"},
 	{0, regexp.MustCompile(`\s*：\s*`), " :"},
 	{1, regexp.MustCompile(`\(.*?\)`), ""},
 	{1, regexp.MustCompile(`:\S+`), ""},

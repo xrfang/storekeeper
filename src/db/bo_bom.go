@@ -89,7 +89,7 @@ func BomSetUser(params []string) (ret interface{}, err error) {
 	return
 }
 
-//修改实付金额，仅针对入库单且为关单状态
+// 修改实付金额，仅针对入库单且为关单状态
 func BomSetPaid(params []string) (ret interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {

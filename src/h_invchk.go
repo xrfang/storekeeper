@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"storekeeper/db"
 	"strconv"
@@ -76,17 +75,18 @@ func invChkEditItem(w http.ResponseWriter, r *http.Request) {
 				pick = append(pick, p)
 				continue
 			}
-			bis := db.GetBillItems(id, p.Items[0].ID)
-			if len(bis) != 1 {
-				panic(fmt.Errorf("GetBillItems failed: bid=%v; gid=%v", id, p.Items[0].ID))
-			}
-			if p.Weight != nil {
-				bis[0].Confirm = *p.Weight
-				bis[0].Flag = 1
-				db.SetBillItem(bis[0], 1)
-			}
+			db.SetBillItem(db.BillItem{
+				BomID:     id,
+				Cost:      p.Items[0].Cost,
+				GoodsID:   p.Items[0].ID,
+				GoodsName: p.Items[0].Name,
+				Memo:      p.Memo,
+				Request:   *p.Weight,
+			}, 2) //盘点单的mode=2
 			if p.Rack != "" {
-				db.UpdateRack(bis[0].GoodsID, p.Rack)
+				//TODO: 盘点时修改Rack其实是不妥的，因为录入以后才知道应当放在哪个
+				//Rack中。分多次录入就会导致混乱！
+				//db.UpdateRack(p.Items[0].ID, p.Rack)
 			}
 			done = append(done, p)
 		}

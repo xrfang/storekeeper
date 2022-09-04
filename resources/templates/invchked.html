@@ -107,7 +107,7 @@ function addGoods() {
 	if (e.done.length > 0) {
 		var done = []
 		$.each(e.done, function(_, it) {
-			done.push(it.items[0].name)
+			done.push(`[${it.items[0].rack}]${it.items[0].name}`)
 		})
 		$('#choice').append(`<p>已处理</span>：${done.join("，")}</p>`)
 	}
@@ -190,6 +190,7 @@ function setInvChkDone() {
 	$.post(`/api/set/${bid}`, { key: "setinv" }, function(e) {
 		getBillInfo()
 	})
+	$('#choice').css('display', 'none')
 }
 function doneInvChk() {
   $('#cfmdone').modal('show')

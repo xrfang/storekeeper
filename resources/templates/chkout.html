@@ -34,9 +34,7 @@
 </div>
 <script>
 function manageSku() {
-  $.get(`/sku?_probe=1`, function() {
-    window.location.href = `/sku`
-  })
+  window.location.href = `/sku`
 }
 var billym={{.Month}}
 var billuser={{.User}}
